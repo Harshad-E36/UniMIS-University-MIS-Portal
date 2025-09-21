@@ -296,7 +296,7 @@
         </div>
         <div class="modal-body">
           <form method="post" id="add_edit_form" class="row g-3">
-            <!-- {% csrf_token %} -->
+            {% csrf_token %}
             <input type="hidden" name="id" id="record_id" value="0">
 
             <!-- College Code -->
@@ -404,6 +404,7 @@
               <label for="affiliated_to" class="form-label">Affiliated To</label>
               <select class="form-select" id="affiliated_to" name="affiliated_to">
                 <option value="" disabled selected>Select University/Board</option>
+                <option value="RTMNU">RTMNU</option>
               </select>
             </div>
 
@@ -583,7 +584,7 @@
         console.log(record_id)
 
         var rowdata = $('table#records_table').DataTable().row('table#records_table tbody tr#' + record_id).data()
-
+        console.log(rowdata)
         // populate modal form fields in order to edit 
         $modal.find('#college_code').val(rowdata[0])
         $modal.find('#college_name').val(rowdata[1])
