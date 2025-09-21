@@ -42,7 +42,7 @@
 
     /* Modern header */
     .header-container {
-      margin-top: 2rem;
+      margin-top: 0.5rem;
     }
 
     .header-banner {
@@ -113,22 +113,70 @@
       width: 100%;
     }
 
-    /* Prevent breaking UI */
-    .table td,
-    .table th {
-      max-width: 190px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    /* Reset unwanted browser default spacing */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow-x: hidden;
+      /* prevent sideways scroll */
+      overflow-y: hidden;
+      /* remove vertical scrollbar */
     }
 
-    /* Show full text on hover */
-    .table td:hover {
-      white-space: normal;
-      overflow: visible;
-      background: #f9f9f9;
-      z-index: 2;
-      position: relative;
+    .modal-body {
+      max-height: 88vh;
+      /* fits within viewport */
+      overflow-y: auto;
+      /* scroll only inside modal if needed */
+    }
+
+
+    /* Fix header spacing */
+    .container,
+    .container-fluid {
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
+
+    /* Optional: adjust the hero/banner card */
+    .hero-section,
+    .card {
+      margin-top: 0 !important;
+      border-radius: 0;
+      /* optional if you want flush look */
+    }
+
+    /* Datatables tweaks */
+    .dataTables_wrapper {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .login-btn {
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .login-btn:hover {
+      background-color: #0d6efd;
+      /* Bootstrap primary */
+      color: #fff;
+      border-color: #0d6efd;
+    }
+
+    .modal .modal-dialog {
+      margin-top: 10px !important;
+      /* remove big gap */
+    }
+
+    body.modal-open {
+      overflow: hidden !important;
+      padding-right: 0 !important;
+      /* removes Bootstrap’s auto padding */
     }
   </style>
 </head>
@@ -139,7 +187,15 @@
     <div class="row">
       <div class="col-lg-12 mx-auto">
         <div class="header-container text-center">
-          <div class="header-banner">
+          <div class="header-banner position-relative">
+            <!-- Login/Signup Button -->
+            <div class="position-absolute top-0 end-0 p-3">
+              <a href="#" class="btn btn-outline-light btn-sm fw-semibold shadow-sm login-btn" data-bs-toggle="modal"
+                data-bs-target="#AuthModal">
+                <i class="bi bi-box-arrow-in-right"></i> Login / Signup
+              </a>
+            </div>
+
             <h1 class="fw-bold">College Records</h1>
             <p>Any Placeholder text here </p>
             <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton" data-bs-toggle="modal"
@@ -147,6 +203,8 @@
               <i class="bi bi-plus-lg"></i> Add Record
             </button>
           </div>
+
+
         </div>
 
         <div class="table-container">
@@ -175,6 +233,59 @@
     </div>
   </div>
 
+
+  <!-- Auth Modal -->
+  <div class="modal fade" id="AuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="auth_modal_title">Login</h1>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <form id="auth_form" class="row g-3">
+            {% csrf_token %}
+            <input type="hidden" id="auth_mode" value="login">
+
+            <!-- Email -->
+            <div class="col-12">
+              <label for="auth_email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="auth_email" name="auth_email" required>
+            </div>
+
+            <!-- Password (used in both modes) -->
+            <div class="col-12">
+              <label for="auth_password" class="form-label" id="password_label">Password</label>
+              <input type="password" class="form-control" id="auth_password" name="auth_password" required>
+            </div>
+
+            <!-- Confirm Password (only in signup mode) -->
+            <div class="col-12 d-none" id="confirm_group">
+              <label for="confirm_password" class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+            </div>
+
+            <!-- Submit -->
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary w-100" id="auth_submit">Login</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer justify-content-center">
+          <small id="auth_footer_text">
+            Don't have an account? <a href="#" id="toggle_auth">Signup</a>
+          </small>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
   <!-- Add/Edit Modal -->
   <div class="modal fade" id="RecordsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -185,7 +296,7 @@
         </div>
         <div class="modal-body">
           <form method="post" id="add_edit_form" class="row g-3">
-            {% csrf_token %}
+            <!-- {% csrf_token %} -->
             <input type="hidden" name="id" id="record_id" value="0">
 
             <!-- College Code -->
@@ -228,8 +339,10 @@
             <div class="col-md-4">
               <label for="district" class="form-label">District</label>
               <select class="form-select" id="district" name="district" required>
-                <option value="">Select District</option>
-                <option value="nagpur">Nagpur</option>
+                <option value="" disabled selected>Select District</option>
+                <option value="Nagpur">Nagpur</option>
+                <option value="Amravati">Amravati</option>
+                <option value="Gadchiroli">Gadchiroli</option>
               </select>
             </div>
 
@@ -237,8 +350,7 @@
             <div class="col-md-6">
               <label for="taluka" class="form-label">Taluka</label>
               <select class="form-select" id="taluka" name="taluka" required>
-                <option value="">Select Taluka</option>
-                <option value="nagpur">Nagpur</option>
+                <option value="" disabled selected>Select Taluka</option>
               </select>
             </div>
 
@@ -246,39 +358,52 @@
             <div class="col-md-6">
               <label for="city" class="form-label">City</label>
               <select class="form-select" id="city" name="city" required>
-                <option value="">Select City</option>
-                <option value="nagpur">Nagpur</option>
+                <option value="" disabled selected>Select City</option>
               </select>
             </div>
+
 
             <!-- College Type -->
             <div class="col-md-6">
               <label for="college_type" class="form-label">College Type</label>
               <select class="form-select" id="college_type" name="college_type" required>
-                <option value="">Select Type</option>
+                <option value="" disabled selected>Select Type</option>
                 <option value="Government">Government</option>
-                <option value="Private">Private</option>
                 <option value="Semi Government">Semi Government</option>
+                <option value="Government Aided">Government Aided</option>
+                <option value="Private / Unaided">Private / Unaided</option>
+                <option value="Autonomous">Autonomous</option>
+                <option value="Deemed University">Deemed University</option>
+                <option value="Constituent College">Constituent College</option>
+                <option value="Central University">Central University</option>
+                <option value="State University">State University</option>
               </select>
             </div>
+
 
             <!-- Belongs To -->
             <div class="col-md-6">
               <label for="belongs_to" class="form-label">Belongs To</label>
-              <select class="form-select" id="belongs_to" name="belongs_to">
-                <option value="">Select Option</option>
-                <option value="Minority">Minority</option>
-                <option value="Ladies">Ladies</option>
-                <option value="person_with_disability">Person with disability</option>
+              <select class="form-select" id="belongs_to" name="belongs_to" required>
+                <option value="" disabled selected>Select Option</option>
+                <option value="Minority - Religious">Minority - Religious</option>
+                <option value="Minority - Linguistic">Minority - Linguistic</option>
+                <option value="Non-Minority">Non-Minority</option>
+                <option value="Ladies / Women's College">Ladies / Women's College</option>
+                <option value="Co-Education">Co-Education</option>
+                <option value="Person with Disability / Inclusive College">Person with Disability / Inclusive College
+                </option>
+                <option value="Tribal College">Tribal College</option>
+                <option value="Rural College">Rural College</option>
               </select>
             </div>
+
 
             <!-- Affiliated To -->
             <div class="col-md-6">
               <label for="affiliated_to" class="form-label">Affiliated To</label>
               <select class="form-select" id="affiliated_to" name="affiliated_to">
-                <option value="">Select University/Board</option>
-                <option value="RTMNU">RTMNU</option>
+                <option value="" disabled selected>Select University/Board</option>
               </select>
             </div>
 
@@ -287,39 +412,156 @@
               <label for="discipline" class="form-label">Discipline</label>
 
               <div class="dropdown">
-                <!-- button styled like form-select; uses bootstrap dropdown for the menu -->
+                <!-- button styled like form-select, uses bootstrap dropdown for the menu -->
                 <button class="form-select dropdown-toggle text-start" type="button" id="disciplineDropdown"
                   data-bs-toggle="dropdown" aria-expanded="false">
                   Select Discipline(s)
                 </button>
 
                 <div class="dropdown-menu w-100 p-2" aria-labelledby="disciplineDropdown"
-                  style="max-height:240px; overflow:auto;">
+                  style="max-height:300px; overflow:auto;">
+
                   <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Engineering"
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Engineering / Technology"
                       id="discipline_engineering" name="discipline[]">
-                    <label class="form-check-label" for="discipline_engineering">Engineering College</label>
+                    <label class="form-check-label" for="discipline_engineering">Engineering / Technology</label>
                   </div>
+
                   <div class="form-check">
                     <input class="form-check-input discipline-checkbox" type="checkbox" value="Medical"
                       id="discipline_medical" name="discipline[]">
-                    <label class="form-check-label" for="discipline_medical">Medical College</label>
+                    <label class="form-check-label" for="discipline_medical">Medical</label>
                   </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Dental"
+                      id="discipline_dental" name="discipline[]">
+                    <label class="form-check-label" for="discipline_dental">Dental</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Pharmacy"
+                      id="discipline_pharmacy" name="discipline[]">
+                    <label class="form-check-label" for="discipline_pharmacy">Pharmacy</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Nursing / Paramedical"
+                      id="discipline_nursing" name="discipline[]">
+                    <label class="form-check-label" for="discipline_nursing">Nursing / Paramedical</label>
+                  </div>
+
                   <div class="form-check">
                     <input class="form-check-input discipline-checkbox" type="checkbox" value="Law" id="discipline_law"
                       name="discipline[]">
-                    <label class="form-check-label" for="discipline_law">Law College</label>
+                    <label class="form-check-label" for="discipline_law">Law</label>
                   </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Commerce"
+                      id="discipline_commerce" name="discipline[]">
+                    <label class="form-check-label" for="discipline_commerce">Commerce</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Arts / Humanities"
+                      id="discipline_arts" name="discipline[]">
+                    <label class="form-check-label" for="discipline_arts">Arts / Humanities</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Science"
+                      id="discipline_science" name="discipline[]">
+                    <label class="form-check-label" for="discipline_science">Science</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox"
+                      value="Education (B.Ed / D.Ed / M.Ed)" id="discipline_education" name="discipline[]">
+                    <label class="form-check-label" for="discipline_education">Education (B.Ed / D.Ed / M.Ed)</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox"
+                      value="Polytechnic / Diploma Institute" id="discipline_polytechnic" name="discipline[]">
+                    <label class="form-check-label" for="discipline_polytechnic">Polytechnic / Diploma Institute</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Agriculture"
+                      id="discipline_agriculture" name="discipline[]">
+                    <label class="form-check-label" for="discipline_agriculture">Agriculture</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Veterinary Science"
+                      id="discipline_veterinary" name="discipline[]">
+                    <label class="form-check-label" for="discipline_veterinary">Veterinary Science</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Management (MBA / BBA)"
+                      id="discipline_management" name="discipline[]">
+                    <label class="form-check-label" for="discipline_management">Management (MBA / BBA)</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Architecture"
+                      id="discipline_architecture" name="discipline[]">
+                    <label class="form-check-label" for="discipline_architecture">Architecture</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox"
+                      value="Fine Arts / Performing Arts" id="discipline_finearts" name="discipline[]">
+                    <label class="form-check-label" for="discipline_finearts">Fine Arts / Performing Arts</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox"
+                      value="Computer Applications (BCA / MCA)" id="discipline_computers" name="discipline[]">
+                    <label class="form-check-label" for="discipline_computers">Computer Applications (BCA / MCA)</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Social Work"
+                      id="discipline_socialwork" name="discipline[]">
+                    <label class="form-check-label" for="discipline_socialwork">Social Work</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Home Science"
+                      id="discipline_homescience" name="discipline[]">
+                    <label class="form-check-label" for="discipline_homescience">Home Science</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox"
+                      value="Physical Education / Sports" id="discipline_sports" name="discipline[]">
+                    <label class="form-check-label" for="discipline_sports">Physical Education / Sports</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox"
+                      value="Hotel Management / Hospitality" id="discipline_hotel" name="discipline[]">
+                    <label class="form-check-label" for="discipline_hotel">Hotel Management / Hospitality</label>
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input discipline-checkbox" type="checkbox"
+                      value="Design & Fashion Technology" id="discipline_design" name="discipline[]">
+                    <label class="form-check-label" for="discipline_design">Design & Fashion Technology</label>
+                  </div>
+
                 </div>
               </div>
             </div>
 
-
-            <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="submit" class="btn btn-primary" id="submit_button">Add</button>
-            </div>
           </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" id="submit_button" form="add_edit_form">Add</button>
+          </div>
         </div>
       </div>
     </div>
@@ -341,8 +583,6 @@
         console.log(record_id)
 
         var rowdata = $('table#records_table').DataTable().row('table#records_table tbody tr#' + record_id).data()
-        var rowdata2 = $('table#records_table').DataTable().row('table#records_table tbody tr#' + record_id)
-        console.log(rowdata2)
 
         // populate modal form fields in order to edit 
         $modal.find('#college_code').val(rowdata[0])
@@ -363,10 +603,10 @@
           : []
 
         // First uncheck all
-        $modal.find('.discipline-checkbox').prop('unchecked', false)
+        $modal.find('.discipline-checkbox').prop('checked', false)
         // Then check the ones that match
-        disciplines.forEach(function(val) {
-          $modal.find('.discipline-checkbox[value="'+ val +'"]').prop('checked',true);
+        disciplines.forEach(function (val) {
+          $modal.find('.discipline-checkbox[value="' + val + '"]').prop('checked', true);
         });
 
       }
@@ -379,9 +619,107 @@
       $('#add_edit_form').validate().resetForm()
       $modal.find('.discipline-checkbox').prop('checked', false);
 
+      // this is to reset the city and taluka fields after modal closes
+      $modal.find('#city').empty().append(
+        $('<option>', {
+          value: '',
+          text: 'Select City',
+          selected: true
+        })
+      )
+      $modal.find('#taluka').empty().append(
+        $('<option>', {
+          value: '',
+          text: 'Select Taluka',
+          selected: true,
+          disabled: true
+        })
+      )
+
     })
 
-    // Validating all the input fields
+    // lookup for which mode is in use for login/signup 
+    const modes = {
+      login: {
+        title: "Login",
+        submit: "Login",
+        footer: "Don’t have an account? <a href='#' id='toggle_auth'>Signup</a>",
+        showConfirm: false,
+        passwordLabel: "Password"
+      },
+      signup: {
+        title: "Signup",
+        submit: "Signup",
+        footer: "Already have an account? <a href='#' id='toggle_auth'>Login</a>",
+        showConfirm: true,
+        passwordLabel: "Create Password"
+      }
+    };
+
+    function setAuthMode(mode) {
+      const config = modes[mode];
+      $("#auth_modal_title").text(config.title);
+      $("#auth_submit").text(config.submit);
+      $("#auth_mode").val(mode);
+      $("#password_label").text(config.passwordLabel);
+      $("#confirm_group").toggleClass("d-none", !config.showConfirm);
+      $("#auth_footer_text").html(config.footer);
+    }
+
+    // Default to login on open/close
+    $('#AuthModal').on('show.bs.modal hidden.bs.modal', function () {
+      setAuthMode("login");
+      $('#auth_form')[0].reset();
+    });
+
+    // Toggle mode
+    $(document).on("click", "#toggle_auth", function (e) {
+      e.preventDefault();
+      const newMode = $("#auth_mode").val() === "login" ? "signup" : "login";
+      setAuthMode(newMode);
+    });
+
+    $('#auth_form').validate({
+      rules: {
+        auth_email: {
+          required: true,
+          email: true
+        },
+        auth_password: {
+          required: true,
+          minlength: 6
+        },
+        confirm_password: {
+          required: function () {
+            return $("#auth_mode").val() === "signup"; // Only required in signup mode
+          },
+          equalTo: "#auth_password" // Must match the password field
+        }
+      },
+      messages: {
+        auth_email: {
+          required: "Please enter your email",
+          email: "Enter a valid email address"
+        },
+        auth_password: {
+          required: "Please enter your password",
+          minlength: "Password must be at least 6 characters"
+        },
+        confirm_password: {
+          required: "Please confirm your password",
+          equalTo: "Passwords do not match"
+        }
+      },
+      errorElement: "div",
+      errorPlacement: function (error, element) {
+        error.addClass("text-danger small");
+        error.insertAfter(element);
+      }
+    });
+
+
+
+    // Validation for add/edit form
     $('#add_edit_form').validate({
       rules: {
         college_name: {
@@ -399,6 +737,71 @@
         add_edit_records();
       }
     })
+
+    // lookup for talukas 
+    var talukasByDistrict = {
+      "Nagpur": [
+        "Nagpur (Urban)", "Nagpur (Rural)", "Hingna", "Kamptee", "Savner",
+        "Katol", "Ramtek", "Umred", "Narkhed", "Parseoni",
+        "Mauda", "Kuhi", "Kalameshwar", "Bhiwapur"
+      ],
+      "Gadchiroli": [
+        "Gadchiroli", "Aheri", "Armori", "Kurkheda", "Desaiganj (Vadasa)",
+        "Dhanora", "Etapalli", "Sironcha", "Mulchera", "Korchi",
+        "Bhamragad", "Chamorshi"
+      ],
+      "Amravati": [
+        "Amravati", "Achalpur", "Warud", "Chandurbazar", "Dharni",
+        "Morshi", "Daryapur", "Anjangaon Surji", "Dhamangaon Railway",
+        "Nandgaon-Khandeshwar", "Chikhaldara", "Bhatkuli", "Teosa",
+        "Chandur Railway"
+      ]
+    }
+    $('#district').on('change', function () {
+      // Sync City with District
+      var selectedDistrict = $(this).val();
+
+      if (selectedDistrict) {
+        $('#city').empty()
+          .append($('<option>', {
+            value: selectedDistrict,
+            text: selectedDistrict,
+            selected: true
+          }));
+      } else {
+        $('#city').empty()
+          .append($('<option>', {
+            value: '',
+            text: 'Select City',
+            selected: true
+          }));
+      }
+
+      // Sync Taluka with District
+      var district = $(this).val()
+      var $taluka = $('#taluka')
+
+      // Reset taluka dropdown
+      $taluka.empty().append(
+        $('<option>', {
+          value: '',
+          text: 'Select Taluka',
+          selected: true,
+          disabled: true
+        })
+      )
+
+      // If district exists in lookup, populate
+      if (talukasByDistrict[district]) {
+        $.each(talukasByDistrict[district], function (i, taluka) {
+          $taluka.append(
+            $('<option>', { value: taluka, text: taluka })
+          )
+        })
+      }
+    });
+
+
 
     // DataTable 
     $('#records_table').DataTable({
