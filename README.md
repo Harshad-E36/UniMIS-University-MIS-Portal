@@ -1,3 +1,3 @@
-# RTMNU_University_Project
+# RTMNU_University_Project - Sep-2025
 
-This is a feature branch where Malhar will be contributing his changes.
+## Branch for Feature Updates by Harshad
