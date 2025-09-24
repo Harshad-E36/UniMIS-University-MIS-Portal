@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import timezone
 # Create your models here.
 
 class Colleges(models.Model):
@@ -16,8 +16,9 @@ class Colleges(models.Model):
     affiliated = models.CharField(max_length=50)
     discipline = models.CharField(max_length=50)
     created_by = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_by = models.GenericIPAddressField(null=True, blank=True)
-
+    updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
