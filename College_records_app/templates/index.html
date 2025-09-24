@@ -178,6 +178,38 @@
       padding-right: 0 !important;
       /* removes Bootstrap’s auto padding */
     }
+
+    /* Apply only inside table cells */
+    tr td .truncate-text {
+      display: block;
+      /* stay inside the cell */
+      max-width: 100%;
+      /* match column width */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tooltip-inner {
+      max-width: 300px;
+      /* wider tooltips */
+      background-color: #333;
+      /* dark background */
+      color: #fff;
+      /* white text */
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-align: left;
+    }
+
+    .tooltip.bs-tooltip-top .tooltip-arrow::before {
+      border-top-color: #333;
+    }
+
+    .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+      border-bottom-color: #333;
+    }
   </style>
 </head>
 
@@ -248,6 +280,12 @@
           <form id="auth_form" class="row g-3">
             {% csrf_token %}
             <input type="hidden" id="auth_mode" value="login">
+
+            <!-- Username (only in signup mode) -->
+            <div class="col-12 d-none" id="username_group">
+              <label for="auth_username" class="form-label">Username</label>
+              <input type="text" class="form-control" id="auth_username" name="auth_username">
+            </div>
 
             <!-- Email -->
             <div class="col-12">
@@ -584,24 +622,26 @@
         console.log(record_id)
 
         var rowdata = $('table#records_table').DataTable().row('table#records_table tbody tr#' + record_id).data()
-        console.log(rowdata)
+
         // populate modal form fields in order to edit 
         $modal.find('#college_code').val(rowdata[0])
         $modal.find('#college_name').val(rowdata[1])
         $modal.find('#address').val(rowdata[2])
         $modal.find('#country').val(rowdata[3])
         $modal.find('#state').val(rowdata[4])
-        $modal.find('#district').val(rowdata[5])
-        $modal.find('#city').val(rowdata[6])
-        $modal.find('#taluka').val(rowdata[7])
+        // district -> trigger change so taluka options are populated
+        $modal.find('#district').val(rowdata[5]).trigger('change');
+        // tiny delay prevents timing issues)
+        setTimeout(function () {
+          $modal.find('#taluka').val(rowdata[6]);
+          $modal.find('#city').val(rowdata[7]);
+        }, 10);
         $modal.find('#college_type').val(rowdata[8])
         $modal.find('#belongs_to').val(rowdata[9])
         $modal.find('#affiliated_to').val(rowdata[10])
 
         // Discipline (multi-select dropdown)
-        var disciplines = rowdata[11]
-          ? rowdata[11].split(',').map(d => d.trim())
-          : []
+        var disciplines = rowdata[11] ? rowdata[11].split(',').map(d => d.trim()) : [];
 
         // First uncheck all
         $modal.find('.discipline-checkbox').prop('checked', false)
@@ -644,8 +684,9 @@
       login: {
         title: "Login",
         submit: "Login",
-        footer: "Don’t have an account? <a href='#' id='toggle_auth'>Signup</a>",
+        footer: "Don't have an account? <a href='#' id='toggle_auth'>Signup</a>",
         showConfirm: false,
+        showUsername: false,
         passwordLabel: "Password"
       },
       signup: {
@@ -653,9 +694,11 @@
         submit: "Signup",
         footer: "Already have an account? <a href='#' id='toggle_auth'>Login</a>",
         showConfirm: true,
+        showUsername: true,
         passwordLabel: "Create Password"
       }
     };
+
 
     function setAuthMode(mode) {
       const config = modes[mode];
@@ -664,6 +707,7 @@
       $("#auth_mode").val(mode);
       $("#password_label").text(config.passwordLabel);
       $("#confirm_group").toggleClass("d-none", !config.showConfirm);
+      $("#username_group").toggleClass("d-none", !config.showUsername);
       $("#auth_footer_text").html(config.footer);
     }
 
@@ -682,6 +726,12 @@
 
     $('#auth_form').validate({
       rules: {
+        auth_username: {
+          required: function () {
+            return $("#auth_mode").val() === "signup";
+          },
+          minlength: 3
+        },
         auth_email: {
           required: true,
           email: true
@@ -698,6 +748,10 @@
         }
       },
       messages: {
+        auth_username: {
+          required: "Please enter a username",
+          minlength: "Username must be at least 3 characters"
+        },
         auth_email: {
           required: "Please enter your email",
           email: "Enter a valid email address"
@@ -823,8 +877,20 @@
       // this part acts as a success to ajax 
       columns: [
         { data: 0 },  // College Code
-        { data: 1 },  // College Name
-        { data: 2 },  // Address
+        {
+          data: 1, render: function (data, type, row) {
+            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+            ${data}
+          </span>`;
+          }
+        },  // College Name
+        {
+          data: 2, render: function (data, type, row) {
+            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+            ${data}
+          </span>`;
+          }
+        },  // Address
         { data: 3 },  // Country
         { data: 4 },  // State
         { data: 5 },  // District
@@ -833,7 +899,13 @@
         { data: 8 },  // College Type
         { data: 9 },  // Belongs To
         { data: 10 }, // Affiliated To
-        { data: 11 }, // Discipline
+        {
+          data: 11, render: function (data, type, row) {
+            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+            ${data}
+          </span>`;
+          }
+        }, // Discipline
         { data: null, searchable: false, orderable: false } // Action
       ],
 
@@ -864,6 +936,13 @@
       }
     });
   })
+  // Reinitialize tooltips every time DataTables redraws
+  $('#records_table').on('draw.dt', function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+  });
 
   // Function to add or edit a contact based on the status code returned
   function add_edit_records() {
