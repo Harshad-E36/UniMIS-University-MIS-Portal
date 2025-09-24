@@ -184,7 +184,15 @@ def signup(request):
             }
             return JsonResponse(response_data)
         
-        user = User.objects.create_user(username = username,email=email, password = password)
+        if User.objects.filter(email = email).exists():
+            print("inside")
+            response_data = {
+                'message' : 'email already exists',
+                'status' : 400
+            }
+            return JsonResponse(response_data)
+        
+        user = User.objects.create_user(username=username, email=email, password=password)
         user.save()
 
         response_data = {
@@ -199,6 +207,7 @@ def user_login(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         remember_me = request.POST.get('remember_me')
+        print(remember_me, email, password)
 
         user = authenticate(request, email = email, password = password)
 

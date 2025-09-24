@@ -210,6 +210,36 @@
     .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
       border-bottom-color: #333;
     }
+
+    .notification {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      background-color: #28a745;
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+      z-index: 1000;
+    }
+
+    .notification-success {
+      background-color: #28a745;
+    }
+
+    .notification-error {
+      background-color: #dc3545;
+    }
+
+    .show-notification {
+      opacity: 1;
+      transform: translateX(-50%) translateY(20px);
+    }
   </style>
 </head>
 
@@ -222,8 +252,8 @@
           <div class="header-banner position-relative">
             <!-- Login/Signup Button -->
             <div class="position-absolute top-0 end-0 p-3">
-              <a href="#" class="btn btn-outline-light btn-sm fw-semibold shadow-sm login-btn" data-bs-toggle="modal"
-                data-bs-target="#AuthModal">
+              <a href="#" id="auth_btn" class="btn btn-outline-light btn-sm fw-semibold shadow-sm login-btn"
+                data-bs-toggle="modal" data-bs-target="#AuthModal">
                 <i class="bi bi-box-arrow-in-right"></i> Login / Signup
               </a>
             </div>
@@ -238,8 +268,7 @@
 
 
         </div>
-
-        <div class="table-container">
+        <div class="table-container d-none" id="datatable_wrapper">
           <table class="table table-hover table-striped align-middle" id="records_table">
             <thead>
               <tr>
@@ -259,8 +288,8 @@
               </tr>
             </thead>
           </table>
-
         </div>
+
       </div>
     </div>
   </div>
@@ -283,20 +312,28 @@
 
             <!-- Username (only in signup mode) -->
             <div class="col-12 d-none" id="username_group">
-              <label for="auth_username" class="form-label">Username</label>
-              <input type="text" class="form-control" id="auth_username" name="auth_username">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control" id="username" name="username">
             </div>
 
             <!-- Email -->
             <div class="col-12">
-              <label for="auth_email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="auth_email" name="auth_email" required>
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email" required>
             </div>
 
             <!-- Password (used in both modes) -->
             <div class="col-12">
-              <label for="auth_password" class="form-label" id="password_label">Password</label>
-              <input type="password" class="form-control" id="auth_password" name="auth_password" required>
+              <label for="password" class="form-label" id="password_label">Password</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+
+            <!-- Remember Me (only for login) -->
+            <div class="form-check mb-3" id="rememberMeWrapper">
+              <input class="form-check-input" type="checkbox" id="rememberMe">
+              <label class="form-check-label" for="rememberMe" name="remember_me">
+                Remember Me
+              </label>
             </div>
 
             <!-- Confirm Password (only in signup mode) -->
@@ -597,10 +634,10 @@
             </div>
 
           </form>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary" id="submit_button" form="add_edit_form">Add</button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" id="submit_button" form="add_edit_form">Add</button>
         </div>
       </div>
     </div>
@@ -610,6 +647,41 @@
 
 <script>
   $('document').ready(function () {
+
+    $.ajax({
+      url: "{% url 'user_status' %}", // backend endpoint for checking auth
+      type: "GET",
+      success: function (response) {
+        if (response.status === 200) {
+          // Authenticated
+          $("#datatable_wrapper").removeClass("d-none"); // show table
+          $("#auth_btn")
+            .html('<i class="bi bi-box-arrow-right"></i> Logout')
+            .removeAttr("data-bs-toggle data-bs-target") // remove modal trigger
+            .off("click") // clear old behavior
+            .on("click", function (e) {
+              e.preventDefault();
+              window.location.href = "{% url 'logout' %}"; // redirect to logout
+            })
+          // Initialize DataTable now
+          initDataTable();
+
+        } else {
+          // Not authenticated
+          $("#AuthModal").modal("show");
+          $("#datatable_wrapper").addClass("d-none"); // keep table hidden
+          $("#auth_btn")
+            .html('<i class="bi bi-box-arrow-in-right"></i> Login / Signup')
+            .attr("data-bs-toggle", "modal")
+            .attr("data-bs-target", "#AuthModal");
+        }
+      },
+      error: function () {
+        console.error("Auth check failed");
+      }
+    });
+
+
     // Loading college records details when edit button is clicked
     $('#RecordsModal').on('show.bs.modal', function (e) {
       var $modal = $(this)
@@ -687,6 +759,7 @@
         footer: "Don't have an account? <a href='#' id='toggle_auth'>Signup</a>",
         showConfirm: false,
         showUsername: false,
+        showRemember: true,
         passwordLabel: "Password"
       },
       signup: {
@@ -695,6 +768,7 @@
         footer: "Already have an account? <a href='#' id='toggle_auth'>Login</a>",
         showConfirm: true,
         showUsername: true,
+        showRemember: false,
         passwordLabel: "Create Password"
       }
     };
@@ -708,6 +782,7 @@
       $("#password_label").text(config.passwordLabel);
       $("#confirm_group").toggleClass("d-none", !config.showConfirm);
       $("#username_group").toggleClass("d-none", !config.showUsername);
+      $("#rememberMeWrapper").toggleClass("d-none", !config.showRemember);
       $("#auth_footer_text").html(config.footer);
     }
 
@@ -726,17 +801,17 @@
 
     $('#auth_form').validate({
       rules: {
-        auth_username: {
+        username: {
           required: function () {
             return $("#auth_mode").val() === "signup";
           },
           minlength: 3
         },
-        auth_email: {
+        email: {
           required: true,
           email: true
         },
-        auth_password: {
+        password: {
           required: true,
           minlength: 6
         },
@@ -744,19 +819,19 @@
           required: function () {
             return $("#auth_mode").val() === "signup"; // Only required in signup mode
           },
-          equalTo: "#auth_password" // Must match the password field
+          equalTo: "#password" // Must match the password field
         }
       },
       messages: {
-        auth_username: {
+        username: {
           required: "Please enter a username",
           minlength: "Username must be at least 3 characters"
         },
-        auth_email: {
+        email: {
           required: "Please enter your email",
           email: "Enter a valid email address"
         },
-        auth_password: {
+        password: {
           required: "Please enter your password",
           minlength: "Password must be at least 6 characters"
         },
@@ -765,14 +840,21 @@
           equalTo: "Passwords do not match"
         }
       },
-      errorElement: "div",
-      errorPlacement: function (error, element) {
-        error.addClass("text-danger small");
-        error.insertAfter(element);
+      submitHandler: function (form) {
+        if ($("#auth_mode").val() === "signup") {
+          signup_ajax();
+        }
+        else {
+          login_ajax();
+        }
+
       }
+      // errorElement: "div",
+      // errorPlacement: function (error, element) {
+      //   error.addClass("text-danger small");
+      //   error.insertAfter(element);
+      // }
     });
-
-
 
     // Validation for add/edit form
     $('#add_edit_form').validate({
@@ -856,86 +938,86 @@
       }
     });
 
-
-
     // DataTable 
-    $('#records_table').DataTable({
-      paging: true,
-      searching: true,
-      responsive: true,
-      processing: true,
-      serverSide: true,
-      scrollY: 360,
-      pageLength: 15,
+    function initDataTable() {
+      $('#records_table').DataTable({
+        paging: true,
+        searching: true,
+        responsive: true,
+        processing: true,
+        serverSide: true,
+        scrollY: 360,
+        pageLength: 15,
 
-      lengthMenu: [[5, 10, 15, 20], ["5", "10", "15", "20"]],
+        lengthMenu: [[5, 10, 15, 20], ["5", "10", "15", "20"]],
 
-      ajax: {
-        url: '{% url "get_records" %}',
-        type: 'GET'
-      },
-      // this part acts as a success to ajax 
-      columns: [
-        { data: 0 },  // College Code
-        {
-          data: 1, render: function (data, type, row) {
-            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+        ajax: {
+          url: '{% url "get_records" %}',
+          type: 'GET'
+        },
+        // this part acts as a success to ajax 
+        columns: [
+          { data: 0 },  // College Code
+          {
+            data: 1, render: function (data, type, row) {
+              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
             ${data}
           </span>`;
-          }
-        },  // College Name
-        {
-          data: 2, render: function (data, type, row) {
-            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+            }
+          },  // College Name
+          {
+            data: 2, render: function (data, type, row) {
+              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
             ${data}
           </span>`;
-          }
-        },  // Address
-        { data: 3 },  // Country
-        { data: 4 },  // State
-        { data: 5 },  // District
-        { data: 6 },  // Taluka
-        { data: 7 },  // City
-        { data: 8 },  // College Type
-        { data: 9 },  // Belongs To
-        { data: 10 }, // Affiliated To
-        {
-          data: 11, render: function (data, type, row) {
-            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+            }
+          },  // Address
+          { data: 3 },  // Country
+          { data: 4 },  // State
+          { data: 5 },  // District
+          { data: 6 },  // Taluka
+          { data: 7 },  // City
+          { data: 8 },  // College Type
+          { data: 9 },  // Belongs To
+          { data: 10 }, // Affiliated To
+          {
+            data: 11, render: function (data, type, row) {
+              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
             ${data}
           </span>`;
-          }
-        }, // Discipline
-        { data: null, searchable: false, orderable: false } // Action
-      ],
+            }
+          }, // Discipline
+          { data: null, searchable: false, orderable: false } // Action
+        ],
 
 
-      // adding the edit and delete button to the row and setting arrtibute to each tr 
-      // The createdRow option is a callback function that allows you to modify the row after it has been created but before it is displayed on the page 
-      createdRow: function (row, data, dataIndex) {
-        $(row).attr('id', data[12])
-        console.log(data[12])
-        $('td:eq(12)', row).html(` <div class="d-flex justify-content-center align-items-center gap-2">
+        // adding the edit and delete button to the row and setting arrtibute to each tr 
+        // The createdRow option is a callback function that allows you to modify the row after it has been created but before it is displayed on the page 
+        createdRow: function (row, data, dataIndex) {
+          $(row).attr('id', data[12])
+          console.log(data[12])
+          $('td:eq(12)', row).html(` <div class="d-flex justify-content-center align-items-center gap-2">
         <a class="btn btn-sm btn-outline-primary" 
            href="#" 
            data-bs-toggle="modal" 
            data-record-id="${data[12]}" 
            data-bs-target="#RecordsModal"
-           data-bs-toggle="tooltip" 
            title="Edit">
            <i class="bi bi-pencil-square"></i>
         </a>
         <a class="btn btn-sm btn-outline-danger" 
            href="#" 
            onclick="delete_record('${data[12]}')"
-           data-bs-toggle="tooltip" 
            title="Delete">
            <i class="bi bi-trash"></i>
         </a>
     </div>`)
-      }
-    });
+        }
+      });
+
+    }
   })
+
   // Reinitialize tooltips every time DataTables redraws
   $('#records_table').on('draw.dt', function () {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -943,6 +1025,61 @@
       return new bootstrap.Tooltip(tooltipTriggerEl)
     });
   });
+
+  function login_ajax() {
+    $.ajax({
+      url: '{% url "login" %}',
+      type: 'POST',
+      data: $('#auth_form').serialize(),
+      success: function (data, status, xhr) {
+        if (data.status === 200) {
+          $("#datatable_wrapper").removeClass("d-none"); // show table
+          $("#auth_btn")
+            .html('<i class="bi bi-box-arrow-right"></i> Logout')
+            .removeAttr("data-bs-toggle data-bs-target") // remove modal trigger
+            .off("click") // clear old behavior
+            .on("click", function (e) {
+              e.preventDefault();
+              window.location.href = "{% url 'logout' %}"; // redirect to logout
+            })
+          // Initialize DataTable now
+          initDataTable();
+          showNotification("Login Successful", "success")
+          $("#AuthModal").modal("hide")
+        }
+        else if (data.status === 401) {
+          showNotification("Invalid Credentials", "danger")
+        }
+      },
+      error: function (xhr, status, error) {
+        showNotification("Error: " + error, "danger");
+      }
+    })
+  }
+
+  function signup_ajax() {
+    $.ajax({
+      url: '{% url "signup" %}',
+      type: 'POST',
+      data: $('#auth_form').serialize(),
+      success: function (data, status, xhr) {
+        if (data.status === 201) {
+          showNotification("Signup successful", "success")
+          $("#AuthModal").modal("hide")
+          setTimeout(function () {
+            $("#AuthModal").modal("show");
+          }, 300);
+        }
+        else if (data.status === 400) {
+          showNotification("User already exixts", "danger")
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log(xhr.responseText)
+        showNotification("Error: " + error, "error");
+      }
+    })
+  }
 
   // Function to add or edit a contact based on the status code returned
   function add_edit_records() {
@@ -955,21 +1092,21 @@
 
         if (data.status === 201) {
           $('table#records_table').DataTable().draw()
-
-          // alert(data.message)
+          showNotification("Record added successfully!", "success");
         }
 
         // when the edit button is clicked the id will be a non zero value hence status code 200 will be returned indicating that an existing record is overwritten
 
         else if (data.status === 200) {
           $('table#records_table').DataTable().draw()
+          showNotification("Record updated successfully!", "success");
         }
         // hide the modal automatically after the use is fulfilled
         $('#RecordsModal').modal('hide')
       },
 
       error: function (xhr, status, error) {
-        alert('Error  occured' + error)
+        showNotification("Error: " + error, "error");
       }
     })
   }
@@ -987,15 +1124,36 @@
         success: function (data, status, xhr) {
           if (data.status === 204) {
             $('table#records_table').DataTable().draw()
+            showNotification("Record deleted successfully!", "success");
           }
           else {
-            alert(data.message)
+            showNotification(data.message || "Failed to delete record.", "error");
           }
         }
       })
     }
   }
 
+  function showNotification(message, type) {
+    var notificationClass = type === "success" ? "notification-success" : "notification-error";
+    var notification = $('<div>', {
+      class: 'notification ' + notificationClass,
+      text: message
+    });
+
+    $('body').append(notification);
+
+    setTimeout(function () {
+      notification.addClass('show-notification');
+    }, 10); // slight delay to ensure the element is in the DOM
+
+    setTimeout(function () {
+      notification.removeClass('show-notification');
+      setTimeout(function () {
+        notification.remove();
+      }, 500); // additional delay to allow transition effect
+    }, 3000);
+  }
 
 </script>
 
