@@ -2,6 +2,8 @@ from django.shortcuts import render
 from .models import Colleges
 from django.db.models import Q
 from django.http import JsonResponse
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 # Create your views here.
 
 def get_client_ip(request):
@@ -151,4 +153,80 @@ def delete_record(request):
             'status' : 204
         }
         return JsonResponse(response_data)
+    
 
+def user_status(request):
+    if request.user.is_authenticated:
+        response_data = {
+            'is_authenticated' : True,
+            'username' : request.user.username,
+            'status' : 200
+        }
+    else:
+        response_data = {
+            'is_authenticated' : False,
+            'status' : 401
+        }
+    return JsonResponse(response_data)  
+
+
+
+def signup(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        if User.objects.filter(username = username).exists():
+            response_data = {
+                'message' : 'username already exists',
+                'status' : 400
+            }
+            return JsonResponse(response_data)
+        
+        user = User.objects.create_user(username = username,email=email, password = password)
+        user.save()
+
+        response_data = {
+            'message' : 'user created successfully',
+            'status' : 201
+        }
+        return JsonResponse(response_data)
+    
+
+def user_login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me')
+
+        user = authenticate(request, email = email, password = password)
+
+        if user is not None:
+            login(request, user)
+            if remember_me == 'on':
+                request.session.set_expiry(1209600)  # 2 weeks
+            else:
+                request.session.set_expiry(0)  # Session expires on browser close
+            response_data = {
+                'message' : 'login successful',
+                'status' : 200
+            }
+            return JsonResponse(response_data)
+        else:
+            response_data = {
+                'message' : 'invalid credentials',
+                'status' : 401
+            }
+            return JsonResponse(response_data)
+        
+
+        
+def user_logout(request):
+    if request.method == 'POST':
+        logout(request)
+        response_data = {
+            'message' : 'logout successful',
+            'status' : 200
+        }
+        return JsonResponse(response_data)
