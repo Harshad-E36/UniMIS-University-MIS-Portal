@@ -1033,6 +1033,7 @@
       data: $('#auth_form').serialize(),
       success: function (data, status, xhr) {
         if (data.status === 200) {
+          $("#AuthModal").modal("hide")
           $("#datatable_wrapper").removeClass("d-none"); // show table
           $("#auth_btn")
             .html('<i class="bi bi-box-arrow-right"></i> Logout')
@@ -1045,7 +1046,6 @@
           // Initialize DataTable now
           initDataTable();
           showNotification("Login Successful", "success")
-          $("#AuthModal").modal("hide")
         }
         else if (data.status === 401) {
           showNotification("Invalid Credentials", "danger")

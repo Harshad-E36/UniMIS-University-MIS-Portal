@@ -207,9 +207,9 @@ def user_login(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         remember_me = request.POST.get('remember_me')
-        print(remember_me, email, password)
+        username = User.objects.get(email=email).username
 
-        user = authenticate(request, email = email, password = password)
+        user = authenticate(request, username = username, password = password)
 
         if user is not None:
             login(request, user)
