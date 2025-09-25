@@ -213,7 +213,7 @@ def user_login(request):
 
         if user is not None:
             login(request, user)
-            if remember_me == 'on':
+            if remember_me == '1':
                 request.session.set_expiry(1209600)  # 2 weeks
             else:
                 request.session.set_expiry(0)  # Session expires on browser close
