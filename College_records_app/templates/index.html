@@ -669,7 +669,7 @@
       }
     },
     complete: function(xhr){
-      if (xhr.responseJSON && xhr.responseJSON.status === 401) {
+      if (xhr.responseJSON && xhr.responseJSON.status === 302) {
         // Session expired or forbidden
         showNotification("Session expired. Please log in again.", "danger");
         $("#datatable_wrapper").addClass("d-none"); // hide table
@@ -679,7 +679,6 @@
     }
   });
 
-  // LINE ~740
   var dataTableInstance = null;
 
   function initDataTable() {
@@ -1127,6 +1126,7 @@
           showNotification("Login Successful", "success");
         } else if (data.status === 401) {
           showNotification("Invalid Credentials", "danger");
+          $("#auth_form")[0].reset()
         }
       },
       error: function (xhr, status, error) {
