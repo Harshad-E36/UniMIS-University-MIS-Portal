@@ -225,7 +225,7 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       opacity: 0;
       transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-      z-index: 1000;
+      z-index: 2000;
     }
 
     .notification-success {
@@ -307,7 +307,6 @@
 
         <div class="modal-body">
           <form id="auth_form" class="row g-3">
-            {% csrf_token %}
             <input type="hidden" id="auth_mode" value="login">
 
             <!-- Username (only in signup mode) -->
@@ -330,11 +329,12 @@
 
             <!-- Remember Me (only for login) -->
             <div class="form-check mb-3" id="rememberMeWrapper">
-              <input class="form-check-input" type="checkbox" id="rememberMe">
-              <label class="form-check-label" for="rememberMe" name="remember_me">
+              <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me" value="1">
+              <label class="form-check-label" for="rememberMe">
                 Remember Me
               </label>
             </div>
+
 
             <!-- Confirm Password (only in signup mode) -->
             <div class="col-12 d-none" id="confirm_group">
@@ -371,7 +371,6 @@
         </div>
         <div class="modal-body">
           <form method="post" id="add_edit_form" class="row g-3">
-            {% csrf_token %}
             <input type="hidden" name="id" id="record_id" value="0">
 
             <!-- College Code -->
@@ -646,6 +645,162 @@
 </body>
 
 <script>
+  // function to get CSRF cookie
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      var cookies = document.cookie.split(';');
+      $.each(cookies, function (i, cookie) {
+        cookie = $.trim(cookie);
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          return false; // break loop
+        }
+      });
+    }
+    return cookieValue;
+  }
+
+  // jQuery global setup: adds CSRF to every non-GET request
+  $.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+      if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+        xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+      }
+    }
+  });
+
+  // LINE ~740
+  var dataTableInstance = null;
+
+  function initDataTable() {
+    if (!$.fn.DataTable.isDataTable('#records_table')) {
+      dataTableInstance = $('#records_table').DataTable({
+        paging: true,
+        searching: true,
+        responsive: true,
+        processing: true,
+        serverSide: true,
+        scrollY: 360,
+        pageLength: 15,
+        lengthMenu: [[5, 10, 15, 20], ["5", "10", "15", "20"]],
+        ajax: {
+          url: '{% url "get_records" %}',
+          type: 'GET'
+        },
+        columns: [
+          { data: 0 },
+          {
+            data: 1, render: function (data, type, row) {
+              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+            ${data}
+          </span>`;
+            }
+          },
+          {
+            data: 2, render: function (data, type, row) {
+              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+            ${data}
+          </span>`;
+            }
+          },
+          { data: 3 },
+          { data: 4 },
+          { data: 5 },
+          { data: 6 },
+          { data: 7 },
+          { data: 8 },
+          { data: 9 },
+          { data: 10 },
+          {
+            data: 11, render: function (data, type, row) {
+              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+            ${data}
+          </span>`;
+            }
+          },
+          { data: null, searchable: false, orderable: false }
+        ],
+        createdRow: function (row, data, dataIndex) {
+          $(row).attr('id', data[12]);
+          $('td:eq(12)', row).html(`
+          <div class="d-flex justify-content-center align-items-center gap-2">
+            <a class="btn btn-sm btn-outline-primary" 
+               href="#" 
+               data-bs-toggle="modal" 
+               data-record-id="${data[12]}" 
+               data-bs-target="#RecordsModal"
+               title="Edit">
+               <i class="bi bi-pencil-square"></i>
+            </a>
+            <a class="btn btn-sm btn-outline-danger" 
+               href="#" 
+               onclick="delete_record('${data[12]}')"
+               title="Delete">
+               <i class="bi bi-trash"></i>
+            </a>
+          </div>`);
+        }
+      });
+
+      // Enable tooltips after draw
+      $('#records_table').on('draw.dt', function () {
+        $('[data-bs-toggle="tooltip"]').tooltip('dispose').tooltip();
+      });
+    }
+  }
+
+  // setting up logout button 
+  function setupLogoutButton() {
+    $("#auth_btn")
+      .off("click")
+      .html('<i class="bi bi-box-arrow-right"></i> Logout')
+      .removeAttr("data-bs-toggle")
+      .removeAttr("data-bs-target")
+      .on("click", function (e) {
+        e.preventDefault();
+        $.ajax({
+          url: "{% url 'logout' %}",
+          type: "POST",
+          success: function (data) {
+            if (data.status === 200) {
+              showNotification("Logout successful", "success");
+
+              // Flip back to Login/Signup
+              setupLoginButton();
+
+              // Hide table again
+              $("#datatable_wrapper").addClass("d-none");
+
+              // reload table safely if already initialized
+              if ($.fn.DataTable.isDataTable('#records_table')) {
+                $('#records_table').DataTable().ajax.reload(null, false);
+              }
+              $("#AuthModal").modal("show");
+            }
+            else {
+              showNotification(data.message || "Logout failed", "danger");
+            }
+          },
+          error: function (xhr, status, error) {
+            console.error("Logout failed:", error);
+            showNotification("Error logging out", "danger");
+          }
+        });
+      });
+  }
+
+  function setupLoginButton() {
+    // Clear any previous handlers first, then set the button to open the Auth modal
+    $("#auth_btn")
+      .off("click")
+      .html('<i class="bi bi-box-arrow-in-right"></i> Login / Signup')
+      .attr("data-bs-toggle", "modal")
+      .attr("data-bs-target", "#AuthModal");
+  }
+
+
+
   $('document').ready(function () {
 
     $.ajax({
@@ -655,14 +810,7 @@
         if (response.status === 200) {
           // Authenticated
           $("#datatable_wrapper").removeClass("d-none"); // show table
-          $("#auth_btn")
-            .html('<i class="bi bi-box-arrow-right"></i> Logout')
-            .removeAttr("data-bs-toggle data-bs-target") // remove modal trigger
-            .off("click") // clear old behavior
-            .on("click", function (e) {
-              e.preventDefault();
-              window.location.href = "{% url 'logout' %}"; // redirect to logout
-            })
+          setupLogoutButton();
           // Initialize DataTable now
           initDataTable();
 
@@ -691,7 +839,6 @@
         $modal.find('.modal-title').text('Edit Record')
         $modal.find('#submit_button').text('Edit')
         $modal.find('#record_id').val(record_id)
-        console.log(record_id)
 
         var rowdata = $('table#records_table').DataTable().row('table#records_table tbody tr#' + record_id).data()
 
@@ -938,93 +1085,18 @@
       }
     });
 
-    // DataTable 
-    function initDataTable() {
-      $('#records_table').DataTable({
-        paging: true,
-        searching: true,
-        responsive: true,
-        processing: true,
-        serverSide: true,
-        scrollY: 360,
-        pageLength: 15,
 
-        lengthMenu: [[5, 10, 15, 20], ["5", "10", "15", "20"]],
-
-        ajax: {
-          url: '{% url "get_records" %}',
-          type: 'GET'
-        },
-        // this part acts as a success to ajax 
-        columns: [
-          { data: 0 },  // College Code
-          {
-            data: 1, render: function (data, type, row) {
-              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-            ${data}
-          </span>`;
-            }
-          },  // College Name
-          {
-            data: 2, render: function (data, type, row) {
-              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-            ${data}
-          </span>`;
-            }
-          },  // Address
-          { data: 3 },  // Country
-          { data: 4 },  // State
-          { data: 5 },  // District
-          { data: 6 },  // Taluka
-          { data: 7 },  // City
-          { data: 8 },  // College Type
-          { data: 9 },  // Belongs To
-          { data: 10 }, // Affiliated To
-          {
-            data: 11, render: function (data, type, row) {
-              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-            ${data}
-          </span>`;
-            }
-          }, // Discipline
-          { data: null, searchable: false, orderable: false } // Action
-        ],
-
-
-        // adding the edit and delete button to the row and setting arrtibute to each tr 
-        // The createdRow option is a callback function that allows you to modify the row after it has been created but before it is displayed on the page 
-        createdRow: function (row, data, dataIndex) {
-          $(row).attr('id', data[12])
-          console.log(data[12])
-          $('td:eq(12)', row).html(` <div class="d-flex justify-content-center align-items-center gap-2">
-        <a class="btn btn-sm btn-outline-primary" 
-           href="#" 
-           data-bs-toggle="modal" 
-           data-record-id="${data[12]}" 
-           data-bs-target="#RecordsModal"
-           title="Edit">
-           <i class="bi bi-pencil-square"></i>
-        </a>
-        <a class="btn btn-sm btn-outline-danger" 
-           href="#" 
-           onclick="delete_record('${data[12]}')"
-           title="Delete">
-           <i class="bi bi-trash"></i>
-        </a>
-    </div>`)
-        }
+    // Reinitialize tooltips every time DataTables redraws
+    $('#records_table').on('draw.dt', function () {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
       });
+    });
 
-    }
+
   })
 
-  // Reinitialize tooltips every time DataTables redraws
-  $('#records_table').on('draw.dt', function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
-  });
 
   function login_ajax() {
     $.ajax({
@@ -1033,28 +1105,28 @@
       data: $('#auth_form').serialize(),
       success: function (data, status, xhr) {
         if (data.status === 200) {
+          $("#AuthModal").modal("hide");
           $("#datatable_wrapper").removeClass("d-none"); // show table
-          $("#auth_btn")
-            .html('<i class="bi bi-box-arrow-right"></i> Logout')
-            .removeAttr("data-bs-toggle data-bs-target") // remove modal trigger
-            .off("click") // clear old behavior
-            .on("click", function (e) {
-              e.preventDefault();
-              window.location.href = "{% url 'logout' %}"; // redirect to logout
-            })
-          // Initialize DataTable now
-          initDataTable();
-          showNotification("Login Successful", "success")
-          $("#AuthModal").modal("hide")
-        }
-        else if (data.status === 401) {
-          showNotification("Invalid Credentials", "danger")
+
+          // Immediately set the button to Logout and bind the logout handler once
+          setupLogoutButton();
+
+          // Initialize datatable once or reload if it exists
+          if ($.fn.DataTable.isDataTable('#records_table')) {
+            $('#records_table').DataTable().ajax.reload();
+          } else {
+            initDataTable();
+          }
+
+          showNotification("Login Successful", "success");
+        } else if (data.status === 401) {
+          showNotification("Invalid Credentials", "danger");
         }
       },
       error: function (xhr, status, error) {
         showNotification("Error: " + error, "danger");
       }
-    })
+    });
   }
 
   function signup_ajax() {
@@ -1068,7 +1140,7 @@
           $("#AuthModal").modal("hide")
           setTimeout(function () {
             $("#AuthModal").modal("show");
-          }, 300);
+          }, 400);
         }
         else if (data.status === 400) {
           showNotification("User already exixts", "danger")

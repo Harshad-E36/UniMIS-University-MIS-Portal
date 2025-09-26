@@ -207,13 +207,13 @@ def user_login(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         remember_me = request.POST.get('remember_me')
-        print(remember_me, email, password)
+        username = User.objects.get(email=email).username
 
-        user = authenticate(request, email = email, password = password)
+        user = authenticate(request, username = username, password = password)
 
         if user is not None:
             login(request, user)
-            if remember_me == 'on':
+            if remember_me == '1':
                 request.session.set_expiry(1209600)  # 2 weeks
             else:
                 request.session.set_expiry(0)  # Session expires on browser close
