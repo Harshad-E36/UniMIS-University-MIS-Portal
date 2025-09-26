@@ -4,7 +4,19 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+from functools import wraps
 # Create your views here.
+
+def ajax_login_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse({'message': 'Session expired. Please log in again.', 'status': 401})
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+
 
 def get_client_ip(request):
     """Get the real client IP address from request headers"""
@@ -16,10 +28,11 @@ def get_client_ip(request):
     
     return ip
 
+
 def home(request):
     return render(request, 'index.html')
 
-
+@ajax_login_required
 def get_records(request):
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -71,7 +84,7 @@ def get_records(request):
     return JsonResponse(response)
 
 
-
+@ajax_login_required
 def add_edit_record(request):
     if request.method == "POST":
         id = int(request.POST.get('id'))
@@ -140,7 +153,7 @@ def add_edit_record(request):
 
             return JsonResponse(response_data)
 
-
+@ajax_login_required
 def delete_record(request):
     if request.method == 'POST':
         id = request.POST.get('id')
@@ -206,7 +219,7 @@ def user_login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        remember_me = request.POST.get('remember_me')
+        remember_me = request.POST.get('remember_me', '0')
         username = User.objects.get(email=email).username
 
         user = authenticate(request, username = username, password = password)
@@ -214,13 +227,12 @@ def user_login(request):
         if user is not None:
             login(request, user)
             if remember_me == '1':
-                request.session.set_expiry(1209600)  # 2 weeks
-            else:
-                request.session.set_expiry(0)  # Session expires on browser close
+                request.session.set_expiry(86400)  # 24 hrs
             response_data = {
                 'message' : 'login successful',
                 'status' : 200
             }
+
             return JsonResponse(response_data)
         else:
             response_data = {
