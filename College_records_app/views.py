@@ -11,7 +11,7 @@ def ajax_login_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return JsonResponse({'message': 'Session expired. Please log in again.', 'status': 401})
+            return JsonResponse({'message': 'Session expired. Please log in again.', 'status': 440})
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -32,7 +32,7 @@ def get_client_ip(request):
 def home(request):
     return render(request, 'index.html')
 
-@ajax_login_required
+
 def get_records(request):
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
