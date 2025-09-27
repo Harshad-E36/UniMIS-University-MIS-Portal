@@ -21,6 +21,18 @@
   <!-- Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 
+  <!-- Buttons CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
+  <!-- Buttons + dependencies for excel and print button -->
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+
   <title>College Records</title>
 
   <style>
@@ -668,7 +680,7 @@
         xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
       }
     },
-    complete: function(xhr){
+    complete: function (xhr) {
       if (xhr.responseJSON && xhr.responseJSON.status === 302) {
         // Session expired or forbidden
         showNotification("Session expired. Please log in again.", "danger");
@@ -728,6 +740,38 @@
             }
           },
           { data: null, searchable: false, orderable: false }
+        ],
+        // 👇 Add this block for buttons
+        dom: 'Bfrtip',
+        buttons: [
+          {
+            extend: 'excel',
+            text: 'Export to Excel',
+            className: 'btn btn-success btn-sm',
+            exportOptions: {
+              columns: ':not(:last-child)'   // exclude last column
+            }
+          },
+          {
+            extend: 'print',
+            text: 'Print Table',
+            className: 'btn btn-primary btn-sm',
+            title: 'College Records',
+            exportOptions: {
+              columns: ':not(:last-child)'   // exclude last column
+            },
+            customize: function (win) {
+              $(win.document.body)
+                .css('font-size', '10pt') // smaller font for better fit
+                .prepend('<h3 style="text-align:center">College Records Report</h3>');
+
+              $(win.document.body).find('table')
+                .addClass('compact')
+                .css('font-size', 'inherit')
+                .css('width', '100%')   // full page width
+                .css('table-layout', 'fixed'); // fit columns
+            }
+          }
         ],
         createdRow: function (row, data, dataIndex) {
           $(row).attr('id', data[12]);
