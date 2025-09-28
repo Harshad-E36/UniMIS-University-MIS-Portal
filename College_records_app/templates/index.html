@@ -70,7 +70,6 @@
       background: white;
       border-radius: 1rem;
       padding: 1rem;
-      margin-top: 1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
@@ -704,7 +703,8 @@
         responsive: true,
         processing: true,
         serverSide: true,
-        scrollY: 360,
+        // scrollY: 360,
+        scrollCollapse: true, // allow table to shrink if less data
         pageLength: 15,
         lengthMenu: [[5, 10, 15, 20], ["5", "10", "15", "20"]],
         ajax: {
@@ -746,7 +746,7 @@
           { data: null, searchable: false, orderable: false }
         ],
         // 👇 Add this block for buttons
-        dom: 'Bfrtip',
+        dom: '<"d-flex justify-content-between align-items-center"lBf>rtip',
         buttons: [
           {
             extend: 'excel',
@@ -780,7 +780,7 @@
         createdRow: function (row, data, dataIndex) {
           $(row).attr('id', data[13]);
           console.log('Row created with ID:', data[13]);
-          $('td:eq(12)', row).html(`
+          $('td:eq(13)', row).html(`
           <div class="d-flex justify-content-center align-items-center gap-2">
             <a class="btn btn-sm btn-outline-primary" 
                href="#" 
@@ -909,12 +909,13 @@
           $modal.find('#taluka').val(rowdata[6]);
           $modal.find('#city').val(rowdata[7]);
         }, 10);
-        $modal.find('#college_type').val(rowdata[8])
-        $modal.find('#belongs_to').val(rowdata[9])
-        $modal.find('#affiliated_to').val(rowdata[10])
+        $modal.find('#pincode').val(rowdata[8])
+        $modal.find('#college_type').val(rowdata[9])
+        $modal.find('#belongs_to').val(rowdata[10])
+        $modal.find('#affiliated_to').val(rowdata[11])
 
         // Discipline (multi-select dropdown)
-        var disciplines = rowdata[11] ? rowdata[11].split(',').map(d => d.trim()) : [];
+        var disciplines = rowdata[12] ? rowdata[12].split(',').map(d => d.trim()) : [];
 
         // First uncheck all
         $modal.find('.discipline-checkbox').prop('checked', false)
