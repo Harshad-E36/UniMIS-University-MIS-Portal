@@ -11,6 +11,7 @@ class Colleges(models.Model):
     District = models.CharField(max_length=20)
     taluka = models.CharField(max_length=20)
     city = models.CharField(max_length=20)
+    pincode = models.CharField(max_length=10)
     college_type = models.CharField(max_length=50)
     belongs_to = models.CharField(max_length=40)
     affiliated = models.CharField(max_length=50)
