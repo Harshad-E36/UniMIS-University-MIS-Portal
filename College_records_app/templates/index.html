@@ -292,6 +292,7 @@
                 <th>District</th>
                 <th>Taluka</th>
                 <th>City</th>
+                <th>Pincode</th>
                 <th>College Type</th>
                 <th>Belongs To</th>
                 <th>Affiliated To</th>
@@ -388,7 +389,7 @@
             <!-- College Code -->
             <div class="col-md-6">
               <label for="college_code" class="form-label">College Code</label>
-              <input type="text" class="form-control" id="college_code" name="college_code" pattern="[A-Za-z0-9]+"
+              <input type="text" class="form-control" id="college_code" name="college_code"
                 required>
             </div>
 
@@ -433,7 +434,7 @@
             </div>
 
             <!-- Taluka -->
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label for="taluka" class="form-label">Taluka</label>
               <select class="form-select" id="taluka" name="taluka" required>
                 <option value="" disabled selected>Select Taluka</option>
@@ -441,14 +442,17 @@
             </div>
 
             <!-- City -->
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label for="city" class="form-label">City</label>
               <select class="form-select" id="city" name="city" required>
                 <option value="" disabled selected>Select City</option>
               </select>
             </div>
-
-
+            <!-- Pincode -->  
+            <div class="col-md-4">
+              <label for="pincode" class="form-label">Pincode</label>
+              <input type="text" class="form-control" id="pincode" name="pincode" pattern="\d{6}" title="Please enter a valid 6-digit pincode" required>
+            </div>
             <!-- College Type -->
             <div class="col-md-6">
               <label for="college_type" class="form-label">College Type</label>
@@ -458,6 +462,7 @@
                 <option value="Semi Government">Semi Government</option>
                 <option value="Government Aided">Government Aided</option>
                 <option value="Private / Unaided">Private / Unaided</option>
+                <option value="Private / Aided">Private / Aided</option>
                 <option value="Autonomous">Autonomous</option>
                 <option value="Deemed University">Deemed University</option>
                 <option value="Constituent College">Constituent College</option>
@@ -472,8 +477,7 @@
               <label for="belongs_to" class="form-label">Belongs To</label>
               <select class="form-select" id="belongs_to" name="belongs_to" required>
                 <option value="" disabled selected>Select Option</option>
-                <option value="Minority - Religious">Minority - Religious</option>
-                <option value="Minority - Linguistic">Minority - Linguistic</option>
+                <option value="Minority">Minority</option>
                 <option value="Non-Minority">Non-Minority</option>
                 <option value="Ladies / Women's College">Ladies / Women's College</option>
                 <option value="Co-Education">Co-Education</option>
@@ -489,7 +493,6 @@
             <div class="col-md-6">
               <label for="affiliated_to" class="form-label">Affiliated To</label>
               <select class="form-select" id="affiliated_to" name="affiliated_to">
-                <option value="" disabled selected>Select University/Board</option>
                 <option value="RTMNU">Rashtrasant Tukadoji Maharaj Nagpur University(RTMNU)</option>
               </select>
             </div>
@@ -732,13 +735,14 @@
           { data: 8 },
           { data: 9 },
           { data: 10 },
+          {data:11},
           {
-            data: 11, render: function (data, type, row) {
+            data: 12, render: function (data, type, row) {
               return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-            ${data}
-          </span>`;
-            }
-          },
+                ${data}
+                </span>`;
+              }
+            }, 
           { data: null, searchable: false, orderable: false }
         ],
         // 👇 Add this block for buttons
@@ -774,20 +778,21 @@
           }
         ],
         createdRow: function (row, data, dataIndex) {
-          $(row).attr('id', data[12]);
+          $(row).attr('id', data[13]);
+          console.log('Row created with ID:', data[13]);
           $('td:eq(12)', row).html(`
           <div class="d-flex justify-content-center align-items-center gap-2">
             <a class="btn btn-sm btn-outline-primary" 
                href="#" 
                data-bs-toggle="modal" 
-               data-record-id="${data[12]}" 
+               data-record-id="${data[13]}" 
                data-bs-target="#RecordsModal"
                title="Edit">
                <i class="bi bi-pencil-square"></i>
             </a>
             <a class="btn btn-sm btn-outline-danger" 
                href="#" 
-               onclick="delete_record('${data[12]}')"
+               onclick="delete_record('${data[13]}')"
                title="Delete">
                <i class="bi bi-trash"></i>
             </a>

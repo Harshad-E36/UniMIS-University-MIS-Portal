@@ -47,7 +47,7 @@ def get_records(request):
 
     # searching
     if search_value:
-        college_queryset = Colleges.objects.filter((Q(College_Code__icontains = search_value)|Q(College_Name__icontains = search_value)|Q(address__icontains = search_value)|Q(country__icontains = search_value)|Q(state__icontains = search_value)|Q(District__icontains = search_value)|Q(taluka__icontains = search_value)|Q(city__icontains = search_value)|Q(college_type__icontains = search_value)|Q(belongs_to__icontains = search_value)|Q(affiliated__icontains = search_value)|Q(discipline__icontains = search_value))&Q(is_deleted = False))
+        college_queryset = Colleges.objects.filter((Q(College_Code__icontains = search_value)|Q(College_Name__icontains = search_value)|Q(address__icontains = search_value)|Q(country__icontains = search_value)|Q(state__icontains = search_value)|Q(District__icontains = search_value)|Q(taluka__icontains = search_value)|Q(city__icontains = search_value)|Q(pincode__icontains = search_value)|Q(college_type__icontains = search_value)|Q(belongs_to__icontains = search_value)|Q(affiliated__icontains = search_value)|Q(discipline__icontains = search_value))&Q(is_deleted = False))
     else:
         college_queryset = Colleges.objects.filter(is_deleted = False)
     
@@ -58,7 +58,7 @@ def get_records(request):
     column_index = int(request.GET.get('order[0][column]', 0))
     direction = request.GET.get('order[0][dir]', 'asc')
 
-    column_name = ['College_Code', 'College_Name','address','country','state','District','taluka','city','college_type','belongs_to','affiliated','discipline'] [column_index]
+    column_name = ['College_Code', 'College_Name','address','country','state','District','taluka','city','pincode','college_type','belongs_to','affiliated','discipline'] [column_index]
 
     if direction == 'desc':
         column_name = f'-{column_name}'
@@ -71,7 +71,7 @@ def get_records(request):
     college_queryset = college_queryset[start:start+length]
 
     for college in college_queryset:
-        data.append([college.College_Code, college.College_Name, college.address, college.country ,college.state, college.District, college.taluka, college.city,college.college_type, college.belongs_to, college.affiliated,  college.discipline.replace(",", ", "), college.id])
+        data.append([college.College_Code, college.College_Name, college.address, college.country ,college.state, college.District, college.taluka, college.city,college.pincode,college.college_type, college.belongs_to, college.affiliated,  college.discipline.replace(",", ", "), college.id])
 
     
     response = {
@@ -96,6 +96,7 @@ def add_edit_record(request):
         district = request.POST.get('district')
         taluka = request.POST.get('taluka')
         city = request.POST.get('city')
+        pincode = request.POST.get('pincode')
         college_type = request.POST.get('college_type')
         belongs_to = request.POST.get('belongs_to')
         affiliated = request.POST.get('affiliated_to')
@@ -114,6 +115,7 @@ def add_edit_record(request):
                 District = district,
                 taluka = taluka,
                 city = city,
+                pincode = pincode,
                 college_type = college_type,
                 belongs_to = belongs_to,
                 affiliated = affiliated,
@@ -138,6 +140,7 @@ def add_edit_record(request):
             college.District = district
             college.taluka = taluka
             college.city = city
+            college.pincode = pincode
             college.college_type = college_type
             college.belongs_to = belongs_to
             college.affiliated = affiliated
