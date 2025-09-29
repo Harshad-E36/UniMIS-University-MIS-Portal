@@ -388,8 +388,7 @@
             <!-- College Code -->
             <div class="col-md-6">
               <label for="college_code" class="form-label">College Code</label>
-              <input type="text" class="form-control" id="college_code" name="college_code"
-                required>
+              <input type="text" class="form-control" id="college_code" name="college_code" required>
             </div>
 
             <!-- College Name -->
@@ -447,10 +446,11 @@
                 <option value="" disabled selected>Select City</option>
               </select>
             </div>
-            <!-- Pincode -->  
+            <!-- Pincode -->
             <div class="col-md-4">
               <label for="pincode" class="form-label">Pincode</label>
-              <input type="text" class="form-control" id="pincode" name="pincode" pattern="\d{6}" title="Please enter a valid 6-digit pincode" required>
+              <input type="text" class="form-control" id="pincode" name="pincode" pattern="\d{6}"
+                title="Please enter a valid 6-digit pincode" required>
             </div>
             <!-- College Type -->
             <div class="col-md-6">
@@ -735,14 +735,14 @@
           { data: 8 },
           { data: 9 },
           { data: 10 },
-          {data:11},
+          { data: 11 },
           {
             data: 12, render: function (data, type, row) {
               return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
                 ${data}
                 </span>`;
-              }
-            }, 
+            }
+          },
           { data: null, searchable: false, orderable: false }
         ],
         // 👇 Add this block for buttons
@@ -855,8 +855,6 @@
       .attr("data-bs-toggle", "modal")
       .attr("data-bs-target", "#AuthModal");
   }
-
-
 
   $('document').ready(function () {
 
@@ -1058,18 +1056,39 @@
       // }
     });
 
+    // Add a custom validation method
+    $.validator.addMethod("disciplineRequired", function (value, element) {
+      // Count how many checkboxes are checked
+      return $('.discipline-checkbox:checked').length > 0;
+    }, "Please select at least one discipline");
+
     // Validation for add/edit form
     $('#add_edit_form').validate({
+      ignore: [],
       rules: {
         college_name: {
           required: true,
           minlength: 2
-        }
+        },
+        'discipline[]': {
+          disciplineRequired: true
+        }, // apply custom rule
       },
       messages: {
         college_name: {
           required: "Please enter the college name",
           minlength: "College name must consist of at least 2 characters"
+        },
+        'discipline[]': {
+          disciplineRequired: "Please select at least one discipline"
+        },
+      },
+      errorPlacement: function (error, element) {
+        if (element.hasClass('discipline-checkbox')) {
+          // place error below the dropdown button
+          error.insertAfter('#disciplineDropdown');
+        } else {
+          error.insertAfter(element);
         }
       },
       submitHandler: function (form) {

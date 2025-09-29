@@ -11,4 +11,5 @@ urlpatterns = [
     path('logout/', views.user_logout, name="logout"),
     path('user_status/', views.user_status, name="user_status"),
     path('college_master/', views.college_master, name='college_master'),
+    path("apply-filters/", views.apply_filters, name="apply_filters"),
 ]

@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from functools import wraps
+import json
 # Create your views here.
 
 def ajax_login_required(view_func):
@@ -255,3 +256,10 @@ def user_logout(request):
             'status' : 200
         }
         return JsonResponse(response_data)
+    
+def apply_filters(request):
+    if request.method == "POST":
+        filters = json.loads(request.POST.get("filters", "[]"))
+        print("Selected Filters:", filters)
+        return JsonResponse({"status": "success", "temp_num": 50})
+    return JsonResponse({"status": "error"}, status=400)
