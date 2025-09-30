@@ -264,153 +264,153 @@
     </div>
   </header>
 
-  <!-- Filter Navbar -->
-  <div class="container-fluid mb-3">
-    <nav class="navbar filter-navbar shadow-sm px-3">
+  <div id="protected_content" class="d-none">
+    <!-- Filter Navbar -->
+    <div class="container-fluid mb-3">
+      <nav class="navbar filter-navbar shadow-sm px-3">
 
-      <div class="d-flex align-items-center gap-3">
-        <!-- Dropdown Filter -->
-        <div class="dropdown">
-          <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterDropdown"
-            data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-            <i class="bi bi-funnel"></i> Filters
+        <div class="d-flex align-items-center gap-3">
+          <!-- Dropdown Filter -->
+          <div class="dropdown">
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterDropdown"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <i class="bi bi-funnel"></i> Filters
+            </button>
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterDropdown">
+              <li>
+                <label class="dropdown-item form-check">
+                  <input class="form-check-input filter-option me-2" type="checkbox" value="district"> District
+                </label>
+              </li>
+              <li>
+                <label class="dropdown-item form-check">
+                  <input class="form-check-input filter-option me-2" type="checkbox" value="taluka"> Taluka
+                </label>
+              </li>
+              <li>
+                <label class="dropdown-item form-check">
+                  <input class="form-check-input filter-option me-2" type="checkbox" value="city"> City
+                </label>
+              </li>
+              <li>
+                <label class="dropdown-item form-check">
+                  <input class="form-check-input filter-option me-2" type="checkbox" value="college_type"> College Type
+                </label>
+              </li>
+              <li>
+                <label class="dropdown-item form-check">
+                  <input class="form-check-input filter-option me-2" type="checkbox" value="belongs_to"> Belongs To
+                </label>
+              </li>
+              <li>
+                <label class="dropdown-item form-check">
+                  <input class="form-check-input filter-option me-2" type="checkbox" value="affiliated_to"> Affiliated
+                  To
+                </label>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Apply Button -->
+          <button id="applyFilter" class="btn btn-primary apply-btn">
+            <i class="bi bi-check2-circle"></i> Apply Filter
           </button>
-          <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterDropdown">
-            <li>
-              <label class="dropdown-item form-check">
-                <input class="form-check-input filter-option me-2" type="checkbox" value="district"> District
-              </label>
-            </li>
-            <li>
-              <label class="dropdown-item form-check">
-                <input class="form-check-input filter-option me-2" type="checkbox" value="taluka"> Taluka
-              </label>
-            </li>
-            <li>
-              <label class="dropdown-item form-check">
-                <input class="form-check-input filter-option me-2" type="checkbox" value="city"> City
-              </label>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li>
-              <label class="dropdown-item form-check">
-                <input class="form-check-input filter-option me-2" type="checkbox" value="college_type"> College Type
-              </label>
-            </li>
-            <li>
-              <label class="dropdown-item form-check">
-                <input class="form-check-input filter-option me-2" type="checkbox" value="belongs_to"> Belongs To
-              </label>
-            </li>
-            <li>
-              <label class="dropdown-item form-check">
-                <input class="form-check-input filter-option me-2" type="checkbox" value="affiliated_to"> Affiliated To
-              </label>
-            </li>
-          </ul>
         </div>
 
-        <!-- Apply Button -->
-        <button id="applyFilter" class="btn btn-primary apply-btn">
-          <i class="bi bi-check2-circle"></i> Apply Filter
-        </button>
-      </div>
-
-    </nav>
-  </div>
-
-
-
-
-
-  <!-- Content -->
-  <main class="content-section">
-    <div class="row g-3 m-0">
-
-      <!-- Colleges -->
-      <div class="col-12 col-md-3">
-        <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-          <div class="card-body">
-            <h6 class="card-title">Colleges</h6>
-            <p class="stat-number mb-0" id="colleges_num" name="colleges_num">10</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Belongs To -->
-      <div class="col-12 col-md-3">
-        <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-          <div class="card-body">
-            <h6 class="card-title">Belongs To</h6>
-            <p class="stat-number mb-0" id="belongs_to_num" name="belongs_to_num">5</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Affiliated To -->
-      <div class="col-12 col-md-3">
-        <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-          <div class="card-body">
-            <h6 class="card-title">Affiliated To</h6>
-            <p class="stat-number mb-0" id="affiliated_to_num" name="affiliated_to_num">7</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- College Name -->
-      <div class="col-12 col-md-3">
-        <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-          <div class="card-body">
-            <h6 class="card-title">College Name</h6>
-            <p class="stat-number mb-0" id="college_name_num" name="college_name_num">12</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- State -->
-      <div class="col-12 col-md-3">
-        <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-          <div class="card-body">
-            <h6 class="card-title">State</h6>
-            <p class="stat-number mb-0" id="state_num" name="state_num">15</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- District -->
-      <div class="col-12 col-md-3">
-        <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-          <div class="card-body">
-            <h6 class="card-title">District</h6>
-            <p class="stat-number mb-0" id="district_num" name="district_num">8</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Taluka -->
-      <div class="col-12 col-md-3">
-        <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-          <div class="card-body">
-            <h6 class="card-title">Taluka</h6>
-            <p class="stat-number mb-0" id="taluka_num" name="taluka_num">6</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- City -->
-      <div class="col-12 col-md-3">
-        <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-          <div class="card-body">
-            <h6 class="card-title">City</h6>
-            <p class="stat-number mb-0" id="city_num" name="city_num">20</p>
-          </div>
-        </div>
-      </div>
-
+      </nav>
     </div>
-  </main>
+
+
+
+
+
+    <!-- Content -->
+    <main class="content-section">
+      <div class="row g-3 m-0">
+
+        <!-- Colleges -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+            <div class="card-body">
+              <h6 class="card-title">Colleges</h6>
+              <p class="stat-number mb-0" id="colleges_num" name="colleges_num">10</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Belongs To -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+            <div class="card-body">
+              <h6 class="card-title">Belongs To</h6>
+              <p class="stat-number mb-0" id="belongs_to_num" name="belongs_to_num">5</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Affiliated To -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+            <div class="card-body">
+              <h6 class="card-title">Affiliated To</h6>
+              <p class="stat-number mb-0" id="affiliated_to_num" name="affiliated_to_num">7</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- College Name -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+            <div class="card-body">
+              <h6 class="card-title">College Name</h6>
+              <p class="stat-number mb-0" id="college_name_num" name="college_name_num">12</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- State -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+            <div class="card-body">
+              <h6 class="card-title">State</h6>
+              <p class="stat-number mb-0" id="state_num" name="state_num">15</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- District -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+            <div class="card-body">
+              <h6 class="card-title">District</h6>
+              <p class="stat-number mb-0" id="district_num" name="district_num">8</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Taluka -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+            <div class="card-body">
+              <h6 class="card-title">Taluka</h6>
+              <p class="stat-number mb-0" id="taluka_num" name="taluka_num">6</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- City -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+            <div class="card-body">
+              <h6 class="card-title">City</h6>
+              <p class="stat-number mb-0" id="city_num" name="city_num">20</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
 
   <!-- Auth Modal -->
   <div class="modal fade" id="AuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
@@ -530,6 +530,7 @@
               $("#AuthModal").modal("show");
               // Flip back to Login/Signup
               setupLoginButton();
+              $("#protected_content").addClass("d-none");
             }
             else {
               showNotification(data.message || "Logout failed", "danger");
@@ -562,6 +563,7 @@
       success: function (data, status, xhr) {
         if (data.status === 200) {
           $("#AuthModal").modal("hide");
+          $("#protected_content").removeClass("d-none");
           // Immediately set the button to Logout and bind the logout handler once
           setupLogoutButton();
           showNotification("Login Successful", "success");
@@ -569,10 +571,12 @@
         } else if (data.status === 401) {
           showNotification("Invalid Credentials", "danger");
           $("#auth_form")[0].reset()
+          $("#protected_content").addClass("d-none");
         }
       },
       error: function (xhr, status, error) {
         showNotification("Error: " + error, "danger");
+        $("#protected_content").addClass("d-none");
       }
     });
   }
