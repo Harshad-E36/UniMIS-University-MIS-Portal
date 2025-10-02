@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from functools import wraps
+import json
 # Create your views here.
 
 def ajax_login_required(view_func):
@@ -14,9 +15,6 @@ def ajax_login_required(view_func):
             return JsonResponse({'message': 'Session expired. Please log in again.', 'status': 302})
         return view_func(request, *args, **kwargs)
     return _wrapped_view
-
-
-
 
 def get_client_ip(request):
     """Get the real client IP address from request headers"""
@@ -31,6 +29,10 @@ def get_client_ip(request):
 
 def home(request):
     return render(request, 'index.html')
+
+
+def college_master(request):
+    return render(request, 'college_master.html')  # Make sure 'tables.html' exists in templates
 
 
 def get_records(request):
@@ -233,7 +235,8 @@ def user_login(request):
                 request.session.set_expiry(86400)  # 24 hrs
             response_data = {
                 'message' : 'login successful',
-                'status' : 200
+                'status' : 200,
+                'username' : username
             }
 
             return JsonResponse(response_data)
@@ -253,3 +256,10 @@ def user_logout(request):
             'status' : 200
         }
         return JsonResponse(response_data)
+    
+def apply_filters(request):
+    if request.method == "POST":
+        filters = json.loads(request.POST.get("filters", "[]"))
+        print("Selected Filters:", filters)
+        return JsonResponse({"status": "success", "temp_num": 50})
+    return JsonResponse({"status": "error"}, status=400)
