@@ -265,48 +265,292 @@
   </header>
 
   <div id="protected_content" class="d-none">
+
     <!-- Filter Navbar -->
     <div class="container-fluid mb-3">
       <nav class="navbar filter-navbar shadow-sm px-3">
 
-        <div class="d-flex align-items-center gap-3">
-          <!-- Dropdown Filter -->
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <!-- College Code -->
           <div class="dropdown">
-            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterDropdown"
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterCollegeCode"
               data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-              <i class="bi bi-funnel"></i> Filters
+              <i class="bi bi-funnel"></i> College Code
             </button>
-            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterDropdown">
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterCollegeCode">
+              <li><small class="text-muted">Options coming soon</small></li>
+            </ul>
+          </div>
+
+          <!-- College Name -->
+          <div class="dropdown">
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterCollegeName"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <i class="bi bi-funnel"></i> College Name
+            </button>
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterCollegeName">
+              <li><small class="text-muted">Options coming soon</small></li>
+            </ul>
+          </div>
+
+          <!-- District -->
+          <div class="dropdown">
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterDistrict"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <i class="bi bi-funnel"></i> District
+            </button>
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterDistrict">
               <li>
-                <label class="dropdown-item form-check">
-                  <input class="form-check-input filter-option me-2" type="checkbox" value="district"> District
-                </label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="districtNagpur" name="district" value="Nagpur">
+                  <label class="form-check-label" for="districtNagpur">Nagpur</label>
+                </div>
               </li>
               <li>
-                <label class="dropdown-item form-check">
-                  <input class="form-check-input filter-option me-2" type="checkbox" value="taluka"> Taluka
-                </label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="districtAmravati" name="district"
+                    value="Amravati">
+                  <label class="form-check-label" for="districtAmravati">Amravati</label>
+                </div>
               </li>
               <li>
-                <label class="dropdown-item form-check">
-                  <input class="form-check-input filter-option me-2" type="checkbox" value="city"> City
-                </label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="districtGadchiroli" name="district"
+                    value="Gadchiroli">
+                  <label class="form-check-label" for="districtGadchiroli">Gadchiroli</label>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Taluka -->
+          <div class="dropdown">
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterTaluka"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <i class="bi bi-funnel"></i> Taluka
+            </button>
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterTaluka" id="talukaDropdown">
+              <li><small class="text-muted">Select district(s) first</small></li>
+            </ul>
+          </div>
+
+
+          <!-- College Type -->
+          <div class="dropdown">
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterCollegeType"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <i class="bi bi-funnel"></i> College Type
+            </button>
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterCollegeType">
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType1"
+                    name="collegeType" value="Government"><label class="form-check-label"
+                    for="collegeType1">Government</label></div>
               </li>
               <li>
-                <label class="dropdown-item form-check">
-                  <input class="form-check-input filter-option me-2" type="checkbox" value="college_type"> College Type
-                </label>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType2"
+                    name="collegeType" value="Semi Government"><label class="form-check-label" for="collegeType2">Semi
+                    Government</label></div>
               </li>
               <li>
-                <label class="dropdown-item form-check">
-                  <input class="form-check-input filter-option me-2" type="checkbox" value="belongs_to"> Belongs To
-                </label>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType3"
+                    name="collegeType" value="Government Aided"><label class="form-check-label"
+                    for="collegeType3">Government Aided</label></div>
               </li>
               <li>
-                <label class="dropdown-item form-check">
-                  <input class="form-check-input filter-option me-2" type="checkbox" value="affiliated_to"> Affiliated
-                  To
-                </label>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType4"
+                    name="collegeType" value="Private / Unaided"><label class="form-check-label"
+                    for="collegeType4">Private / Unaided</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType5"
+                    name="collegeType" value="Private / Aided"><label class="form-check-label"
+                    for="collegeType5">Private / Aided</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType6"
+                    name="collegeType" value="Autonomous"><label class="form-check-label"
+                    for="collegeType6">Autonomous</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType7"
+                    name="collegeType" value="Deemed University"><label class="form-check-label"
+                    for="collegeType7">Deemed University</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType8"
+                    name="collegeType" value="Constituent College"><label class="form-check-label"
+                    for="collegeType8">Constituent College</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType9"
+                    name="collegeType" value="Central University"><label class="form-check-label"
+                    for="collegeType9">Central University</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType10"
+                    name="collegeType" value="State University"><label class="form-check-label"
+                    for="collegeType10">State University</label></div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Belongs To -->
+          <div class="dropdown">
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterBelongsTo"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <i class="bi bi-funnel"></i> Belongs To
+            </button>
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterBelongsTo">
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo1" name="belongsTo"
+                    value="Minority"><label class="form-check-label" for="belongsTo1">Minority</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo2" name="belongsTo"
+                    value="Non-Minority"><label class="form-check-label" for="belongsTo2">Non-Minority</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo3" name="belongsTo"
+                    value="Ladies / Women's College"><label class="form-check-label" for="belongsTo3">Ladies / Women's
+                    College</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo4" name="belongsTo"
+                    value="Co-Education"><label class="form-check-label" for="belongsTo4">Co-Education</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo5" name="belongsTo"
+                    value="Person with Disability / Inclusive College"><label class="form-check-label"
+                    for="belongsTo5">Person with Disability / Inclusive College</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo6" name="belongsTo"
+                    value="Tribal College"><label class="form-check-label" for="belongsTo6">Tribal College</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo7" name="belongsTo"
+                    value="Rural College"><label class="form-check-label" for="belongsTo7">Rural College</label></div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Discipline -->
+          <div class="dropdown">
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterDiscipline"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <i class="bi bi-funnel"></i> Discipline
+            </button>
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterDiscipline"
+              style="max-height:300px; overflow:auto;">
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline1"
+                    name="discipline" value="Engineering / Technology"><label class="form-check-label"
+                    for="discipline1">Engineering / Technology</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline2"
+                    name="discipline" value="Medical"><label class="form-check-label" for="discipline2">Medical</label>
+                </div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline3"
+                    name="discipline" value="Dental"><label class="form-check-label" for="discipline3">Dental</label>
+                </div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline4"
+                    name="discipline" value="Pharmacy"><label class="form-check-label"
+                    for="discipline4">Pharmacy</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline5"
+                    name="discipline" value="Nursing / Paramedical"><label class="form-check-label"
+                    for="discipline5">Nursing / Paramedical</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline6"
+                    name="discipline" value="Law"><label class="form-check-label" for="discipline6">Law</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline7"
+                    name="discipline" value="Commerce"><label class="form-check-label"
+                    for="discipline7">Commerce</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline8"
+                    name="discipline" value="Arts / Humanities"><label class="form-check-label" for="discipline8">Arts /
+                    Humanities</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline9"
+                    name="discipline" value="Science"><label class="form-check-label" for="discipline9">Science</label>
+                </div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline10"
+                    name="discipline" value="Education (B.Ed / D.Ed / M.Ed)"><label class="form-check-label"
+                    for="discipline10">Education (B.Ed / D.Ed / M.Ed)</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline11"
+                    name="discipline" value="Polytechnic / Diploma Institute"><label class="form-check-label"
+                    for="discipline11">Polytechnic / Diploma Institute</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline12"
+                    name="discipline" value="Agriculture"><label class="form-check-label"
+                    for="discipline12">Agriculture</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline13"
+                    name="discipline" value="Veterinary Science"><label class="form-check-label"
+                    for="discipline13">Veterinary Science</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline14"
+                    name="discipline" value="Management (MBA / BBA)"><label class="form-check-label"
+                    for="discipline14">Management (MBA / BBA)</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline15"
+                    name="discipline" value="Architecture"><label class="form-check-label"
+                    for="discipline15">Architecture</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline16"
+                    name="discipline" value="Fine Arts / Performing Arts"><label class="form-check-label"
+                    for="discipline16">Fine Arts / Performing Arts</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline17"
+                    name="discipline" value="Computer Applications (BCA / MCA)"><label class="form-check-label"
+                    for="discipline17">Computer Applications (BCA / MCA)</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline18"
+                    name="discipline" value="Social Work"><label class="form-check-label" for="discipline18">Social
+                    Work</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline19"
+                    name="discipline" value="Home Science"><label class="form-check-label" for="discipline19">Home
+                    Science</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline20"
+                    name="discipline" value="Physical Education / Sports"><label class="form-check-label"
+                    for="discipline20">Physical Education / Sports</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline21"
+                    name="discipline" value="Hotel Management / Hospitality"><label class="form-check-label"
+                    for="discipline21">Hotel Management / Hospitality</label></div>
+              </li>
+              <li>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline22"
+                    name="discipline" value="Design & Fashion Technology"><label class="form-check-label"
+                    for="discipline22">Design & Fashion Technology</label></div>
               </li>
             </ul>
           </div>
@@ -320,10 +564,6 @@
       </nav>
     </div>
 
-
-
-
-
     <!-- Content -->
     <main class="content-section">
       <div class="row g-3 m-0">
@@ -333,7 +573,7 @@
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
               <h6 class="card-title">Colleges</h6>
-              <p class="stat-number mb-0" id="colleges_num" name="colleges_num">10</p>
+              <p class="stat-number mb-0" id="colleges_num" name="colleges_num"></p>
             </div>
           </div>
         </div>
@@ -629,6 +869,24 @@
     }, 3000);
   }
 
+  const districtTalukaMap = {
+    "Nagpur": [
+      "Nagpur (Urban)", "Nagpur (Rural)", "Hingna", "Kamptee", "Savner",
+      "Katol", "Ramtek", "Umred", "Narkhed", "Parseoni",
+      "Mauda", "Kuhi", "Kalameshwar", "Bhiwapur"
+    ],
+    "Gadchiroli": [
+      "Gadchiroli", "Aheri", "Armori", "Kurkheda", "Desaiganj (Vadasa)",
+      "Dhanora", "Etapalli", "Sironcha", "Mulchera", "Korchi",
+      "Bhamragad", "Chamorshi"
+    ],
+    "Amravati": [
+      "Amravati", "Achalpur", "Warud", "Chandurbazar", "Dharni",
+      "Morshi", "Daryapur", "Anjangaon Surji", "Dhamangaon Railway",
+      "Nandgaon-Khandeshwar", "Chikhaldara", "Bhatkuli", "Teosa",
+      "Chandur Railway"
+    ]
+  };
 
   $(document).ready(function () {
     $.ajax({
@@ -639,6 +897,7 @@
           // Authenticated
           setWelcomeMessage(response.username);
           setupLogoutButton();
+          $("#protected_content").removeClass("d-none");
 
         } else {
           // Not authenticated
@@ -707,33 +966,122 @@
       setAuthMode(newMode);
     });
 
-    // ajax for applying filter 
-    $("#applyFilter").click(function () {
-      // collect selected filters
-      let selectedFilters = [];
-      $(".filter-option:checked").each(function () {
-        selectedFilters.push($(this).val());
+    function updateTalukas() {
+      let selectedDistricts = [];
+      $("input[name='district']:checked").each(function () {
+        selectedDistricts.push($(this).val());
       });
-      if (selectedFilters.length === 0) {
-        // Show Bootstrap alert
-        showNotification("Please select a filter first", "danger")
-        return; // stop here
+
+      let $talukaDropdown = $("#talukaDropdown");
+      $talukaDropdown.empty(); // reset
+
+      if (selectedDistricts.length === 0) {
+        $talukaDropdown.append('<li><small class="text-muted">Select district(s) first</small></li>');
+        return;
       }
+
+      let counter = 1;
+      selectedDistricts.forEach(district => {
+        if (districtTalukaMap[district]) {
+          // Add district header (non-clickable, styled as muted text)
+          $talukaDropdown.append(`
+          <li class="dropdown-header fw-bold text-primary">${district}</li>
+        `);
+
+          // Add its talukas
+          districtTalukaMap[district].forEach(taluka => {
+            let id = "taluka" + counter++;
+            $talukaDropdown.append(`
+            <li>
+              <div class="form-check ms-2">
+                <input class="form-check-input" type="checkbox" id="${id}" name="taluka" value="${taluka}">
+                <label class="form-check-label" for="${id}">${taluka}</label>
+              </div>
+            </li>
+          `);
+          });
+
+          // Add separator for visual clarity
+          $talukaDropdown.append('<li><hr class="dropdown-divider"></li>');
+        }
+      });
+
+      // Remove trailing divider
+      $talukaDropdown.find("li:last-child hr").parent().remove();
+    }
+
+    // Event listener for district check/uncheck
+    $(document).on("change", "input[name='district']", updateTalukas);
+
+
+    // Ajax for applying filter
+    $("#applyFilter").click(function () {
+      // Initialize an object to hold all selected filters
+      let selectedFilters = {
+        collegeCode: [],
+        collegeName: [],
+        district: [],
+        taluka: [],
+        collegeType: [],
+        belongsTo: [],
+        discipline: []
+      };
+
+      // Collect checked values from each dropdown's UL
+      $("#filterCollegeCode + .dropdown-menu .form-check-input:checked").each(function () {
+        selectedFilters.collegeCode.push($(this).val());
+      });
+
+      $("#filterCollegeName + .dropdown-menu .form-check-input:checked").each(function () {
+        selectedFilters.collegeName.push($(this).val());
+      });
+
+      $("#filterDistrict + .dropdown-menu .form-check-input:checked").each(function () {
+        selectedFilters.district.push($(this).val());
+      });
+
+      $("#filterTaluka + .dropdown-menu .form-check-input:checked").each(function () {
+        selectedFilters.taluka.push($(this).val());
+      });
+
+      $("#filterCollegeType + .dropdown-menu .form-check-input:checked").each(function () {
+        selectedFilters.collegeType.push($(this).val());
+      });
+
+      $("#filterBelongsTo + .dropdown-menu .form-check-input:checked").each(function () {
+        selectedFilters.belongsTo.push($(this).val());
+      });
+
+      $("#filterDiscipline + .dropdown-menu .form-check-input:checked").each(function () {
+        selectedFilters.discipline.push($(this).val());
+      });
+
+      // Check if at least one filter is selected
+      let hasSelection = Object.values(selectedFilters).some(arr => arr.length > 0);
+      if (!hasSelection) {
+        showNotification("Please select at least one filter", "danger");
+        return;
+      }
+
+      // Send AJAX request
       $.ajax({
         type: "POST",
         url: "{% url 'apply_filters' %}",
         data: {
-          'filters': JSON.stringify(selectedFilters),
+          'filters': JSON.stringify(selectedFilters)
         },
         success: function (response) {
-          if (response.status === "success")
-            $("#colleges_num").text(response.temp_num)
+          if (response.status === "success") {
+            $("#colleges_num").text(response.temp_num);
+          }
         },
         error: function (xhr, status, error) {
           console.error("Error applying filters:", error);
         }
       });
     });
+
+
 
     // validation for authentication form 
     $('#auth_form').validate({
