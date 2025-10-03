@@ -232,6 +232,16 @@
       /* add scroll if needed */
     }
 
+    /* College Name dropdown specific max-width */
+    #filterCollegeName+.dropdown-menu {
+      min-width: 472px;
+      width: 100%;
+      /* makes it responsive */
+      max-height: 300px;
+      /* optional, height limit */
+      overflow-y: auto;
+    }
+
     /* Apply button */
     .apply-btn {
       border-radius: 20px;
@@ -278,7 +288,20 @@
               <i class="bi bi-funnel"></i> College Code
             </button>
             <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterCollegeCode">
-              <li><small class="text-muted">Options coming soon</small></li>
+              <li>
+                <input type="text" class="form-control mb-2" placeholder="Search...">
+              </li>
+              {% for college in Colleges %}
+              <li>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="{{ college.College_Code }}"
+                    id="code{{ forloop.counter }}">
+                  <label class="form-check-label" for="code{{ forloop.counter }}">
+                    {{ college.College_Code }}
+                  </label>
+                </div>
+              </li>
+              {% endfor %}
             </ul>
           </div>
 
@@ -289,7 +312,20 @@
               <i class="bi bi-funnel"></i> College Name
             </button>
             <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterCollegeName">
-              <li><small class="text-muted">Options coming soon</small></li>
+              <li>
+                <input type="text" class="form-control mb-2" placeholder="Search...">
+              </li>
+              {% for college in Colleges %}
+              <li>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="{{ college.College_Name }}"
+                    id="name{{ forloop.counter }}">
+                  <label class="form-check-label" for="name{{ forloop.counter }}">
+                    {{ college.College_Name }}
+                  </label>
+                </div>
+              </li>
+              {% endfor %}
             </ul>
           </div>
 
@@ -808,6 +844,9 @@
           setupLogoutButton();
           showNotification("Login Successful", "success");
           setWelcomeMessage(data.username);
+          $("#colleges_num").text(response.total_colleges_count);
+
+
         } else if (data.status === 401) {
           showNotification("Invalid Credentials", "danger");
           $("#auth_form")[0].reset()
@@ -898,6 +937,8 @@
           setWelcomeMessage(response.username);
           setupLogoutButton();
           $("#protected_content").removeClass("d-none");
+          $("#colleges_num").text(response.total_colleges_count);
+
 
         } else {
           // Not authenticated
@@ -1018,43 +1059,14 @@
     $("#applyFilter").click(function () {
       // Initialize an object to hold all selected filters
       let selectedFilters = {
-        collegeCode: [],
-        collegeName: [],
-        district: [],
-        taluka: [],
-        collegeType: [],
-        belongsTo: [],
-        discipline: []
+        collegeCode: $("#filterCollegeCode + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        collegeName: $("#filterCollegeName + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        district: $("#filterDistrict + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        taluka: $("#filterTaluka + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        collegeType: $("#filterCollegeType + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        belongsTo: $("#filterBelongsTo + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        discipline: $("#filterDiscipline + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
       };
-
-      // Collect checked values from each dropdown's UL
-      $("#filterCollegeCode + .dropdown-menu .form-check-input:checked").each(function () {
-        selectedFilters.collegeCode.push($(this).val());
-      });
-
-      $("#filterCollegeName + .dropdown-menu .form-check-input:checked").each(function () {
-        selectedFilters.collegeName.push($(this).val());
-      });
-
-      $("#filterDistrict + .dropdown-menu .form-check-input:checked").each(function () {
-        selectedFilters.district.push($(this).val());
-      });
-
-      $("#filterTaluka + .dropdown-menu .form-check-input:checked").each(function () {
-        selectedFilters.taluka.push($(this).val());
-      });
-
-      $("#filterCollegeType + .dropdown-menu .form-check-input:checked").each(function () {
-        selectedFilters.collegeType.push($(this).val());
-      });
-
-      $("#filterBelongsTo + .dropdown-menu .form-check-input:checked").each(function () {
-        selectedFilters.belongsTo.push($(this).val());
-      });
-
-      $("#filterDiscipline + .dropdown-menu .form-check-input:checked").each(function () {
-        selectedFilters.discipline.push($(this).val());
-      });
 
       // Check if at least one filter is selected
       let hasSelection = Object.values(selectedFilters).some(arr => arr.length > 0);
@@ -1068,11 +1080,18 @@
         type: "POST",
         url: "{% url 'apply_filters' %}",
         data: {
-          'filters': JSON.stringify(selectedFilters)
+          "ColegeCode[]": selectedFilters.collegeCode,
+          "CollegeName[]": selectedFilters.collegeName,
+          "District[]": selectedFilters.district,
+          "Taluka[]": selectedFilters.taluka,
+          "CollegeType[]": selectedFilters.collegeType,
+          "BelongsTo[]": selectedFilters.belongsTo,
+          "Discipline[]": selectedFilters.discipline
         },
         success: function (response) {
-          if (response.status === "success") {
-            $("#colleges_num").text(response.temp_num);
+          if (response.status === 200) {
+            console.log("Filters applied successfully", response);
+            $("#colleges_num").text(response.count_data);
           }
         },
         error: function (xhr, status, error) {
@@ -1135,6 +1154,19 @@
 
       }
     });
+    // Search functionality within dropdowns filters
+
+    // Apply search filter for any dropdown
+    $('.filter-dropdown input[type="text"]').on('keyup', function () {
+      let searchValue = $(this).val().toLowerCase();
+
+      // Only check li elements that are not the search input itself
+      $(this).closest('ul').find('li').not(':first').each(function () {
+        let text = $(this).text().toLowerCase();
+        $(this).toggle(text.includes(searchValue));
+      });
+    });
+
   });
 </script>
 
