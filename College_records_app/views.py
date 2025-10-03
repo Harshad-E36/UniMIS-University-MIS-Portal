@@ -259,7 +259,12 @@ def user_logout(request):
     
 def apply_filters(request):
     if request.method == "POST":
-        filters = json.loads(request.POST.get("filters", "[]"))
-        print("Selected Filters:", filters)
-        return JsonResponse({"status": "success", "temp_num": 50})
-    return JsonResponse({"status": "error"}, status=400)
+        try:
+            filters = json.loads(request.POST.get("filters", "{}"))  # parse as dict
+            print("Selected Filters:", filters)
+
+            
+            return JsonResponse({"status": "success", "temp_num": 50})
+        except json.JSONDecodeError:
+            return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
