@@ -28,7 +28,7 @@ def get_client_ip(request):
 
 
 def home(request):
-    return render(request, 'index.html')
+    return render(request, 'index.html', {"Colleges": Colleges.objects.filter(is_deleted = False)})  # Make sure 'index.html' exists in templates
 
 
 def college_master(request):
@@ -178,7 +178,8 @@ def user_status(request):
         response_data = {
             'is_authenticated' : True,
             'username' : request.user.username,
-            'status' : 200
+            'status' : 200,
+            'total_colleges_count' : Colleges.objects.filter(is_deleted = False).count()
         }
     else:
         response_data = {
@@ -236,7 +237,8 @@ def user_login(request):
             response_data = {
                 'message' : 'login successful',
                 'status' : 200,
-                'username' : username
+                'username' : username,
+                'total_colleges_count' : Colleges.objects.filter(is_deleted = False).count()
             }
 
             return JsonResponse(response_data)
@@ -259,12 +261,49 @@ def user_logout(request):
     
 def apply_filters(request):
     if request.method == "POST":
-        try:
-            filters = json.loads(request.POST.get("filters", "{}"))  # parse as dict
-            print("Selected Filters:", filters)
+        college_codes = request.POST.getlist('ColegeCode[]')
+        college_names = request.POST.getlist('CollegeName[]')
+        districts = request.POST.getlist('District[]')
+        talukas = request.POST.getlist('Taluka[]')
+        college_types = request.POST.getlist('CollegeType[]')
+        belongs_tos = request.POST.getlist('BelongsTo[]')
+        disciplines = request.POST.getlist('Discipline[]')
 
-            
-            return JsonResponse({"status": "success", "temp_num": 50})
-        except json.JSONDecodeError:
-            return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
-    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+        print(college_codes, college_names, districts, talukas, college_types, belongs_tos, disciplines)
+
+        filter_criteria = Q(is_deleted = False)
+
+        if college_codes:
+            filter_criteria &= Q(College_Code__in = college_codes)
+        
+        if college_names:
+            filter_criteria &= Q(College_Name__in = college_names)
+        
+        if districts:
+            filter_criteria &= Q(District__in = districts)
+        
+        if talukas:
+            filter_criteria &= Q(taluka__in = talukas)
+        
+        if college_types:
+            filter_criteria &= Q(college_type__in = college_types)
+        
+        if belongs_tos:
+            filter_criteria &= Q(belongs_to__in = belongs_tos)
+        
+        if disciplines:
+            discipline_query = Q()
+            for discipline in disciplines:
+                discipline_query |= Q(discipline__icontains = discipline)
+            filter_criteria &= discipline_query
+
+        filtered_colleges_count = Colleges.objects.filter(filter_criteria).count()
+        print("Filtered count:", filtered_colleges_count)
+        
+        response_data = {
+            'message' : 'filters applied successfully',
+            'status' : 200,
+            'count_data' : filtered_colleges_count
+        }
+
+        return JsonResponse(response_data)
