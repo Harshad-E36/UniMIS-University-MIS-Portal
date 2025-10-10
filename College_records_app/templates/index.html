@@ -605,7 +605,7 @@
       <div class="row g-3 m-0">
 
         <!-- Colleges -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
               <h6 class="card-title">Colleges</h6>
@@ -615,7 +615,7 @@
         </div>
 
         <!-- Belongs To -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
               <h6 class="card-title">Belongs To</h6>
@@ -625,61 +625,11 @@
         </div>
 
         <!-- Affiliated To -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
               <h6 class="card-title">Affiliated To</h6>
               <p class="stat-number mb-0" id="affiliated_to_num" name="affiliated_to_num">7</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- College Name -->
-        <div class="col-12 col-md-3">
-          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-            <div class="card-body">
-              <h6 class="card-title">College Name</h6>
-              <p class="stat-number mb-0" id="college_name_num" name="college_name_num">12</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- State -->
-        <div class="col-12 col-md-3">
-          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-            <div class="card-body">
-              <h6 class="card-title">State</h6>
-              <p class="stat-number mb-0" id="state_num" name="state_num">15</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- District -->
-        <div class="col-12 col-md-3">
-          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-            <div class="card-body">
-              <h6 class="card-title">District</h6>
-              <p class="stat-number mb-0" id="district_num" name="district_num">8</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Taluka -->
-        <div class="col-12 col-md-3">
-          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-            <div class="card-body">
-              <h6 class="card-title">Taluka</h6>
-              <p class="stat-number mb-0" id="taluka_num" name="taluka_num">6</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- City -->
-        <div class="col-12 col-md-3">
-          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
-            <div class="card-body">
-              <h6 class="card-title">City</h6>
-              <p class="stat-number mb-0" id="city_num" name="city_num">20</p>
             </div>
           </div>
         </div>
@@ -844,7 +794,7 @@
           setupLogoutButton();
           showNotification("Login Successful", "success");
           setWelcomeMessage(data.username);
-          $("#colleges_num").text(response.total_colleges_count);
+          $("#colleges_num").text(data.total_colleges_count);  
 
 
         } else if (data.status === 401) {
@@ -928,16 +878,24 @@
   };
 
   $(document).ready(function () {
+
+  // Prevent caching issues on back/forward navigation
+    $(window).on("pageshow", function (event) {
+    if (event.originalEvent.persisted || (window.performance && window.performance.navigation.type === 2)) {
+      location.reload();
+    }
+  });
+  
     $.ajax({
       url: "{% url 'user_status' %}", // backend endpoint for checking auth
       type: "GET",
-      success: function (response) {
-        if (response.status === 200) {
+      success: function (data) {
+        if (data.status === 200) {
           // Authenticated
-          setWelcomeMessage(response.username);
+          setWelcomeMessage(data.username);
           setupLogoutButton();
           $("#protected_content").removeClass("d-none");
-          $("#colleges_num").text(response.total_colleges_count);
+          $("#colleges_num").text(data.total_colleges_count);
 
 
         } else {
