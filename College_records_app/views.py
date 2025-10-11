@@ -188,6 +188,15 @@ def user_status(request):
         }
     return JsonResponse(response_data)  
 
+def clear_filters(request):
+    if request.method == "GET":
+        response_data = {
+            'status' : 200,
+            'total_colleges_count' : Colleges.objects.filter(is_deleted = False).count()
+        }
+        return JsonResponse(response_data)
+
+    return JsonResponse({"status": "error"}, status=400)
 
 
 def signup(request):

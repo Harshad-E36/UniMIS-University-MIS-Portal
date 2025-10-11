@@ -12,4 +12,6 @@ urlpatterns = [
     path('user_status/', views.user_status, name="user_status"),
     path('college_master/', views.college_master, name='college_master'),
     path('apply_filters/', views.apply_filters, name="apply_filters"),
+    path("clear_filters/", views.clear_filters, name="clear_filters"),
+
 ]
