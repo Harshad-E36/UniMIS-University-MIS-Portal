@@ -251,6 +251,7 @@
       opacity: 1;
       transform: translateX(-50%) translateY(20px);
     }
+
   </style>
 </head>
 
@@ -386,13 +387,13 @@
             <input type="hidden" name="id" id="record_id" value="0">
 
             <!-- College Code -->
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label for="college_code" class="form-label">College Code</label>
               <input type="text" class="form-control" id="college_code" name="college_code" required>
             </div>
 
             <!-- College Name -->
-            <div class="col-md-6">
+            <div class="col-md-8">
               <label for="college_name" class="form-label">College Name</label>
               <input type="text" class="form-control" id="college_name" name="college_name" required>
             </div>
@@ -646,6 +647,9 @@
               </div>
             </div>
 
+            <!-- Dynamic Course Dropdowns -->
+            <div id="courseDropdownsContainer" class="col-12 mt-3"></div>
+
           </form>
         </div>
         <div class="modal-footer">
@@ -856,6 +860,33 @@
       .attr("data-bs-target", "#AuthModal");
   }
 
+  // Mapping of disciplines to their courses
+  const disciplineCourses = {
+    "Engineering / Technology": ["B.Tech in Computer Engineering"],
+    "Medical": ["MBBS - Medicine"],
+    "Dental": ["BDS - Dental Surgery"],
+    "Pharmacy": ["B.Pharm - Pharmacy"],
+    "Nursing / Paramedical": ["B.Sc Nursing"],
+    "Law": ["LLB - Bachelor of Laws"],
+    "Commerce": ["B.Com - Commerce"],
+    "Arts / Humanities": ["BA - English Literature"],
+    "Science": ["B.Sc - Physics"],
+    "Education (B.Ed / D.Ed / M.Ed)": ["B.Ed - Bachelor of Education"],
+    "Polytechnic / Diploma Institute": ["Diploma in Civil Engineering"],
+    "Agriculture": ["B.Sc - Agriculture"],
+    "Veterinary Science": ["BVSc - Veterinary Science"],
+    "Management (MBA / BBA)": ["MBA - Business Administration"],
+    "Architecture": ["B.Arch - Architecture"],
+    "Fine Arts / Performing Arts": ["BFA - Fine Arts"],
+    "Computer Applications (BCA / MCA)": ["BCA - Computer Applications"],
+    "Social Work": ["BSW - Social Work"],
+    "Home Science": ["B.Sc - Home Science"],
+    "Physical Education / Sports": ["B.P.Ed - Physical Education"],
+    "Hotel Management / Hospitality": ["BHM - Hotel Management"],
+    "Design & Fashion Technology": ["B.Des - Fashion Design"],
+  };
+
+
   $('document').ready(function () {
 
     $.ajax({
@@ -881,6 +912,59 @@
       }
     });
 
+    $(".discipline-checkbox").change(function () {
+      const selectedDisciplines = $(".discipline-checkbox:checked")
+        .map(function () {
+          return $(this).val();
+        })
+        .get();
+
+      // Clear all previously generated dropdowns
+      $("#courseDropdownsContainer").empty();
+
+      // For each selected discipline, create dropdown
+      selectedDisciplines.forEach((discipline) => {
+        if (disciplineCourses[discipline] !== undefined) {
+          const courses = disciplineCourses[discipline];
+
+          // Build dropdown HTML
+          let dropdownHtml = `
+          <div class="col-12 mt-3 dependent-dropdown">
+            <label class="form-label fw-semibold">${discipline} Courses</label>
+            <div class="dropdown w-100">
+              <button class="form-select dropdown-toggle text-start" type="button" 
+                id="${discipline.replace(/\s+/g, '_')}_Dropdown"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                Select Course(s)
+              </button>
+              <div class="dropdown-menu w-100 p-2 shadow-sm" 
+                   aria-labelledby="${discipline.replace(/\s+/g, '_')}_Dropdown" 
+                   style="max-height:300px; overflow:auto;">`;
+
+          // Add available courses
+          courses.forEach((course, index) => {
+            dropdownHtml += `
+            <div class="form-check">
+              <input class="form-check-input course-checkbox" type="checkbox" 
+                value="${course}" 
+                id="${discipline.replace(/\s+/g, '_')}_${index}" 
+                name="courses[${discipline}][]">
+              <label class="form-check-label" for="${discipline.replace(/\s+/g, '_')}_${index}">
+                ${course}
+              </label>
+            </div>`;
+          });
+
+          dropdownHtml += `
+              </div>
+            </div>
+          </div>`;
+
+          // Append dropdown to container
+          $("#courseDropdownsContainer").append(dropdownHtml);
+        }
+      });
+    });
 
     // Loading college records details when edit button is clicked
     $('#RecordsModal').on('show.bs.modal', function (e) {
@@ -948,6 +1032,7 @@
           disabled: true
         })
       )
+      $(this).find('.dependent-dropdown').remove();
 
     })
 

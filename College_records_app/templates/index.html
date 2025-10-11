@@ -242,7 +242,7 @@
       overflow-y: auto;
     }
 
-    /* Apply button */
+    /* Apply Filter Button */
     .apply-btn {
       border-radius: 20px;
       font-weight: 600;
@@ -253,6 +253,25 @@
 
     .apply-btn:hover {
       background: #0b5ed7;
+      transform: translateY(-1px);
+    }
+
+    /* Clear Filter Button */
+    .clear-btn {
+      border-radius: 20px;
+      font-weight: 600;
+      padding: 6px 16px;
+      background: #f8d7da;
+      color: #842029;
+      border: none;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .clear-btn:hover {
+      background: #dc3545;
+      /* vibrant red */
+      color: #fff;
       transform: translateY(-1px);
     }
   </style>
@@ -591,11 +610,15 @@
             </ul>
           </div>
 
-          <!-- Apply Button -->
-          <button id="applyFilter" class="btn btn-primary apply-btn">
-            <i class="bi bi-check2-circle"></i> Apply Filter
-          </button>
-        </div>
+          <!-- Apply & Clear Filter Buttons -->
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <button id="applyFilter" class="btn btn-primary apply-btn">
+              <i class="bi bi-check2-circle me-1"></i> Apply Filter
+            </button>
+            <button id="clearFilter" class="btn btn-outline-danger clear-btn">
+              <i class="bi bi-x-circle me-1"></i> Clear Filter
+            </button>
+          </div>
 
       </nav>
     </div>
@@ -794,7 +817,7 @@
           setupLogoutButton();
           showNotification("Login Successful", "success");
           setWelcomeMessage(data.username);
-          $("#colleges_num").text(data.total_colleges_count);  
+          $("#colleges_num").text(data.total_colleges_count);
 
 
         } else if (data.status === 401) {
@@ -879,13 +902,13 @@
 
   $(document).ready(function () {
 
-  // Prevent caching issues on back/forward navigation
+    // Prevent caching issues on back/forward navigation
     $(window).on("pageshow", function (event) {
-    if (event.originalEvent.persisted || (window.performance && window.performance.navigation.type === 2)) {
-      location.reload();
-    }
-  });
-  
+      if (event.originalEvent.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        location.reload();
+      }
+    });
+
     $.ajax({
       url: "{% url 'user_status' %}", // backend endpoint for checking auth
       type: "GET",
@@ -1049,7 +1072,7 @@
         success: function (response) {
           if (response.status === 200) {
             console.log("Filters applied successfully", response);
-            $("#colleges_num").text(response.count_data);
+            $("#colleges_num").text(response.total_colleges_count);
           }
         },
         error: function (xhr, status, error) {
@@ -1058,7 +1081,27 @@
       });
     });
 
+    // 🔹 Clear Filters Button
+    $("#clearFilter").click(function () {
+      // Uncheck all checkboxes in every filter dropdown
+      $(".filter-dropdown .form-check-input").prop("checked", false);
 
+      // Send AJAX to backend to reset filters (optional)
+      $.ajax({
+        url: "{% url 'clear_filters' %}",
+        type: "GET",
+        success: function (data) {
+          if (data.status === 200) {
+            $("#colleges_num").text(data.total_colleges_count);
+             showNotification("Filters cleared successfully!", "success");
+
+          }
+        },
+        error: function () {
+          console.error("Auth check failed");
+        }
+      });
+    });
 
     // validation for authentication form 
     $('#auth_form').validate({
