@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from .models import Colleges
+from .models import College, CollegeProgram
+from django.db.models import Prefetch
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth.models import User
@@ -28,7 +29,7 @@ def get_client_ip(request):
 
 
 def home(request):
-    return render(request, 'index.html', {"Colleges": Colleges.objects.filter(is_deleted = False)})  # Make sure 'index.html' exists in templates
+    return render(request, 'index.html', {"Colleges": College.objects.filter(is_deleted = False)})  # Make sure 'index.html' exists in templates
 
 
 def college_master(request):
@@ -45,13 +46,25 @@ def get_records(request):
     FilteredRecord = 0
     data = []
 
-    TotalRecord = Colleges.objects.filter(is_deleted = False).count()
+    program_prefetch = Prefetch(
+        'college_programs', # related_name in CollegeProgram model
+        queryset=CollegeProgram.objects.filter(is_deleted=False),
+        to_attr='program_list'  # Access via college.active_programs
+    )
+    print(program_prefetch)
+
+    college_queryset = College.objects.filter(is_deleted=False)
+
+    TotalRecord = College.objects.filter(is_deleted = False).count()
 
     # searching
     if search_value:
-        college_queryset = Colleges.objects.filter((Q(College_Code__icontains = search_value)|Q(College_Name__icontains = search_value)|Q(address__icontains = search_value)|Q(country__icontains = search_value)|Q(state__icontains = search_value)|Q(District__icontains = search_value)|Q(taluka__icontains = search_value)|Q(city__icontains = search_value)|Q(pincode__icontains = search_value)|Q(college_type__icontains = search_value)|Q(belongs_to__icontains = search_value)|Q(affiliated__icontains = search_value)|Q(discipline__icontains = search_value))&Q(is_deleted = False))
+        college_queryset = College.objects.filter((Q(College_Code__icontains = search_value)|Q(College_Name__icontains = search_value)|Q(address__icontains = search_value)|Q(country__icontains = search_value)|Q(state__icontains = search_value)|Q(District__icontains = search_value)|Q(taluka__icontains = search_value)|Q(city__icontains = search_value)|Q(pincode__icontains = search_value)|Q(college_type__icontains = search_value)|Q(belongs_to__icontains = search_value)|Q(affiliated__icontains = search_value)|Q(college_programs__Discipline__icontains = search_value)|Q(college_programs__ProgramName__icontains = search_value))&Q(is_deleted = False)).distinct()
     else:
-        college_queryset = Colleges.objects.filter(is_deleted = False)
+        college_queryset = College.objects.filter(is_deleted = False)
+
+    
+    college_queryset = college_queryset.prefetch_related(program_prefetch)
     
     # Filtered record count
     FilteredRecord = college_queryset.count()
@@ -60,7 +73,7 @@ def get_records(request):
     column_index = int(request.GET.get('order[0][column]', 0))
     direction = request.GET.get('order[0][dir]', 'asc')
 
-    column_name = ['College_Code', 'College_Name','address','country','state','District','taluka','city','pincode','college_type','belongs_to','affiliated','discipline'] [column_index]
+    column_name = ['College_Code', 'College_Name','address','country','state','District','taluka','city','pincode','college_type','belongs_to','affiliated'] [column_index]
 
     if direction == 'desc':
         column_name = f'-{column_name}'
@@ -72,10 +85,44 @@ def get_records(request):
 
     college_queryset = college_queryset[start:start+length]
 
+    # Prepare discipline-program pairs
     for college in college_queryset:
-        data.append([college.College_Code, college.College_Name, college.address, college.country ,college.state, college.District, college.taluka, college.city,college.pincode,college.college_type, college.belongs_to, college.affiliated,  college.discipline.replace(",", ", "), college.id])
+        disciplines_map = {}
+        print(getattr(college, 'program_list', []))
+        
 
-    
+        # Group programs by discipline
+        for prog in getattr(college, 'program_list', []):
+            if prog.Discipline not in disciplines_map:
+                disciplines_map[prog.Discipline] = []
+            disciplines_map[prog.Discipline].append(prog.ProgramName)
+
+
+        # Create rows for each discipline-program pair
+        print(disciplines_map)
+        first_row = True
+        for discipline, programs in disciplines_map.items():
+            data.append([
+                college.College_Code if first_row else "", # only show college code in the first row for that college
+                college.College_Name if first_row else "",# only show college name in the first row for that college
+                college.address if first_row else "",# only show address in the first row for that college
+                college.country if first_row else "",# only show country in the first row for that college
+                college.state if first_row else "",# only show state in the first row for that college
+                college.District if first_row else "",# only show district in the first row for that college
+                college.taluka if first_row else "",# only show taluka in the first row for that college
+                college.city if first_row else "",# only show city in the first row for that college
+                college.pincode if first_row else "",# only show pincode in the first row for that college
+                college.college_type if first_row else "",# only show college type in the first row for that college
+                college.belongs_to if first_row else "",# only show belongs to in the first row for that college
+                college.affiliated if first_row else "",# only show affiliated in the first row for that college
+                discipline,# show discipline in each row
+                ", ".join(programs),# show programs in each row
+                college.id if first_row else ""# only show id in the first row for that college
+                ])
+            first_row = False
+
+            print(data)
+        
     response = {
         'draw' : draw,
         'recordsTotal' : TotalRecord,
@@ -108,7 +155,7 @@ def add_edit_record(request):
         client_ip = get_client_ip(request)
 
         if id == 0:
-            college = Colleges.objects.create(
+            college = College.objects.create(
                 College_Code = college_code,
                 College_Name = college_name,
                 address = address,
@@ -133,7 +180,7 @@ def add_edit_record(request):
             return JsonResponse(response_data)
         
         else:
-            college = Colleges.objects.get(id = id)
+            college = College.objects.get(id = id)
             college.College_Code = college_code
             college.College_Name = college_name
             college.address = address
@@ -162,7 +209,7 @@ def add_edit_record(request):
 def delete_record(request):
     if request.method == 'POST':
         id = request.POST.get('id')
-        record = Colleges.objects.get(id = id)
+        record = College.objects.get(id = id)
         record.is_deleted = True
         record.save()
 
@@ -179,7 +226,7 @@ def user_status(request):
             'is_authenticated' : True,
             'username' : request.user.username,
             'status' : 200,
-            'total_colleges_count' : Colleges.objects.filter(is_deleted = False).count()
+            'total_colleges_count' : College.objects.filter(is_deleted = False).count()
         }
     else:
         response_data = {
@@ -192,7 +239,7 @@ def clear_filters(request):
     if request.method == "GET":
         response_data = {
             'status' : 200,
-            'total_colleges_count' : Colleges.objects.filter(is_deleted = False).count()
+            'total_colleges_count' : College.objects.filter(is_deleted = False).count()
         }
         return JsonResponse(response_data)
 
@@ -247,7 +294,7 @@ def user_login(request):
                 'message' : 'login successful',
                 'status' : 200,
                 'username' : username,
-                'total_colleges_count' : Colleges.objects.filter(is_deleted = False).count()
+                'total_colleges_count' : College.objects.filter(is_deleted = False).count()
             }
 
             return JsonResponse(response_data)
@@ -306,7 +353,7 @@ def apply_filters(request):
                 discipline_query |= Q(discipline__icontains = discipline)
             filter_criteria &= discipline_query
 
-        filtered_colleges_count = Colleges.objects.filter(filter_criteria).count()
+        filtered_colleges_count = College.objects.filter(filter_criteria).count()
         print("Filtered count:", filtered_colleges_count)
         
         response_data = {

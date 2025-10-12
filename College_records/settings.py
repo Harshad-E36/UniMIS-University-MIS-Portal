@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'College_records.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'College_records',
+        'NAME': 'College_Information',
         'USER' : 'root',
         'PASSWORD' : '',
         'HOST' : 'localhost',

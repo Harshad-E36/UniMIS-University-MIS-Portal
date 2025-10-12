@@ -297,6 +297,7 @@
                 <th>Belongs To</th>
                 <th>Affiliated To</th>
                 <th>Discipline</th>
+                <th>Program</th>
                 <th class="text-center">Action</th>
               </tr>
             </thead>
@@ -700,116 +701,282 @@
   var dataTableInstance = null;
 
   function initDataTable() {
-    if (!$.fn.DataTable.isDataTable('#records_table')) {
-      dataTableInstance = $('#records_table').DataTable({
-        paging: true,
-        searching: true,
-        responsive: true,
-        processing: true,
-        serverSide: true,
-        // scrollY: 360,
-        scrollCollapse: true, // allow table to shrink if less data
-        pageLength: 15,
-        lengthMenu: [[5, 10, 15, 20], ["5", "10", "15", "20"]],
-        ajax: {
-          url: '{% url "get_records" %}',
-          type: 'GET'
-        },
-        columns: [
-          { data: 0 },
-          {
-            data: 1, render: function (data, type, row) {
-              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-            ${data}
-          </span>`;
-            }
-          },
-          {
-            data: 2, render: function (data, type, row) {
-              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-            ${data}
-          </span>`;
-            }
-          },
-          { data: 3 },
-          { data: 4 },
-          { data: 5 },
-          { data: 6 },
-          { data: 7 },
-          { data: 8 },
-          { data: 9 },
-          { data: 10 },
-          { data: 11 },
-          {
-            data: 12, render: function (data, type, row) {
-              return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-                ${data}
-                </span>`;
-            }
-          },
-          { data: null, searchable: false, orderable: false }
-        ],
-        // 👇 Add this block for buttons
-        dom: '<"d-flex justify-content-between align-items-center"lBf>rtip',
-        buttons: [
-          {
-            extend: 'excel',
-            text: 'Export to Excel',
-            className: 'btn btn-success btn-sm',
-            exportOptions: {
-              columns: ':not(:last-child)'   // exclude last column
-            }
-          },
-          {
-            extend: 'print',
-            text: 'Print Table',
-            className: 'btn btn-primary btn-sm',
-            title: 'College Records',
-            exportOptions: {
-              columns: ':not(:last-child)'   // exclude last column
-            },
-            customize: function (win) {
-              $(win.document.body)
-                .css('font-size', '10pt') // smaller font for better fit
-                .prepend('<h3 style="text-align:center">College Records Report</h3>');
-
-              $(win.document.body).find('table')
-                .addClass('compact')
-                .css('font-size', 'inherit')
-                .css('width', '100%')   // full page width
-                .css('table-layout', 'fixed'); // fit columns
-            }
+  if (!$.fn.DataTable.isDataTable('#records_table')) {
+    dataTableInstance = $('#records_table').DataTable({
+      paging: true,
+      searching: true,
+      responsive: true,
+      processing: true,
+      serverSide: true,
+      pageLength: 10,
+      ajax: {
+        url: '{% url "get_records" %}',
+        type: 'GET'
+      },
+      columns: [
+        { data: 0 },
+        {
+          data: 1, render: function (data) {
+            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
           }
-        ],
-        createdRow: function (row, data, dataIndex) {
-          $(row).attr('id', data[13]);
-          console.log('Row created with ID:', data[13]);
-          $('td:eq(13)', row).html(`
+        },
+        {
+          data: 2, render: function (data) {
+            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
+          }
+        },
+        { data: 3 },
+        { data: 4 },
+        { data: 5 },
+        { data: 6 },
+        { data: 7 },
+        { data: 8 },
+        { data: 9 },
+        { data: 10 },
+        { data: 11 },
+        {
+          data: 12, render: function (data) {
+            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
+          }
+        },
+        {
+          data: 13, render: function (data) {
+            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
+          }
+        },
+        { data: null, searchable: false, orderable: false }
+      ],
+      createdRow: function (row, data) {
+        $(row).attr('id', data[14]);
+        $('td:eq(14)', row).html(`
           <div class="d-flex justify-content-center align-items-center gap-2">
-            <a class="btn btn-sm btn-outline-primary" 
-               href="#" 
-               data-bs-toggle="modal" 
-               data-record-id="${data[13]}" 
+            <a class="btn btn-sm btn-outline-primary"
+               href="#"
+               data-bs-toggle="modal"
+               data-record-id="${data[14]}"
                data-bs-target="#RecordsModal"
                title="Edit">
                <i class="bi bi-pencil-square"></i>
             </a>
-            <a class="btn btn-sm btn-outline-danger" 
-               href="#" 
-               onclick="delete_record('${data[13]}')"
+            <a class="btn btn-sm btn-outline-danger"
+               href="#"
+               onclick="delete_record('${data[14]}')"
                title="Delete">
                <i class="bi bi-trash"></i>
             </a>
           </div>`);
+      },
+      dom: '<"d-flex justify-content-between align-items-center"lBf>rtip',
+      buttons: [
+        {
+          extend: 'excel',
+          text: 'Export to Excel',
+          className: 'btn btn-success btn-sm',
+          exportOptions: { columns: ':not(:last-child)' }
+        },
+        {
+          extend: 'print',
+          text: 'Print Table',
+          className: 'btn btn-primary btn-sm',
+          title: 'College Records',
+          exportOptions: { columns: ':not(:last-child)' }
         }
-      });
-
-      // Enable tooltips after draw
-      $('#records_table').on('draw.dt', function () {
-        $('[data-bs-toggle="tooltip"]').tooltip('dispose').tooltip();
-      });
-    }
+      ],
+      drawCallback: function () {
+        groupByCollege();
+      }
+    });
   }
+}
+
+// ✅ Grouping logic
+function groupByCollege() {
+  const table = $('#records_table').DataTable();
+  const rows = table.rows({ page: 'current' }).nodes();
+  let lastCollege = null;
+  let collegeRows = [];
+
+  $(rows).each(function () {
+    const code = $('td:eq(0)', this).text().trim();
+    const discipline = $('td:eq(12)', this).text().trim();
+    const program = $('td:eq(13)', this).text().trim();
+
+    if (lastCollege && code !== lastCollege) {
+      renderGroupedBlock(collegeRows);
+      collegeRows = [];
+    }
+
+    collegeRows.push({ row: this, discipline, program });
+    lastCollege = code;
+  });
+
+  if (collegeRows.length > 0) renderGroupedBlock(collegeRows);
+}
+
+// ✅ Render grouped college block with action buttons
+function renderGroupedBlock(collegeRows) {
+  if (!collegeRows.length) return;
+
+  const firstRow = collegeRows[0].row;
+  const colspan = 15;
+
+  const collegeData = [];
+  for (let i = 0; i <= 11; i++) {
+    collegeData.push($('td:eq(' + i + ')', firstRow).text());
+  }
+
+  const actionHTML = $('td:eq(14)', firstRow).html();
+
+  let innerHTML = `
+    <tr class="table-secondary">
+      ${collegeData.map(v => `<td rowspan="${collegeRows.length}">${v}</td>`).join('')}
+      <td colspan="2">
+        <table class="table table-sm mb-0">
+          <tbody>
+  `;
+
+  collegeRows.forEach(r => {
+    innerHTML += `
+      <tr>
+        <td>${r.discipline}</td>
+        <td>${r.program.replace(/,/g, '<br>')}</td>
+      </tr>
+    `;
+  });
+
+  innerHTML += `
+          </tbody>
+        </table>
+      </td>
+      <td rowspan="${collegeRows.length}">
+        ${actionHTML}
+      </td>
+    </tr>
+  `;
+
+  $(firstRow).before(innerHTML);
+  $(collegeRows.map(r => r.row)).remove();
+}
+
+
+  // function initDataTable() {
+  //   if (!$.fn.DataTable.isDataTable('#records_table')) {
+  //     dataTableInstance = $('#records_table').DataTable({
+  //       paging: true,
+  //       searching: true,
+  //       responsive: true,
+  //       processing: true,
+  //       serverSide: true,
+  //       // scrollY: 360,
+  //       scrollCollapse: true, // allow table to shrink if less data
+  //       pageLength: 15,
+  //       lengthMenu: [[5, 10, 15, 20], ["5", "10", "15", "20"]],
+  //       ajax: {
+  //         url: '{% url "get_records" %}',
+  //         type: 'GET'
+  //       },
+  //       columns: [
+  //         { data: 0 },
+  //         {
+  //           data: 1, render: function (data, type, row) {
+  //             return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+  //           ${data}
+  //         </span>`;
+  //           }
+  //         },
+  //         {
+  //           data: 2, render: function (data, type, row) {
+  //             return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+  //           ${data}
+  //         </span>`;
+  //           }
+  //         },
+  //         { data: 3 },
+  //         { data: 4 },
+  //         { data: 5 },
+  //         { data: 6 },
+  //         { data: 7 },
+  //         { data: 8 },
+  //         { data: 9 },
+  //         { data: 10 },
+  //         { data: 11 },
+  //         {
+  //           data: 12, render: function (data, type, row) {
+  //             return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+  //               ${data}
+  //               </span>`;
+  //           }
+  //         },
+  //          {
+  //           data: 13, render: function (data, type, row) {
+  //             return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
+  //               ${data}
+  //               </span>`;
+  //           }
+  //         },
+  //         { data: null, searchable: false, orderable: false }
+  //       ],
+  //       // 👇 Add this block for buttons
+  //       dom: '<"d-flex justify-content-between align-items-center"lBf>rtip',
+  //       buttons: [
+  //         {
+  //           extend: 'excel',
+  //           text: 'Export to Excel',
+  //           className: 'btn btn-success btn-sm',
+  //           exportOptions: {
+  //             columns: ':not(:last-child)'   // exclude last column
+  //           }
+  //         },
+  //         {
+  //           extend: 'print',
+  //           text: 'Print Table',
+  //           className: 'btn btn-primary btn-sm',
+  //           title: 'College Records',
+  //           exportOptions: {
+  //             columns: ':not(:last-child)'   // exclude last column
+  //           },
+  //           customize: function (win) {
+  //             $(win.document.body)
+  //               .css('font-size', '10pt') // smaller font for better fit
+  //               .prepend('<h3 style="text-align:center">College Records Report</h3>');
+
+  //             $(win.document.body).find('table')
+  //               .addClass('compact')
+  //               .css('font-size', 'inherit')
+  //               .css('width', '100%')   // full page width
+  //               .css('table-layout', 'fixed'); // fit columns
+  //           }
+  //         }
+  //       ],
+  //       createdRow: function (row, data, dataIndex) {
+  //         $(row).attr('id', data[14]);
+  //         console.log('Row created with ID:', data[14]);
+  //         $('td:eq(14)', row).html(`
+  //         <div class="d-flex justify-content-center align-items-center gap-2">
+  //           <a class="btn btn-sm btn-outline-primary" 
+  //              href="#" 
+  //              data-bs-toggle="modal" 
+  //              data-record-id="${data[14]}" 
+  //              data-bs-target="#RecordsModal"
+  //              title="Edit">
+  //              <i class="bi bi-pencil-square"></i>
+  //           </a>
+  //           <a class="btn btn-sm btn-outline-danger" 
+  //              href="#" 
+  //              onclick="delete_record('${data[14]}')"
+  //              title="Delete">
+  //              <i class="bi bi-trash"></i>
+  //           </a>
+  //         </div>`);
+  //       }
+  //     });
+
+  //     // Enable tooltips after draw
+  //     $('#records_table').on('draw.dt', function () {
+  //       $('[data-bs-toggle="tooltip"]').tooltip('dispose').tooltip();
+  //     });
+  //   }
+  // }
 
   // setting up logout button 
   function setupLogoutButton() {
