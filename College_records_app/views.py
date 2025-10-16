@@ -42,95 +42,91 @@ def get_records(request):
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '')
 
-    TotalRecord = 0
-    FilteredRecord = 0
-    data = []
+    TotalRecord = College.objects.filter(is_deleted=False).count()
 
     program_prefetch = Prefetch(
-        'college_programs', # related_name in CollegeProgram model
+        'college_programs',
         queryset=CollegeProgram.objects.filter(is_deleted=False),
-        to_attr='program_list'  # Access via college.active_programs
+        to_attr='program_list'
     )
-    print(program_prefetch)
 
     college_queryset = College.objects.filter(is_deleted=False)
 
-    TotalRecord = College.objects.filter(is_deleted = False).count()
-
-    # searching
     if search_value:
-        college_queryset = College.objects.filter((Q(College_Code__icontains = search_value)|Q(College_Name__icontains = search_value)|Q(address__icontains = search_value)|Q(country__icontains = search_value)|Q(state__icontains = search_value)|Q(District__icontains = search_value)|Q(taluka__icontains = search_value)|Q(city__icontains = search_value)|Q(pincode__icontains = search_value)|Q(college_type__icontains = search_value)|Q(belongs_to__icontains = search_value)|Q(affiliated__icontains = search_value)|Q(college_programs__Discipline__icontains = search_value)|Q(college_programs__ProgramName__icontains = search_value))&Q(is_deleted = False)).distinct()
-    else:
-        college_queryset = College.objects.filter(is_deleted = False)
+        college_queryset = college_queryset.filter(
+            Q(College_Code__icontains=search_value)
+            | Q(College_Name__icontains=search_value)
+            | Q(address__icontains=search_value)
+            | Q(country__icontains=search_value)
+            | Q(state__icontains=search_value)
+            | Q(District__icontains=search_value)
+            | Q(taluka__icontains=search_value)
+            | Q(city__icontains=search_value)
+            | Q(pincode__icontains=search_value)
+            | Q(college_type__icontains=search_value)
+            | Q(belongs_to__icontains=search_value)
+            | Q(affiliated__icontains=search_value)
+            | Q(college_programs__Discipline__icontains=search_value)
+            | Q(college_programs__ProgramName__icontains=search_value)
+        ).distinct()
 
-    
     college_queryset = college_queryset.prefetch_related(program_prefetch)
-    
-    # Filtered record count
     FilteredRecord = college_queryset.count()
 
-    #sorting
+    # Sorting
     column_index = int(request.GET.get('order[0][column]', 0))
     direction = request.GET.get('order[0][dir]', 'asc')
-
-    column_name = ['College_Code', 'College_Name','address','country','state','District','taluka','city','pincode','college_type','belongs_to','affiliated'] [column_index]
-
+    column_map = [
+        'College_Code', 'College_Name', 'address', 'country', 'state',
+        'District', 'taluka', 'city', 'pincode', 'college_type',
+        'belongs_to', 'affiliated'
+    ]
+    column_name = column_map[column_index] if column_index < len(column_map) else 'College_Code'
     if direction == 'desc':
         column_name = f'-{column_name}'
-    
     college_queryset = college_queryset.order_by(column_name)
 
+    # Pagination
+    college_queryset = college_queryset[start:start + length]
 
-    # pagination
+    data = []
 
-    college_queryset = college_queryset[start:start+length]
-
-    # Prepare discipline-program pairs
     for college in college_queryset:
         disciplines_map = {}
-        print(getattr(college, 'program_list', []))
-        
 
-        # Group programs by discipline
         for prog in getattr(college, 'program_list', []):
-            if prog.Discipline not in disciplines_map:
-                disciplines_map[prog.Discipline] = []
-            disciplines_map[prog.Discipline].append(prog.ProgramName)
+            disciplines_map.setdefault(prog.Discipline, []).append(prog.ProgramName)
 
-
-        # Create rows for each discipline-program pair
-        print(disciplines_map)
         first_row = True
         for discipline, programs in disciplines_map.items():
             data.append([
-                college.College_Code if first_row else "", # only show college code in the first row for that college
-                college.College_Name if first_row else "",# only show college name in the first row for that college
-                college.address if first_row else "",# only show address in the first row for that college
-                college.country if first_row else "",# only show country in the first row for that college
-                college.state if first_row else "",# only show state in the first row for that college
-                college.District if first_row else "",# only show district in the first row for that college
-                college.taluka if first_row else "",# only show taluka in the first row for that college
-                college.city if first_row else "",# only show city in the first row for that college
-                college.pincode if first_row else "",# only show pincode in the first row for that college
-                college.college_type if first_row else "",# only show college type in the first row for that college
-                college.belongs_to if first_row else "",# only show belongs to in the first row for that college
-                college.affiliated if first_row else "",# only show affiliated in the first row for that college
-                discipline,# show discipline in each row
-                ", ".join(programs),# show programs in each row
-                college.id if first_row else ""# only show id in the first row for that college
-                ])
+                college.College_Code if first_row else "",
+                college.College_Name if first_row else "",
+                college.address if first_row else "",
+                college.country if first_row else "",
+                college.state if first_row else "",
+                college.District if first_row else "",
+                college.taluka if first_row else "",
+                college.city if first_row else "",
+                college.pincode if first_row else "",
+                college.college_type if first_row else "",
+                college.belongs_to if first_row else "",
+                college.affiliated if first_row else "",
+                discipline,
+                ", ".join(programs),
+                college.id if first_row else "",  # visible action cell
+                college.id  # hidden group key (NEW)
+            ])
             first_row = False
 
-            print(data)
-        
     response = {
-        'draw' : draw,
-        'recordsTotal' : TotalRecord,
-        'recordsFiltered' : FilteredRecord,
-        'data' : data
+        'draw': draw,
+        'recordsTotal': TotalRecord,
+        'recordsFiltered': FilteredRecord,
+        'data': data
     }
-
     return JsonResponse(response)
+
 
 
 @ajax_login_required

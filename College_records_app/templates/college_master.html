@@ -252,6 +252,33 @@
       transform: translateX(-50%) translateY(20px);
     }
 
+    #records_table tbody tr.group-end {
+      border-bottom: none;
+    }
+
+    #records_table tbody tr.separator-row td {
+      padding: 0;
+      border: 0;
+      height: 8px;
+      position: relative;
+    }
+
+    #records_table tbody tr.separator-row td::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-bottom: 2px solid #444;
+    }
+
+    #records_table {
+      border-collapse: collapse;
+    }
+
+    #records_table tbody td {
+      border-bottom: none;
+    }
   </style>
 </head>
 
@@ -281,7 +308,7 @@
 
         </div>
         <div class="table-container d-none" id="datatable_wrapper">
-          <table class="table table-hover table-striped align-middle" id="records_table">
+          <table class="table table-hover align-middle" id="records_table">
             <thead>
               <tr>
                 <th>College Code</th>
@@ -698,10 +725,10 @@
     }
   });
 
-  var dataTableInstance = null;
-
+  let dataTableInstance = null;
   function initDataTable() {
-  if (!$.fn.DataTable.isDataTable('#records_table')) {
+    if ($.fn.DataTable.isDataTable('#records_table')) return;
+
     dataTableInstance = $('#records_table').DataTable({
       paging: true,
       searching: true,
@@ -711,62 +738,31 @@
       pageLength: 10,
       ajax: {
         url: '{% url "get_records" %}',
-        type: 'GET'
+        type: 'GET',
       },
       columns: [
-        { data: 0 },
-        {
-          data: 1, render: function (data) {
-            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
-          }
-        },
-        {
-          data: 2, render: function (data) {
-            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
-          }
-        },
-        { data: 3 },
-        { data: 4 },
-        { data: 5 },
-        { data: 6 },
-        { data: 7 },
-        { data: 8 },
-        { data: 9 },
-        { data: 10 },
-        { data: 11 },
-        {
-          data: 12, render: function (data) {
-            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
-          }
-        },
-        {
-          data: 13, render: function (data) {
-            return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
-          }
-        },
-        { data: null, searchable: false, orderable: false }
+        { data: 0 },                     // ID / College Code
+        { data: 1, render: renderWithTooltip }, // Name
+        { data: 2, render: renderWithTooltip }, // Address
+        { data: 3 },                     // Country
+        { data: 4, render: renderWithTooltip }, // State
+        { data: 5 },                     // District
+        { data: 6 },                     // Taluka
+        { data: 7 },                     // City
+        { data: 8 },                     // Pincode
+        { data: 9 },                     // College Type
+        { data: 10 },                    // Belongs To
+        { data: 11 },                    // Affiliated To
+        { data: 12, render: renderWithTooltip }, // Discipline
+        { data: 13, render: renderWithTooltip }, // Program
+        { data: 14, searchable: false, orderable: false }, // Action (visible only on first row)
+        { data: 15, visible: false, searchable: false, orderable: false } // Hidden group key
       ],
-      createdRow: function (row, data) {
-        $(row).attr('id', data[14]);
-        $('td:eq(14)', row).html(`
-          <div class="d-flex justify-content-center align-items-center gap-2">
-            <a class="btn btn-sm btn-outline-primary"
-               href="#"
-               data-bs-toggle="modal"
-               data-record-id="${data[14]}"
-               data-bs-target="#RecordsModal"
-               title="Edit">
-               <i class="bi bi-pencil-square"></i>
-            </a>
-            <a class="btn btn-sm btn-outline-danger"
-               href="#"
-               onclick="delete_record('${data[14]}')"
-               title="Delete">
-               <i class="bi bi-trash"></i>
-            </a>
-          </div>`);
-      },
+
+      createdRow: handleRowCreation,
+
       dom: '<"d-flex justify-content-between align-items-center"lBf>rtip',
+
       buttons: [
         {
           extend: 'excel',
@@ -782,201 +778,109 @@
           exportOptions: { columns: ':not(:last-child)' }
         }
       ],
-      drawCallback: function () {
-        groupByCollege();
-      }
+
+      drawCallback: groupByCollege
     });
   }
-}
 
-// ✅ Grouping logic
-function groupByCollege() {
-  const table = $('#records_table').DataTable();
-  const rows = table.rows({ page: 'current' }).nodes();
-  let lastCollege = null;
-  let collegeRows = [];
 
-  $(rows).each(function () {
-    const code = $('td:eq(0)', this).text().trim();
-    const discipline = $('td:eq(12)', this).text().trim();
-    const program = $('td:eq(13)', this).text().trim();
-
-    if (lastCollege && code !== lastCollege) {
-      renderGroupedBlock(collegeRows);
-      collegeRows = [];
-    }
-
-    collegeRows.push({ row: this, discipline, program });
-    lastCollege = code;
-  });
-
-  if (collegeRows.length > 0) renderGroupedBlock(collegeRows);
-}
-
-// ✅ Render grouped college block with action buttons
-function renderGroupedBlock(collegeRows) {
-  if (!collegeRows.length) return;
-
-  const firstRow = collegeRows[0].row;
-  const colspan = 15;
-
-  const collegeData = [];
-  for (let i = 0; i <= 11; i++) {
-    collegeData.push($('td:eq(' + i + ')', firstRow).text());
+  /* ---------- Helper: Tooltip cell renderer ---------- */
+  function renderWithTooltip(data) {
+    if (!data) return '';
+    return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">${data}</span>`;
   }
 
-  const actionHTML = $('td:eq(14)', firstRow).html();
+  /* ---------- Helper: Handle action buttons and rowspan cells ---------- */
+  function handleRowCreation(row, data) {
+    const recordId = data[14]; // action id only present on first row
+    $(row).attr('id', recordId);
 
-  let innerHTML = `
-    <tr class="table-secondary">
-      ${collegeData.map(v => `<td rowspan="${collegeRows.length}">${v}</td>`).join('')}
-      <td colspan="2">
-        <table class="table table-sm mb-0">
-          <tbody>
-  `;
+    const $actionCell = $('td:eq(14)', row);
 
-  collegeRows.forEach(r => {
-    innerHTML += `
-      <tr>
-        <td>${r.discipline}</td>
-        <td>${r.program.replace(/,/g, '<br>')}</td>
+    if (recordId) {
+      $actionCell.html(`
+      <div class="d-flex justify-content-center align-items-center gap-2 action-icons">
+        <a class="btn btn-sm btn-outline-primary"
+           href="#"
+           data-bs-toggle="modal"
+           data-record-id="${recordId}"
+           data-bs-target="#RecordsModal"
+           title="Edit">
+           <i class="bi bi-pencil-square"></i>
+        </a>
+        <a class="btn btn-sm btn-outline-danger"
+           href="#"
+           onclick="delete_record('${recordId}')"
+           title="Delete">
+           <i class="bi bi-trash"></i>
+        </a>
+      </div>
+    `);
+    } else {
+      $actionCell.remove(); // Remove empty action cell for rowspan children
+    }
+  }
+
+
+  /* ---------- Helper: Group rows visually by college code ---------- */
+  function groupByCollege() {
+    const table = $('#records_table').DataTable();
+    const rows = table.rows({ page: 'current' }).nodes();
+
+    // Remove existing separators
+    $('#records_table tbody tr.separator-row').remove();
+
+    const grouped = {};
+
+    // Group by hidden group key in column 15; ignore responsive child rows
+    $(rows).each(function () {
+      const $row = $(this);
+      if ($row.hasClass('child')) return;
+      const key = $row.find('td:eq(15)').text().trim();
+      if (!key) return;
+      (grouped[key] = grouped[key] || []).push($row);
+    });
+
+    $.each(grouped, function (_, rowsArr) {
+      const rowspan = rowsArr.length;
+      const $firstRow = $(rowsArr[0]);
+
+      // Shared columns: 0–12 shared; 13=Discipline NOT shared; 14=Program NOT shared; 15 hidden key (not displayed); 14 Action is shared visually
+      const sharedCols = [...Array(13).keys(), 14]; // indices 0..12 plus 14
+
+      // Apply rowspan to shared columns on the first row
+      sharedCols.forEach(i => {
+        const $cell = $firstRow.find(`td:eq(${i})`);
+        if ($cell.length) $cell.attr('rowspan', rowspan).addClass('align-middle');
+      });
+
+      // Clear shared columns in child rows
+      for (let i = 1; i < rowsArr.length; i++) {
+        const $dup = $(rowsArr[i]);
+        sharedCols.forEach(j => {
+          $dup.find(`td:eq(${j})`).empty();
+        });
+      }
+
+      // Mark the actual last row of the group
+      rowsArr.forEach($r => $r.removeClass('group-end'));
+      const $lastRow = $(rowsArr).last();
+      $lastRow.addClass('group-end');
+
+      // Insert separator AFTER the group
+      const colCount = table.columns(':visible').count();
+      const $sep = $(`
+      <tr class="separator-row" role="presentation" aria-hidden="true">
+        <td colspan="${colCount}"></td>
       </tr>
-    `;
-  });
+    `);
+      $lastRow.after($sep);
+    });
 
-  innerHTML += `
-          </tbody>
-        </table>
-      </td>
-      <td rowspan="${collegeRows.length}">
-        ${actionHTML}
-      </td>
-    </tr>
-  `;
+    // Reinitialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+  }
 
-  $(firstRow).before(innerHTML);
-  $(collegeRows.map(r => r.row)).remove();
-}
-
-
-  // function initDataTable() {
-  //   if (!$.fn.DataTable.isDataTable('#records_table')) {
-  //     dataTableInstance = $('#records_table').DataTable({
-  //       paging: true,
-  //       searching: true,
-  //       responsive: true,
-  //       processing: true,
-  //       serverSide: true,
-  //       // scrollY: 360,
-  //       scrollCollapse: true, // allow table to shrink if less data
-  //       pageLength: 15,
-  //       lengthMenu: [[5, 10, 15, 20], ["5", "10", "15", "20"]],
-  //       ajax: {
-  //         url: '{% url "get_records" %}',
-  //         type: 'GET'
-  //       },
-  //       columns: [
-  //         { data: 0 },
-  //         {
-  //           data: 1, render: function (data, type, row) {
-  //             return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-  //           ${data}
-  //         </span>`;
-  //           }
-  //         },
-  //         {
-  //           data: 2, render: function (data, type, row) {
-  //             return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-  //           ${data}
-  //         </span>`;
-  //           }
-  //         },
-  //         { data: 3 },
-  //         { data: 4 },
-  //         { data: 5 },
-  //         { data: 6 },
-  //         { data: 7 },
-  //         { data: 8 },
-  //         { data: 9 },
-  //         { data: 10 },
-  //         { data: 11 },
-  //         {
-  //           data: 12, render: function (data, type, row) {
-  //             return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-  //               ${data}
-  //               </span>`;
-  //           }
-  //         },
-  //          {
-  //           data: 13, render: function (data, type, row) {
-  //             return `<span class="truncate-text" data-bs-toggle="tooltip" title="${data}">
-  //               ${data}
-  //               </span>`;
-  //           }
-  //         },
-  //         { data: null, searchable: false, orderable: false }
-  //       ],
-  //       // 👇 Add this block for buttons
-  //       dom: '<"d-flex justify-content-between align-items-center"lBf>rtip',
-  //       buttons: [
-  //         {
-  //           extend: 'excel',
-  //           text: 'Export to Excel',
-  //           className: 'btn btn-success btn-sm',
-  //           exportOptions: {
-  //             columns: ':not(:last-child)'   // exclude last column
-  //           }
-  //         },
-  //         {
-  //           extend: 'print',
-  //           text: 'Print Table',
-  //           className: 'btn btn-primary btn-sm',
-  //           title: 'College Records',
-  //           exportOptions: {
-  //             columns: ':not(:last-child)'   // exclude last column
-  //           },
-  //           customize: function (win) {
-  //             $(win.document.body)
-  //               .css('font-size', '10pt') // smaller font for better fit
-  //               .prepend('<h3 style="text-align:center">College Records Report</h3>');
-
-  //             $(win.document.body).find('table')
-  //               .addClass('compact')
-  //               .css('font-size', 'inherit')
-  //               .css('width', '100%')   // full page width
-  //               .css('table-layout', 'fixed'); // fit columns
-  //           }
-  //         }
-  //       ],
-  //       createdRow: function (row, data, dataIndex) {
-  //         $(row).attr('id', data[14]);
-  //         console.log('Row created with ID:', data[14]);
-  //         $('td:eq(14)', row).html(`
-  //         <div class="d-flex justify-content-center align-items-center gap-2">
-  //           <a class="btn btn-sm btn-outline-primary" 
-  //              href="#" 
-  //              data-bs-toggle="modal" 
-  //              data-record-id="${data[14]}" 
-  //              data-bs-target="#RecordsModal"
-  //              title="Edit">
-  //              <i class="bi bi-pencil-square"></i>
-  //           </a>
-  //           <a class="btn btn-sm btn-outline-danger" 
-  //              href="#" 
-  //              onclick="delete_record('${data[14]}')"
-  //              title="Delete">
-  //              <i class="bi bi-trash"></i>
-  //           </a>
-  //         </div>`);
-  //       }
-  //     });
-
-  //     // Enable tooltips after draw
-  //     $('#records_table').on('draw.dt', function () {
-  //       $('[data-bs-toggle="tooltip"]').tooltip('dispose').tooltip();
-  //     });
-  //   }
-  // }
 
   // setting up logout button 
   function setupLogoutButton() {
@@ -1053,6 +957,57 @@ function renderGroupedBlock(collegeRows) {
     "Design & Fashion Technology": ["B.Des - Fashion Design"],
   };
 
+  function createCourseDropdowns(selectedDisciplines, selectedCourses = {}) {
+    // Clear all previously generated dropdowns
+    $("#courseDropdownsContainer").empty();
+
+    // For each selected discipline, create dropdown
+    selectedDisciplines.forEach((discipline) => {
+      if (disciplineCourses[discipline] !== undefined) {
+        const courses = disciplineCourses[discipline];
+
+        // Build dropdown HTML
+        let dropdownHtml = `
+        <div class="col-12 mt-3 dependent-dropdown">
+          <label class="form-label fw-semibold">${discipline} Courses</label>
+          <div class="dropdown w-100">
+            <button class="form-select dropdown-toggle text-start" type="button" 
+              id="${discipline.replace(/\s+/g, '_')}_Dropdown"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              Select Course(s)
+            </button>
+            <div class="dropdown-menu w-100 p-2 shadow-sm" 
+                 aria-labelledby="${discipline.replace(/\s+/g, '_')}_Dropdown" 
+                 style="max-height:300px; overflow:auto;">`;
+
+        // Add available courses and pre-check if present in selectedCourses
+        courses.forEach((course, index) => {
+          // Trim both strings to avoid hidden space mismatches
+          const isChecked = (selectedCourses[discipline] || []).some(c => c.trim() === course.trim());
+          dropdownHtml += `
+          <div class="form-check">
+            <input class="form-check-input course-checkbox" type="checkbox" 
+              value="${course}" 
+              id="${discipline.replace(/\s+/g, '_')}_${index}" 
+              name="courses[${discipline}][]" 
+              ${isChecked ? 'checked' : ''}>
+            <label class="form-check-label" for="${discipline.replace(/\s+/g, '_')}_${index}">
+              ${course}
+            </label>
+          </div>`;
+        });
+
+        dropdownHtml += `
+            </div>
+          </div>
+        </div>`;
+
+        // Append dropdown to container
+        $("#courseDropdownsContainer").append(dropdownHtml);
+      }
+    });
+  }
+
 
   $('document').ready(function () {
 
@@ -1085,123 +1040,91 @@ function renderGroupedBlock(collegeRows) {
           return $(this).val();
         })
         .get();
+      createCourseDropdowns(selectedDisciplines, {});
 
-      // Clear all previously generated dropdowns
-      $("#courseDropdownsContainer").empty();
 
-      // For each selected discipline, create dropdown
-      selectedDisciplines.forEach((discipline) => {
-        if (disciplineCourses[discipline] !== undefined) {
-          const courses = disciplineCourses[discipline];
-
-          // Build dropdown HTML
-          let dropdownHtml = `
-          <div class="col-12 mt-3 dependent-dropdown">
-            <label class="form-label fw-semibold">${discipline} Courses</label>
-            <div class="dropdown w-100">
-              <button class="form-select dropdown-toggle text-start" type="button" 
-                id="${discipline.replace(/\s+/g, '_')}_Dropdown"
-                data-bs-toggle="dropdown" aria-expanded="false">
-                Select Course(s)
-              </button>
-              <div class="dropdown-menu w-100 p-2 shadow-sm" 
-                   aria-labelledby="${discipline.replace(/\s+/g, '_')}_Dropdown" 
-                   style="max-height:300px; overflow:auto;">`;
-
-          // Add available courses
-          courses.forEach((course, index) => {
-            dropdownHtml += `
-            <div class="form-check">
-              <input class="form-check-input course-checkbox" type="checkbox" 
-                value="${course}" 
-                id="${discipline.replace(/\s+/g, '_')}_${index}" 
-                name="courses[${discipline}][]">
-              <label class="form-check-label" for="${discipline.replace(/\s+/g, '_')}_${index}">
-                ${course}
-              </label>
-            </div>`;
-          });
-
-          dropdownHtml += `
-              </div>
-            </div>
-          </div>`;
-
-          // Append dropdown to container
-          $("#courseDropdownsContainer").append(dropdownHtml);
-        }
-      });
     });
 
-    // Loading college records details when edit button is clicked
+    // Edit modal autofill
     $('#RecordsModal').on('show.bs.modal', function (e) {
-      var $modal = $(this)
-      var record_id = $(e.relatedTarget).data('record-id')
+      const $modal = $(this);
+      const record_id = $(e.relatedTarget).data('record-id');
+      const table = $('#records_table').DataTable();
 
       if (record_id > 0) {
-        $modal.find('.modal-title').text('Edit Record')
-        $modal.find('#submit_button').text('Edit')
-        $modal.find('#record_id').val(record_id)
+        $modal.find('.modal-title').text('Edit Record');
+        $modal.find('#submit_button').text('Edit');
+        $modal.find('#record_id').val(record_id);
 
-        var rowdata = $('table#records_table').DataTable().row('table#records_table tbody tr#' + record_id).data()
+        const mainRow = table.row(`#${record_id}`).data();
+        if (!mainRow) return;
 
-        // populate modal form fields in order to edit 
-        $modal.find('#college_code').val(rowdata[0])
-        $modal.find('#college_name').val(rowdata[1])
-        $modal.find('#address').val(rowdata[2])
-        $modal.find('#country').val(rowdata[3])
-        $modal.find('#state').val(rowdata[4])
-        // district -> trigger change so taluka options are populated
-        $modal.find('#district').val(rowdata[5]).trigger('change');
-        // tiny delay prevents timing issues)
-        setTimeout(function () {
-          $modal.find('#taluka').val(rowdata[6]);
-          $modal.find('#city').val(rowdata[7]);
+        // Fill in the shared college details
+        $modal.find('#college_code').val(mainRow[0]);
+        $modal.find('#college_name').val(mainRow[1]);
+        $modal.find('#address').val(mainRow[2]);
+        $modal.find('#country').val(mainRow[3]);
+        $modal.find('#state').val(mainRow[4]);
+        $modal.find('#district').val(mainRow[5]).trigger('change');
+        setTimeout(() => {
+          $modal.find('#taluka').val(mainRow[6]);
+          $modal.find('#city').val(mainRow[7]);
         }, 10);
-        $modal.find('#pincode').val(rowdata[8])
-        $modal.find('#college_type').val(rowdata[9])
-        $modal.find('#belongs_to').val(rowdata[10])
-        $modal.find('#affiliated_to').val(rowdata[11])
+        $modal.find('#pincode').val(mainRow[8]);
+        $modal.find('#college_type').val(mainRow[9]);
+        $modal.find('#belongs_to').val(mainRow[10]);
+        $modal.find('#affiliated_to').val(mainRow[11]);
 
-        // Discipline (multi-select dropdown)
-        var disciplines = rowdata[12] ? rowdata[12].split(',').map(d => d.trim()) : [];
+        // --- Handle Disciplines correctly ---
+        const collegeGroupId = mainRow[15]; // hidden group key
+        const allRows = table.rows().data().toArray().filter(r => r[15] === collegeGroupId);
 
-        // First uncheck all
-        $modal.find('.discipline-checkbox').prop('checked', false)
-        // Then check the ones that match
-        disciplines.forEach(function (val) {
-          $modal.find('.discipline-checkbox[value="' + val + '"]').prop('checked', true);
+        // Collect all disciplines for this college
+        const disciplines = [...new Set(allRows.map(r => r[12]).filter(Boolean))];
+
+        // Reset and check the matching checkboxes
+        $modal.find('.discipline-checkbox').prop('checked', false);
+        disciplines.forEach(d => {
+          $modal.find(`.discipline-checkbox[value="${d}"]`).prop('checked', true);
         });
 
+        // --- Handle Course Dropdowns ---
+        // Build a mapping of courses for each discipline from the table data
+        const coursesByDiscipline = {};
+        allRows.forEach(r => {
+          const discipline = r[12]?.trim(); // Column 12
+          const course = r[13]?.trim();     // Column 13
+          if (discipline && course) {
+            if (!coursesByDiscipline[discipline]) coursesByDiscipline[discipline] = [];
+            if (!coursesByDiscipline[discipline].includes(course)) {
+              coursesByDiscipline[discipline].push(course);
+            }
+          }
+        });
+
+        // Generate dependent course dropdowns with selected courses
+        createCourseDropdowns(disciplines, coursesByDiscipline);
       }
     }).on('hidden.bs.modal', function () {
-      var $modal = $(this)
-      $modal.find('.modal-title').text('Add Record')
-      $modal.find('#submit_button').text('Add')
-      $modal.find('#record_id').val(0)
-      $('#add_edit_form')[0].reset()
-      $('#add_edit_form').validate().resetForm()
+      const $modal = $(this);
+      $modal.find('.modal-title').text('Add Record');
+      $modal.find('#submit_button').text('Add');
+      $modal.find('#record_id').val(0);
+      $('#add_edit_form')[0].reset();
+      $('#add_edit_form').validate().resetForm();
       $modal.find('.discipline-checkbox').prop('checked', false);
 
-      // this is to reset the city and taluka fields after modal closes
+      // Reset dependent dropdowns
       $modal.find('#city').empty().append(
-        $('<option>', {
-          value: '',
-          text: 'Select City',
-          selected: true
-        })
-      )
+        $('<option>', { value: '', text: 'Select City', selected: true })
+      );
       $modal.find('#taluka').empty().append(
-        $('<option>', {
-          value: '',
-          text: 'Select Taluka',
-          selected: true,
-          disabled: true
-        })
-      )
-      $(this).find('.dependent-dropdown').remove();
+        $('<option>', { value: '', text: 'Select Taluka', selected: true, disabled: true })
+      );
+      $modal.find('.dependent-dropdown').remove();
+    });
 
-    })
+
 
     // lookup for which mode is in use for login/signup 
     const modes = {
@@ -1301,11 +1224,7 @@ function renderGroupedBlock(collegeRows) {
         }
 
       }
-      // errorElement: "div",
-      // errorPlacement: function (error, element) {
-      //   error.addClass("text-danger small");
-      //   error.insertAfter(element);
-      // }
+
     });
 
     // Add a custom validation method
