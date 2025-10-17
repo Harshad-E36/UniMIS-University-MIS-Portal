@@ -132,74 +132,39 @@ def get_records(request):
 @ajax_login_required
 def add_edit_record(request):
     if request.method == "POST":
-        id = int(request.POST.get('id'))
-        college_code = request.POST.get('college_code')
-        college_name = request.POST.get('college_name')
-        address = request.POST.get('address')
-        country = request.POST.get('country')
-        state = request.POST.get('state')
-        district = request.POST.get('district')
-        taluka = request.POST.get('taluka')
-        city = request.POST.get('city')
-        pincode = request.POST.get('pincode')
-        college_type = request.POST.get('college_type')
-        belongs_to = request.POST.get('belongs_to')
-        affiliated = request.POST.get('affiliated_to')
-        discipline_list = request.POST.getlist('discipline[]')
-        discipline = ",".join(discipline_list) 
+        try:
+            form_data = request.POST.copy()
 
-        client_ip = get_client_ip(request)
+            # Convert normal fields into dictionary
+            data_dict = {}
+            for key in form_data:
+                if key != 'selected_courses':
+                    data_dict[key] = form_data.get(key)
 
-        if id == 0:
-            college = College.objects.create(
-                College_Code = college_code,
-                College_Name = college_name,
-                address = address,
-                country = country,
-                state = state,
-                District = district,
-                taluka = taluka,
-                city = city,
-                pincode = pincode,
-                college_type = college_type,
-                belongs_to = belongs_to,
-                affiliated = affiliated,
-                discipline = discipline,
-                created_by = client_ip
-            )
+            # Parse selected_courses JSON
+            selected_courses_raw = form_data.get('selected_courses', '{}')
+            try:
+                selected_courses = json.loads(selected_courses_raw)
+            except json.JSONDecodeError:
+                selected_courses = {}
 
-            response_data = {
-                'message' : "record created successfully",
-                'status' : 201
-            }
+            data_dict['selected_courses'] = selected_courses
 
-            return JsonResponse(response_data)
-        
-        else:
-            college = College.objects.get(id = id)
-            college.College_Code = college_code
-            college.College_Name = college_name
-            college.address = address
-            college.country = country
-            college.state = state
-            college.District = district
-            college.taluka = taluka
-            college.city = city
-            college.pincode = pincode
-            college.college_type = college_type
-            college.belongs_to = belongs_to
-            college.affiliated = affiliated
-            college.discipline = discipline
-            college.updated_by = client_ip
+            # ✅ Print everything clearly
+            print("======== FULL FORM DATA RECEIVED ========")
+            print(json.dumps(data_dict, indent=2))
+            print("=========================================")
 
-            college.save()
+            return JsonResponse({
+                'status': 200,
+                'received_data': data_dict
+            })
 
-            response_data = {
-                'message' : "record updated successfully",
-                'status' : 200
-            }
+        except Exception as e:
+            print("Error:", str(e))
+            return JsonResponse({'status': 500, 'error': str(e)})
 
-            return JsonResponse(response_data)
+
 
 @ajax_login_required
 def delete_record(request):

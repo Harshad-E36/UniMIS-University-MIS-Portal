@@ -933,7 +933,7 @@
 
   // Mapping of disciplines to their courses
   const disciplineCourses = {
-    "Engineering / Technology": ["B.Tech in Computer Engineering"],
+    "Engineering / Technology": ["B.Tech", "M.Tech"],
     "Medical": ["MBBS - Medicine"],
     "Dental": ["BDS - Dental Surgery"],
     "Pharmacy": ["B.Pharm - Pharmacy"],
@@ -1041,9 +1041,9 @@
         })
         .get();
       createCourseDropdowns(selectedDisciplines, {});
-
-
     });
+
+
 
     // Edit modal autofill
     $('#RecordsModal').on('show.bs.modal', function (e) {
@@ -1126,7 +1126,7 @@
 
 
 
-    // lookup for which mode is in use for login/signup 
+    // lookup for which mode is in use for login/signup
     const modes = {
       login: {
         title: "Login",
@@ -1401,33 +1401,54 @@
 
   // Function to add or edit a contact based on the status code returned
   function add_edit_records() {
+    const formData = $('#add_edit_form').serializeArray();
+    const dataObj = {};
+
+    // ✅ Collect all fields up to 'affiliated_to' (flat key-value)
+    formData.forEach(item => {
+      // Only include fields that aren't discipline[] or courses[…]
+      if (!item.name.startsWith('discipline') && !item.name.startsWith('courses')) {
+        dataObj[item.name] = item.value;
+      }
+    });
+
+    // ✅ Collect selected discipline-course mapping
+    const selectedCourses = {};
+    $(".discipline-checkbox:checked").each(function () {
+      const discipline = $(this).val();
+      const courses = $(`input[name="courses[${discipline}][]"]:checked`)
+        .map(function () { return $(this).val(); })
+        .get();
+      if (courses.length > 0) {
+        selectedCourses[discipline] = courses;
+      }
+    });
+
+    // ✅ Add selected_courses to payload
+    dataObj['selected_courses'] = JSON.stringify(selectedCourses);
+
     $.ajax({
       url: '{% url "add_edit_record" %}',
       type: 'POST',
-      data: $('#add_edit_form').serialize(),
-      success: function (data, status, xhr) {
-        // when add button is clicked the id will be 0 hence the status returned will be 201
-
+      data: dataObj,
+      success: function (data) {
+        console.log("Response from backend:", data);
         if (data.status === 201) {
-          $('table#records_table').DataTable().draw()
+          $('table#records_table').DataTable().draw();
           showNotification("Record added successfully!", "success");
-        }
-
-        // when the edit button is clicked the id will be a non zero value hence status code 200 will be returned indicating that an existing record is overwritten
-
-        else if (data.status === 200) {
-          $('table#records_table').DataTable().draw()
+        } else if (data.status === 200) {
+          $('table#records_table').DataTable().draw();
           showNotification("Record updated successfully!", "success");
         }
-        // hide the modal automatically after the use is fulfilled
-        $('#RecordsModal').modal('hide')
+        $('#RecordsModal').modal('hide');
       },
-
       error: function (xhr, status, error) {
+        console.error("AJAX Error:", error);
         showNotification("Error: " + error, "error");
-      }
-    })
+      },
+    });
   }
+
 
   // this function is called by the delete anchor itself with the contact id as a parameter, it sends the id and csrf middleware token and a status code 204 is generated when the contact corresponding to the id is deleted, then the ajax removes it from the front end
   function delete_record(id) {
