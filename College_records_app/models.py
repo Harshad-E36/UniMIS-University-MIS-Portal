@@ -32,7 +32,7 @@ class Discipline(models.Model):
 
 class Programs(models.Model):
     Discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE, related_name='programs') # by adding Discipline in parathesis of Programs model to the primary key of the Discipline model — which by default is an auto-generated integer field named id
-    ProgramName = models.CharField(max_length=50)
+    ProgramName = models.CharField(max_length=150)
 
     class Meta:
         unique_together = ('Discipline', 'ProgramName')
