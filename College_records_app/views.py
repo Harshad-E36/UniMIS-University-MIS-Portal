@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import College, CollegeProgram
+from .models import College, CollegeProgram, Taluka, District, Discipline, Programs
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.http import JsonResponse
@@ -324,3 +324,15 @@ def apply_filters(request):
         }
 
         return JsonResponse(response_data)
+    
+
+def get_talukas(request):
+    if request.method == "GET":
+        district_name = request.GET.get('district')
+        if not district_name:
+            return JsonResponse({'talukas': []})
+        
+        talukas = Taluka.objects.filter(District__DistrictName=district_name).values_list('TalukaName', flat=True)
+        print(talukas)
+        return JsonResponse({'talukas': list(talukas)})
+    return JsonResponse({'talukas': []})

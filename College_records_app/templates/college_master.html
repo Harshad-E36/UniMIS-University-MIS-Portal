@@ -1267,69 +1267,57 @@
       }
     })
 
-    // lookup for talukas 
-    var talukasByDistrict = {
-      "Nagpur": [
-        "Nagpur (Urban)", "Nagpur (Rural)", "Hingna", "Kamptee", "Savner",
-        "Katol", "Ramtek", "Umred", "Narkhed", "Parseoni",
-        "Mauda", "Kuhi", "Kalameshwar", "Bhiwapur"
-      ],
-      "Gadchiroli": [
-        "Gadchiroli", "Aheri", "Armori", "Kurkheda", "Desaiganj (Vadasa)",
-        "Dhanora", "Etapalli", "Sironcha", "Mulchera", "Korchi",
-        "Bhamragad", "Chamorshi"
-      ],
-      "Amravati": [
-        "Amravati", "Achalpur", "Warud", "Chandurbazar", "Dharni",
-        "Morshi", "Daryapur", "Anjangaon Surji", "Dhamangaon Railway",
-        "Nandgaon-Khandeshwar", "Chikhaldara", "Bhatkuli", "Teosa",
-        "Chandur Railway"
-      ]
-    }
-    $('#district').on('change', function () {
-      // Sync City with District
-      var selectedDistrict = $(this).val();
 
-      if (selectedDistrict) {
-        $('#city').empty()
-          .append($('<option>', {
+    // Dynamic Taluka and City Syncing
+    $('#district').on('change', function () {
+    // Sync City with District
+    var selectedDistrict = $(this).val();
+
+    if (selectedDistrict) {
+        $('#city').empty().append($('<option>', {
             value: selectedDistrict,
             text: selectedDistrict,
             selected: true
-          }));
-      } else {
-        $('#city').empty()
-          .append($('<option>', {
+        }));
+    } else {
+        $('#city').empty().append($('<option>', {
             value: '',
             text: 'Select City',
             selected: true
-          }));
-      }
+        }));
+    }
 
-      // Sync Taluka with District
-      var district = $(this).val()
-      var $taluka = $('#taluka')
+    // Sync Taluka with District via AJAX (single district)
+    var $taluka = $('#taluka');
 
-      // Reset taluka dropdown
-      $taluka.empty().append(
-        $('<option>', {
-          value: '',
-          text: 'Select Taluka',
-          selected: true,
-          disabled: true
-        })
-      )
+    // Reset taluka dropdown
+    $taluka.empty().append($('<option>', {
+        value: '',
+        text: 'Select Taluka',
+        selected: true,
+        disabled: true
+    }));
 
-      // If district exists in lookup, populate
-      if (talukasByDistrict[district]) {
-        $.each(talukasByDistrict[district], function (i, taluka) {
-          $taluka.append(
-            $('<option>', { value: taluka, text: taluka })
-          )
-        })
-      }
-    });
-
+    if (selectedDistrict) {
+        $.ajax({
+            url: '/get-talukas/',  // Django view URL
+            type: 'GET',
+            data: { district: selectedDistrict },
+            success: function(response) {
+                // response.talukas is a list of taluka names
+                $.each(response.talukas, function(index,taluka) {
+                    $taluka.append($('<option>', {
+                        value: taluka,
+                        text: taluka
+                    }));
+                });
+            },
+            error: function() {
+                console.log('Error fetching talukas');
+            }
+        });
+    }
+});
 
     // Reinitialize tooltips every time DataTables redraws
     $('#records_table').on('draw.dt', function () {
