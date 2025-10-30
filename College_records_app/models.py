@@ -10,6 +10,7 @@ class District(models.Model):
     def __str__(self):
         return self.DistrictName
     
+    
 
 class Taluka(models.Model):
     District = models.ForeignKey(District, on_delete=models.CASCADE, related_name='talukas') # by adding District in parathesis of Taluka model to the primary key of the District model — which by default is an auto-generated integer field named id
@@ -39,7 +40,18 @@ class Programs(models.Model):
 
     def __str__(self):
         return f"{self.ProgramName} ({self.Discipline.DisciplineName})"
-    
+
+class CollegeType(models.Model):
+    CollegeTypeName = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.CollegeTypeName
+
+class BelongsTo(models.Model):
+    BelongsToName = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.BelongsToName
 
 
 # College master table
@@ -75,7 +87,7 @@ class CollegeProgram(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ('Discipline', 'ProgramName')
+        unique_together = ('College','Discipline', 'ProgramName')
 
     def __str__(self):
         return f"({self.Discipline}) {self.ProgramName}"

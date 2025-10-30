@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import College, CollegeProgram, Taluka, District, Discipline, Programs
+from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.http import JsonResponse
@@ -29,11 +29,11 @@ def get_client_ip(request):
 
 
 def home(request):
-    return render(request, 'index.html', {"Colleges": College.objects.filter(is_deleted = False)})  # Make sure 'index.html' exists in templates
-
+    return render(request, 'index.html', {"Colleges": College.objects.filter(is_deleted = False), "disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all(), "programs":Programs.objects.all()})  # Make sure 'index.html' exists in templates
+   
 
 def college_master(request):
-    return render(request, 'college_master.html')  # Make sure 'tables.html' exists in templates
+    return render(request, 'college_master.html', {"disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all()})  # Make sure 'tables.html' exists in templates
 
 
 def get_records(request):
@@ -132,38 +132,92 @@ def get_records(request):
 @ajax_login_required
 def add_edit_record(request):
     if request.method == "POST":
-        try:
-            form_data = request.POST.copy()
+        id = int(request.POST.get('id'))
+        college_code = request.POST.get('college_code')
+        college_name = request.POST.get('college_name')
+        address = request.POST.get('address')
+        country = request.POST.get('country')
+        state = request.POST.get('state')
+        district = request.POST.get('district')
+        taluka = request.POST.get('taluka')
+        city = request.POST.get('city')
+        pincode = request.POST.get('pincode')
+        college_type = request.POST.get('college_type')
+        belongs_to = request.POST.get('belongs_to')
+        affiliated = request.POST.get('affiliated_to')
+        disciplines_programs_json = request.POST.get('disciplines_programs')
 
-            # Convert normal fields into dictionary
-            data_dict = {}
-            for key in form_data:
-                if key != 'selected_courses':
-                    data_dict[key] = form_data.get(key)
+        disciplines_programs = json.loads(disciplines_programs_json)
 
-            # Parse selected_courses JSON
-            selected_courses_raw = form_data.get('selected_courses', '{}')
-            try:
-                selected_courses = json.loads(selected_courses_raw)
-            except json.JSONDecodeError:
-                selected_courses = {}
+        if id > 0:
+            # Edit existing record
+            college = College.objects.get(id=id)
+            college.College_Code = college_code
+            college.College_Name = college_name
+            college.address = address
+            college.country = country
+            college.state = state
+            college.District = district
+            college.taluka = taluka
+            college.city = city
+            college.pincode = pincode
+            college.college_type = college_type
+            college.belongs_to = belongs_to
+            college.affiliated = affiliated
+            college.updated_by = get_client_ip(request)
+            college.save()
 
-            data_dict['selected_courses'] = selected_courses
+            # Update CollegeProgram entries
+            CollegeProgram.objects.filter(College=college).update(is_deleted=True)
+            for item in disciplines_programs:
+                discipline = item['Discipline']
+                program_name = item['ProgramName']
+                cp, created = CollegeProgram.objects.get_or_create(
+                    College=college,
+                    Discipline=discipline,
+                    ProgramName=program_name,
+                    defaults={'is_deleted': False}
+                )
+                if not created:
+                    cp.is_deleted = False
+                    cp.save()
 
-            # ✅ Print everything clearly
-            print("======== FULL FORM DATA RECEIVED ========")
-            print(json.dumps(data_dict, indent=2))
-            print("=========================================")
-
-            return JsonResponse({
-                'status': 200,
-                'received_data': data_dict
-            })
-
-        except Exception as e:
-            print("Error:", str(e))
-            return JsonResponse({'status': 500, 'error': str(e)})
-
+            response_data = {
+                'message': 'record updated successfully',
+                'status': 200
+            }
+            return JsonResponse(response_data)
+        else:
+            # Add new record
+            college = College.objects.create(
+                College_Code=college_code,
+                College_Name=college_name,
+                address=address,
+                country=country,
+                state=state,
+                District=district,
+                taluka=taluka,
+                city=city,
+                pincode=pincode,
+                college_type=college_type,
+                belongs_to=belongs_to,
+                affiliated=affiliated,
+                created_by=get_client_ip(request)
+            )   
+            for item in disciplines_programs:
+                discipline = item['Discipline']
+                program_name = item['ProgramName']
+                CollegeProgram.objects.create(
+                    College=college,
+                    Discipline=discipline,
+                    ProgramName=program_name
+                )
+            response_data = {
+                'message': 'record added successfully',
+                'status': 201
+            }
+            return JsonResponse(response_data)
+        
 
 
 @ajax_login_required
@@ -189,6 +243,7 @@ def user_status(request):
             'status' : 200,
             'total_colleges_count' : College.objects.filter(is_deleted = False).count()
         }
+        print(response_data)
     else:
         response_data = {
             'is_authenticated' : False,
@@ -285,8 +340,9 @@ def apply_filters(request):
         college_types = request.POST.getlist('CollegeType[]')
         belongs_tos = request.POST.getlist('BelongsTo[]')
         disciplines = request.POST.getlist('Discipline[]')
+        programs = request.POST.getlist('Programs[]')
 
-        print(college_codes, college_names, districts, talukas, college_types, belongs_tos, disciplines)
+        print(college_codes, college_names, districts, talukas, college_types, belongs_tos, disciplines, programs)
 
         filter_criteria = Q(is_deleted = False)
 
@@ -311,10 +367,17 @@ def apply_filters(request):
         if disciplines:
             discipline_query = Q()
             for discipline in disciplines:
-                discipline_query |= Q(discipline__icontains = discipline)
+                discipline_query |= Q(college_programs__Discipline__icontains = discipline)
             filter_criteria &= discipline_query
+        if programs:
+            program_query = Q()
+            for program in programs:
+                program_query |= Q(college_programs__ProgramName__icontains = program)
+            filter_criteria &= program_query
+        
 
-        filtered_colleges_count = College.objects.filter(filter_criteria).count()
+
+        filtered_colleges_count = College.objects.filter(filter_criteria).distinct().count()
         print("Filtered count:", filtered_colleges_count)
         
         response_data = {
@@ -336,3 +399,23 @@ def get_talukas(request):
         print(talukas)
         return JsonResponse({'talukas': list(talukas)})
     return JsonResponse({'talukas': []})
+
+
+def get_programs_for_discipline(request):
+    disciplines = request.GET.getlist('discipline')
+    print(disciplines)  # Get from AJAX call
+    response_data = {}
+
+    for discipline_name in disciplines:
+        # Fetch all programs related to this discipline from DB
+        programs = Programs.objects.filter(
+            Discipline__DisciplineName=discipline_name
+        ).values_list('ProgramName', flat=True)
+
+        # If no programs found, use default placeholder
+        if programs:
+            response_data[discipline_name] = list(programs)
+        else:
+            response_data[discipline_name] = ["No programs available"]
+
+    return JsonResponse(response_data)

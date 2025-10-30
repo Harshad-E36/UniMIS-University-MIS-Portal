@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import College, CollegeProgram, Discipline, Programs, District, Taluka
+from .models import College, CollegeProgram, Discipline, Programs, District, Taluka, CollegeType, BelongsTo
 
 # Register your models here.
 
@@ -32,3 +32,12 @@ class ProgramsAdmin(admin.ModelAdmin):
 @admin.register(CollegeProgram)
 class CollegeProgramAdmin(admin.ModelAdmin):
     list_display = ('College', 'Discipline', 'ProgramName')
+
+
+@admin.register(CollegeType)
+class CollegeTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'CollegeTypeName')    
+
+@admin.register(BelongsTo)
+class BelongsToAdmin(admin.ModelAdmin):   
+    list_display = ('id', 'BelongsToName')
