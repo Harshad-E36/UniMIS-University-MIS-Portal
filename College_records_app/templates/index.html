@@ -397,56 +397,13 @@
               <i class="bi bi-funnel"></i> College Type
             </button>
             <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterCollegeType">
+              {% for type in Collegetype %}
               <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType1"
-                    name="collegeType" value="Government"><label class="form-check-label"
-                    for="collegeType1">Government</label></div>
-              </li>
+                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox" id="collegeType{{ forloop.counter }}"
+                    name="collegeType" value="{{ type.CollegeTypeName }}"><label class="form-check-label"
+                    for="collegeType{{ forloop.counter }}">{{ type.CollegeTypeName }}</label></div>
               <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType2"
-                    name="collegeType" value="Semi Government"><label class="form-check-label" for="collegeType2">Semi
-                    Government</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType3"
-                    name="collegeType" value="Government Aided"><label class="form-check-label"
-                    for="collegeType3">Government Aided</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType4"
-                    name="collegeType" value="Private / Unaided"><label class="form-check-label"
-                    for="collegeType4">Private / Unaided</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType5"
-                    name="collegeType" value="Private / Aided"><label class="form-check-label"
-                    for="collegeType5">Private / Aided</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType6"
-                    name="collegeType" value="Autonomous"><label class="form-check-label"
-                    for="collegeType6">Autonomous</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType7"
-                    name="collegeType" value="Deemed University"><label class="form-check-label"
-                    for="collegeType7">Deemed University</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType8"
-                    name="collegeType" value="Constituent College"><label class="form-check-label"
-                    for="collegeType8">Constituent College</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType9"
-                    name="collegeType" value="Central University"><label class="form-check-label"
-                    for="collegeType9">Central University</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="collegeType10"
-                    name="collegeType" value="State University"><label class="form-check-label"
-                    for="collegeType10">State University</label></div>
-              </li>
+              {% endfor %}
             </ul>
           </div>
 
@@ -458,34 +415,11 @@
             </button>
             <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterBelongsTo">
               <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo1" name="belongsTo"
-                    value="Minority"><label class="form-check-label" for="belongsTo1">Minority</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo2" name="belongsTo"
-                    value="Non-Minority"><label class="form-check-label" for="belongsTo2">Non-Minority</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo3" name="belongsTo"
-                    value="Ladies / Women's College"><label class="form-check-label" for="belongsTo3">Ladies / Women's
-                    College</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo4" name="belongsTo"
-                    value="Co-Education"><label class="form-check-label" for="belongsTo4">Co-Education</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo5" name="belongsTo"
-                    value="Person with Disability / Inclusive College"><label class="form-check-label"
-                    for="belongsTo5">Person with Disability / Inclusive College</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo6" name="belongsTo"
-                    value="Tribal College"><label class="form-check-label" for="belongsTo6">Tribal College</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo7" name="belongsTo"
-                    value="Rural College"><label class="form-check-label" for="belongsTo7">Rural College</label></div>
+                {% for belong in BelongsTo %}
+                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo{{ forloop.counter }}"
+                    name="belongsTo" value="{{ belong.BelongsToName }}"><label class="form-check-label"
+                    for="belongsTo{{ forloop.counter }}">{{ belong.BelongsToName }}</label></div>
+                {% endfor %}
               </li>
             </ul>
           </div>
@@ -498,115 +432,34 @@
             </button>
             <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterDiscipline"
               style="max-height:300px; overflow:auto;">
+              {% for discipline in disciplines %}
               <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline1"
+                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox" id="discipline{{ forloop.counter }}"
                     name="discipline" value="Engineering / Technology"><label class="form-check-label"
-                    for="discipline1">Engineering / Technology</label></div>
+                    for="discipline1">{{ discipline.DisciplineName }}</label></div>
               </li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          <!-- Programs -->
+            <div class="dropdown">
+            <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterProgram"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <i class="bi bi-funnel"></i> Program
+            </button>
+            <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterProgram"
+              style="max-height:300px; overflow:auto;">
               <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline2"
-                    name="discipline" value="Medical"><label class="form-check-label" for="discipline2">Medical</label>
-                </div>
+                <input type="text" class="form-control mb-2" placeholder="Search...">
               </li>
+              {% for program in programs %}
               <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline3"
-                    name="discipline" value="Dental"><label class="form-check-label" for="discipline3">Dental</label>
-                </div>
+                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox" id="Program{{ forloop.counter }}"
+                    name="Programs" value="{{ program.ProgramName }}"><label class="form-check-label"
+                    for="Program1">{{ program.ProgramName }}</label></div>
               </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline4"
-                    name="discipline" value="Pharmacy"><label class="form-check-label"
-                    for="discipline4">Pharmacy</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline5"
-                    name="discipline" value="Nursing / Paramedical"><label class="form-check-label"
-                    for="discipline5">Nursing / Paramedical</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline6"
-                    name="discipline" value="Law"><label class="form-check-label" for="discipline6">Law</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline7"
-                    name="discipline" value="Commerce"><label class="form-check-label"
-                    for="discipline7">Commerce</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline8"
-                    name="discipline" value="Arts / Humanities"><label class="form-check-label" for="discipline8">Arts /
-                    Humanities</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline9"
-                    name="discipline" value="Science"><label class="form-check-label" for="discipline9">Science</label>
-                </div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline10"
-                    name="discipline" value="Education (B.Ed / D.Ed / M.Ed)"><label class="form-check-label"
-                    for="discipline10">Education (B.Ed / D.Ed / M.Ed)</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline11"
-                    name="discipline" value="Polytechnic / Diploma Institute"><label class="form-check-label"
-                    for="discipline11">Polytechnic / Diploma Institute</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline12"
-                    name="discipline" value="Agriculture"><label class="form-check-label"
-                    for="discipline12">Agriculture</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline13"
-                    name="discipline" value="Veterinary Science"><label class="form-check-label"
-                    for="discipline13">Veterinary Science</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline14"
-                    name="discipline" value="Management (MBA / BBA)"><label class="form-check-label"
-                    for="discipline14">Management (MBA / BBA)</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline15"
-                    name="discipline" value="Architecture"><label class="form-check-label"
-                    for="discipline15">Architecture</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline16"
-                    name="discipline" value="Fine Arts / Performing Arts"><label class="form-check-label"
-                    for="discipline16">Fine Arts / Performing Arts</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline17"
-                    name="discipline" value="Computer Applications (BCA / MCA)"><label class="form-check-label"
-                    for="discipline17">Computer Applications (BCA / MCA)</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline18"
-                    name="discipline" value="Social Work"><label class="form-check-label" for="discipline18">Social
-                    Work</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline19"
-                    name="discipline" value="Home Science"><label class="form-check-label" for="discipline19">Home
-                    Science</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline20"
-                    name="discipline" value="Physical Education / Sports"><label class="form-check-label"
-                    for="discipline20">Physical Education / Sports</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline21"
-                    name="discipline" value="Hotel Management / Hospitality"><label class="form-check-label"
-                    for="discipline21">Hotel Management / Hospitality</label></div>
-              </li>
-              <li>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="discipline22"
-                    name="discipline" value="Design & Fashion Technology"><label class="form-check-label"
-                    for="discipline22">Design & Fashion Technology</label></div>
-              </li>
+              {% endfor %}
             </ul>
           </div>
 
@@ -641,7 +494,7 @@
         <div class="col-12 col-md-4">
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
-              <h6 class="card-title">Belongs To</h6>
+              <h6 class="card-title">Students</h6>
               <p class="stat-number mb-0" id="belongs_to_num" name="belongs_to_num">5</p>
             </div>
           </div>
@@ -651,7 +504,7 @@
         <div class="col-12 col-md-4">
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
-              <h6 class="card-title">Affiliated To</h6>
+              <h6 class="card-title">Staff</h6>
               <p class="stat-number mb-0" id="affiliated_to_num" name="affiliated_to_num">7</p>
             </div>
           </div>
@@ -1047,7 +900,9 @@
         collegeType: $("#filterCollegeType + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
         belongsTo: $("#filterBelongsTo + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
         discipline: $("#filterDiscipline + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        programs: $("#filterProgram + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get()
       };
+      console.log("Selected Filters:", selectedFilters);
 
       // Check if at least one filter is selected
       let hasSelection = Object.values(selectedFilters).some(arr => arr.length > 0);
@@ -1067,12 +922,13 @@
           "Taluka[]": selectedFilters.taluka,
           "CollegeType[]": selectedFilters.collegeType,
           "BelongsTo[]": selectedFilters.belongsTo,
-          "Discipline[]": selectedFilters.discipline
+          "Discipline[]": selectedFilters.discipline,
+          "Programs[]": selectedFilters.programs
         },
         success: function (response) {
           if (response.status === 200) {
             console.log("Filters applied successfully", response);
-            $("#colleges_num").text(response.total_colleges_count);
+            $("#colleges_num").text(response.count_data);
           }
         },
         error: function (xhr, status, error) {

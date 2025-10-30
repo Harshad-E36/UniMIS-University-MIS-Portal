@@ -486,16 +486,9 @@
               <label for="college_type" class="form-label">College Type</label>
               <select class="form-select" id="college_type" name="college_type" required>
                 <option value="" disabled selected>Select Type</option>
-                <option value="Government">Government</option>
-                <option value="Semi Government">Semi Government</option>
-                <option value="Government Aided">Government Aided</option>
-                <option value="Private / Unaided">Private / Unaided</option>
-                <option value="Private / Aided">Private / Aided</option>
-                <option value="Autonomous">Autonomous</option>
-                <option value="Deemed University">Deemed University</option>
-                <option value="Constituent College">Constituent College</option>
-                <option value="Central University">Central University</option>
-                <option value="State University">State University</option>
+                {% for type in Collegetype %}
+                <option value="{{type.CollegeTypeName}}">{{ type.CollegeTypeName }}</option>
+                {% endfor %}
               </select>
             </div>
 
@@ -505,14 +498,9 @@
               <label for="belongs_to" class="form-label">Belongs To</label>
               <select class="form-select" id="belongs_to" name="belongs_to" required>
                 <option value="" disabled selected>Select Option</option>
-                <option value="Minority">Minority</option>
-                <option value="Non-Minority">Non-Minority</option>
-                <option value="Ladies / Women's College">Ladies / Women's College</option>
-                <option value="Co-Education">Co-Education</option>
-                <option value="Person with Disability / Inclusive College">Person with Disability / Inclusive College
-                </option>
-                <option value="Tribal College">Tribal College</option>
-                <option value="Rural College">Rural College</option>
+                {% for belong in BelongsTo %}
+                <option value="{{belong.BelongsToName}}">{{ belong.BelongsToName }}</option>
+                {% endfor %}
               </select>
             </div>
 
@@ -538,139 +526,13 @@
 
                 <div class="dropdown-menu w-100 p-2" aria-labelledby="disciplineDropdown"
                   style="max-height:300px; overflow:auto;">
-
+                  {% for discipline in disciplines %}
                   <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Engineering / Technology"
-                      id="discipline_engineering" name="discipline[]">
-                    <label class="form-check-label" for="discipline_engineering">Engineering / Technology</label>
+                    <input class="form-check-input discipline-checkbox" type="checkbox" value="{{ discipline.DisciplineName }}"
+                      id="{{discipline.DisciplineName}}" name="discipline[]">
+                    <label class="form-check-label" for="{{discipline.DisciplineName}}">{{ discipline.DisciplineName }}</label>
                   </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Medical"
-                      id="discipline_medical" name="discipline[]">
-                    <label class="form-check-label" for="discipline_medical">Medical</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Dental"
-                      id="discipline_dental" name="discipline[]">
-                    <label class="form-check-label" for="discipline_dental">Dental</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Pharmacy"
-                      id="discipline_pharmacy" name="discipline[]">
-                    <label class="form-check-label" for="discipline_pharmacy">Pharmacy</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Nursing / Paramedical"
-                      id="discipline_nursing" name="discipline[]">
-                    <label class="form-check-label" for="discipline_nursing">Nursing / Paramedical</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Law" id="discipline_law"
-                      name="discipline[]">
-                    <label class="form-check-label" for="discipline_law">Law</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Commerce"
-                      id="discipline_commerce" name="discipline[]">
-                    <label class="form-check-label" for="discipline_commerce">Commerce</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Arts / Humanities"
-                      id="discipline_arts" name="discipline[]">
-                    <label class="form-check-label" for="discipline_arts">Arts / Humanities</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Science"
-                      id="discipline_science" name="discipline[]">
-                    <label class="form-check-label" for="discipline_science">Science</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox"
-                      value="Education (B.Ed / D.Ed / M.Ed)" id="discipline_education" name="discipline[]">
-                    <label class="form-check-label" for="discipline_education">Education (B.Ed / D.Ed / M.Ed)</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox"
-                      value="Polytechnic / Diploma Institute" id="discipline_polytechnic" name="discipline[]">
-                    <label class="form-check-label" for="discipline_polytechnic">Polytechnic / Diploma Institute</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Agriculture"
-                      id="discipline_agriculture" name="discipline[]">
-                    <label class="form-check-label" for="discipline_agriculture">Agriculture</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Veterinary Science"
-                      id="discipline_veterinary" name="discipline[]">
-                    <label class="form-check-label" for="discipline_veterinary">Veterinary Science</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Management (MBA / BBA)"
-                      id="discipline_management" name="discipline[]">
-                    <label class="form-check-label" for="discipline_management">Management (MBA / BBA)</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Architecture"
-                      id="discipline_architecture" name="discipline[]">
-                    <label class="form-check-label" for="discipline_architecture">Architecture</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox"
-                      value="Fine Arts / Performing Arts" id="discipline_finearts" name="discipline[]">
-                    <label class="form-check-label" for="discipline_finearts">Fine Arts / Performing Arts</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox"
-                      value="Computer Applications (BCA / MCA)" id="discipline_computers" name="discipline[]">
-                    <label class="form-check-label" for="discipline_computers">Computer Applications (BCA / MCA)</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Social Work"
-                      id="discipline_socialwork" name="discipline[]">
-                    <label class="form-check-label" for="discipline_socialwork">Social Work</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="Home Science"
-                      id="discipline_homescience" name="discipline[]">
-                    <label class="form-check-label" for="discipline_homescience">Home Science</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox"
-                      value="Physical Education / Sports" id="discipline_sports" name="discipline[]">
-                    <label class="form-check-label" for="discipline_sports">Physical Education / Sports</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox"
-                      value="Hotel Management / Hospitality" id="discipline_hotel" name="discipline[]">
-                    <label class="form-check-label" for="discipline_hotel">Hotel Management / Hospitality</label>
-                  </div>
-
-                  <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox"
-                      value="Design & Fashion Technology" id="discipline_design" name="discipline[]">
-                    <label class="form-check-label" for="discipline_design">Design & Fashion Technology</label>
-                  </div>
-
+                  {% endfor %}
                 </div>
               </div>
             </div>
@@ -768,14 +630,19 @@
           extend: 'excel',
           text: 'Export to Excel',
           className: 'btn btn-success btn-sm',
-          exportOptions: { columns: ':not(:last-child)' }
+          exportOptions: { columns: ':not(:last-child)' },
+          title: 'College Records'
         },
         {
           extend: 'print',
           text: 'Print Table',
           className: 'btn btn-primary btn-sm',
           title: 'College Records',
-          exportOptions: { columns: ':not(:last-child)' }
+          exportOptions: { columns: ':not(:last-child)' },
+          customize: function (win) {
+            $(win.document.body).css('font-size', '10pt');
+            $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+          }
         }
       ],
 
@@ -931,82 +798,74 @@
       .attr("data-bs-target", "#AuthModal");
   }
 
-  // Mapping of disciplines to their courses
-  const disciplineCourses = {
-    "Engineering / Technology": ["B.Tech", "M.Tech"],
-    "Medical": ["MBBS - Medicine"],
-    "Dental": ["BDS - Dental Surgery"],
-    "Pharmacy": ["B.Pharm - Pharmacy"],
-    "Nursing / Paramedical": ["B.Sc Nursing"],
-    "Law": ["LLB - Bachelor of Laws"],
-    "Commerce": ["B.Com - Commerce"],
-    "Arts / Humanities": ["BA - English Literature"],
-    "Science": ["B.Sc - Physics"],
-    "Education (B.Ed / D.Ed / M.Ed)": ["B.Ed - Bachelor of Education"],
-    "Polytechnic / Diploma Institute": ["Diploma in Civil Engineering"],
-    "Agriculture": ["B.Sc - Agriculture"],
-    "Veterinary Science": ["BVSc - Veterinary Science"],
-    "Management (MBA / BBA)": ["MBA - Business Administration"],
-    "Architecture": ["B.Arch - Architecture"],
-    "Fine Arts / Performing Arts": ["BFA - Fine Arts"],
-    "Computer Applications (BCA / MCA)": ["BCA - Computer Applications"],
-    "Social Work": ["BSW - Social Work"],
-    "Home Science": ["B.Sc - Home Science"],
-    "Physical Education / Sports": ["B.P.Ed - Physical Education"],
-    "Hotel Management / Hospitality": ["BHM - Hotel Management"],
-    "Design & Fashion Technology": ["B.Des - Fashion Design"],
-  };
-
   function createCourseDropdowns(selectedDisciplines, selectedCourses = {}) {
-    // Clear all previously generated dropdowns
-    $("#courseDropdownsContainer").empty();
+  // Clear all previously generated dropdowns
+  $("#courseDropdownsContainer").empty();
 
-    // For each selected discipline, create dropdown
-    selectedDisciplines.forEach((discipline) => {
-      if (disciplineCourses[discipline] !== undefined) {
-        const courses = disciplineCourses[discipline];
+  if (selectedDisciplines.length === 0) return;
 
-        // Build dropdown HTML
+  // Make AJAX call to Django view
+  $.ajax({
+    url: "{% url 'get_programs' %}", // update with your correct URL path
+    type: "GET",
+    data: { discipline: selectedDisciplines }, // Django will receive a list
+    traditional: true, // ensures list is sent correctly (discipline=one&discipline=two)
+    success: function (response) {
+      // response will look like:
+      // {
+      //   "Engineering / Technology": ["B.Tech", "M.Tech"],
+      //   "Medical": ["MBBS - Medicine"]
+      // }
+
+      Object.keys(response).forEach((discipline) => {
+        const courses = response[discipline] || [];
+
+        // Build dropdown HTML dynamically
         let dropdownHtml = `
-        <div class="col-12 mt-3 dependent-dropdown">
-          <label class="form-label fw-semibold">${discipline} Courses</label>
-          <div class="dropdown w-100">
-            <button class="form-select dropdown-toggle text-start" type="button" 
-              id="${discipline.replace(/\s+/g, '_')}_Dropdown"
-              data-bs-toggle="dropdown" aria-expanded="false">
-              Select Course(s)
-            </button>
-            <div class="dropdown-menu w-100 p-2 shadow-sm" 
-                 aria-labelledby="${discipline.replace(/\s+/g, '_')}_Dropdown" 
-                 style="max-height:300px; overflow:auto;">`;
+          <div class="col-12 mt-3 dependent-dropdown">
+            <label class="form-label fw-semibold">${discipline} Courses</label>
+            <div class="dropdown w-100">
+              <button class="form-select dropdown-toggle text-start" type="button" 
+                id="${discipline.replace(/\s+/g, '_')}_Dropdown"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                Select Course(s)
+              </button>
+              <div class="dropdown-menu w-100 p-2 shadow-sm" 
+                  aria-labelledby="${discipline.replace(/\s+/g, '_')}_Dropdown" 
+                  style="max-height:300px; overflow:auto;">`;
 
         // Add available courses and pre-check if present in selectedCourses
         courses.forEach((course, index) => {
-          // Trim both strings to avoid hidden space mismatches
-          const isChecked = (selectedCourses[discipline] || []).some(c => c.trim() === course.trim());
+          const isChecked = (selectedCourses[discipline] || []).some(
+            (c) => c.trim() === course.trim()
+          );
           dropdownHtml += `
-          <div class="form-check">
-            <input class="form-check-input course-checkbox" type="checkbox" 
-              value="${course}" 
-              id="${discipline.replace(/\s+/g, '_')}_${index}" 
-              name="courses[${discipline}][]" 
-              ${isChecked ? 'checked' : ''}>
-            <label class="form-check-label" for="${discipline.replace(/\s+/g, '_')}_${index}">
-              ${course}
-            </label>
-          </div>`;
+            <div class="form-check">
+              <input class="form-check-input course-checkbox" type="checkbox" 
+                value="${course}" 
+                id="${discipline.replace(/\s+/g, '_')}_${index}" 
+                name="courses[${discipline}][]" 
+                ${isChecked ? "checked" : ""}>
+              <label class="form-check-label" for="${discipline.replace(/\s+/g, '_')}_${index}">
+                ${course}
+              </label>
+            </div>`;
         });
 
         dropdownHtml += `
+              </div>
             </div>
-          </div>
-        </div>`;
+          </div>`;
 
         // Append dropdown to container
         $("#courseDropdownsContainer").append(dropdownHtml);
-      }
-    });
-  }
+      });
+    },
+    error: function (xhr, status, error) {
+      console.error("Error fetching programs:", error);
+    },
+  });
+}
 
 
   $('document').ready(function () {
@@ -1270,54 +1129,54 @@
 
     // Dynamic Taluka and City Syncing
     $('#district').on('change', function () {
-    // Sync City with District
-    var selectedDistrict = $(this).val();
+      // Sync City with District
+      var selectedDistrict = $(this).val();
 
-    if (selectedDistrict) {
+      if (selectedDistrict) {
         $('#city').empty().append($('<option>', {
-            value: selectedDistrict,
-            text: selectedDistrict,
-            selected: true
+          value: selectedDistrict,
+          text: selectedDistrict,
+          selected: true
         }));
-    } else {
+      } else {
         $('#city').empty().append($('<option>', {
-            value: '',
-            text: 'Select City',
-            selected: true
+          value: '',
+          text: 'Select City',
+          selected: true
         }));
-    }
+      }
 
-    // Sync Taluka with District via AJAX (single district)
-    var $taluka = $('#taluka');
+      // Sync Taluka with District via AJAX (single district)
+      var $taluka = $('#taluka');
 
-    // Reset taluka dropdown
-    $taluka.empty().append($('<option>', {
+      // Reset taluka dropdown
+      $taluka.empty().append($('<option>', {
         value: '',
         text: 'Select Taluka',
         selected: true,
         disabled: true
-    }));
+      }));
 
-    if (selectedDistrict) {
+      if (selectedDistrict) {
         $.ajax({
-            url: '/get-talukas/',  // Django view URL
-            type: 'GET',
-            data: { district: selectedDistrict },
-            success: function(response) {
-                // response.talukas is a list of taluka names
-                $.each(response.talukas, function(index,taluka) {
-                    $taluka.append($('<option>', {
-                        value: taluka,
-                        text: taluka
-                    }));
-                });
-            },
-            error: function() {
-                console.log('Error fetching talukas');
-            }
+          url: '/get_talukas/',  // Django view URL
+          type: 'GET',
+          data: { district: selectedDistrict },
+          success: function (response) {
+            // response.talukas is a list of taluka names
+            $.each(response.talukas, function (index, taluka) {
+              $taluka.append($('<option>', {
+                value: taluka,
+                text: taluka
+              }));
+            });
+          },
+          error: function () {
+            console.log('Error fetching talukas');
+          }
         });
-    }
-});
+      }
+    });
 
     // Reinitialize tooltips every time DataTables redraws
     $('#records_table').on('draw.dt', function () {
@@ -1387,47 +1246,41 @@
     })
   }
 
-  // Function to add or edit a contact based on the status code returned
   function add_edit_records() {
     const formData = $('#add_edit_form').serializeArray();
     const dataObj = {};
 
-    // ✅ Collect all fields up to 'affiliated_to' (flat key-value)
+    // ✅ Collect all simple fields (flat key-value, excluding dynamic programs)
     formData.forEach(item => {
-      // Only include fields that aren't discipline[] or courses[…]
       if (!item.name.startsWith('discipline') && !item.name.startsWith('courses')) {
         dataObj[item.name] = item.value;
       }
     });
 
-    // ✅ Collect selected discipline-course mapping
-    const selectedCourses = {};
+    // ✅ Collect selected discipline-course mapping as list of objects
+    const selectedPrograms = [];
     $(".discipline-checkbox:checked").each(function () {
       const discipline = $(this).val();
-      const courses = $(`input[name="courses[${discipline}][]"]:checked`)
-        .map(function () { return $(this).val(); })
-        .get();
-      if (courses.length > 0) {
-        selectedCourses[discipline] = courses;
-      }
+      $(`input[name="courses[${discipline}][]"]:checked`).each(function () {
+        selectedPrograms.push({
+          'Discipline': discipline,
+          'ProgramName': $(this).val()
+        });
+      });
     });
 
-    // ✅ Add selected_courses to payload
-    dataObj['selected_courses'] = JSON.stringify(selectedCourses);
+    // ✅ Add JSON string to payload
+    dataObj['disciplines_programs'] = JSON.stringify(selectedPrograms);
 
+    // ✅ AJAX request
     $.ajax({
       url: '{% url "add_edit_record" %}',
       type: 'POST',
       data: dataObj,
       success: function (data) {
         console.log("Response from backend:", data);
-        if (data.status === 201) {
-          $('table#records_table').DataTable().draw();
-          showNotification("Record added successfully!", "success");
-        } else if (data.status === 200) {
-          $('table#records_table').DataTable().draw();
-          showNotification("Record updated successfully!", "success");
-        }
+        $('table#records_table').DataTable().draw();
+        showNotification(data.message, "success");
         $('#RecordsModal').modal('hide');
       },
       error: function (xhr, status, error) {
@@ -1438,9 +1291,10 @@
   }
 
 
+
   // this function is called by the delete anchor itself with the contact id as a parameter, it sends the id and csrf middleware token and a status code 204 is generated when the contact corresponding to the id is deleted, then the ajax removes it from the front end
   function delete_record(id) {
-    if (confirm("Are you sure you want to delete this contact?")) {
+    if (confirm("Are you sure you want to delete this record?")) {
       $.ajax({
         type: 'POST',
         url: '{% url "delete_record" %}',
