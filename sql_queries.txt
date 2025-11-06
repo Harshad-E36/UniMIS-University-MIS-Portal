@@ -1,0 +1,494 @@
+INSERT INTO college_records_app_collegetype (CollegeTypeName)
+VALUES
+('Government'),
+('Semi Government'),
+('Government Aided'),
+('Private / Unaided'),
+('Private / Aided'),
+('Autonomous'),
+('Deemed University'),
+('Constituent College'),
+('Central University'),
+('State University');
+
+*************************************************************************************************
+
+INSERT INTO college_records_app_belongsto (BelongsToName)
+VALUES
+('Minority – Religious'),
+('Minority – Linguistic'),
+('Non-Minority'),
+('Ladies / Women’s College'),
+('Co-Education'),
+('Person with Disability / Inclusive College'),
+('Tribal College'),
+('Rural College');
+
+**************************************************************************************************
+
+INSERT INTO college_records_app_taluka (TalukaName, District_id)
+SELECT 'Nagpur (Urban)', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Nagpur (Rural)', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Hingna', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Kamptee', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Savner', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Katol', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Ramtek', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Umred', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Narkhed', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Parseoni', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Mauda', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Kuhi', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Kalameshwar', id FROM college_records_app_district WHERE DistrictName = 'Nagpur'
+UNION ALL
+SELECT 'Bhiwapur', id FROM college_records_app_district WHERE DistrictName = 'Nagpur';
+
+***************************
+
+INSERT INTO college_records_app_taluka (TalukaName, District_id)
+SELECT 'Amravati', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Achalpur', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Warud', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Chandurbazar', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Dharni', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Morshi', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Daryapur', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Anjangaon Surji', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Dhamangaon Railway', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Nandgaon-Khandeshwar', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Chikhaldara', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Bhatkuli', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Teosa', id FROM college_records_app_district WHERE DistrictName = 'Amravati'
+UNION ALL
+SELECT 'Chandur Railway', id FROM college_records_app_district WHERE DistrictName = 'Amravati';
+
+****************************
+
+INSERT INTO college_records_app_taluka (TalukaName, District_id)
+SELECT 'Gadchiroli', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Aheri', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Armori', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Kurkheda', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Desaiganj (Vadasa)', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Dhanora', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Etapalli', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Sironcha', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Mulchera', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Korchi', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Bhamragad', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli'
+UNION ALL
+SELECT 'Chamorshi', id FROM college_records_app_district WHERE DistrictName = 'Gadchiroli';
+
+***********************************************************************************
+
+INSERT INTO college_records_app_discipline (DisciplineName)
+VALUES 
+('Engineering / Technology'),
+('Medical'),
+('Dental'),
+('Pharmacy'),
+('Nursing / Paramedical'),
+('Law'),
+('Commerce'),
+('Arts / Humanities'),
+('Science'),
+('Education'),
+('Polytechnic / Diploma Institute'),
+('Agriculture'),
+('Veterinary Science'),
+('Management'),
+('Architecture'),
+('Fine Arts / Performing Arts'),
+('Computer Applications'),
+('Social Work'),
+('Home Science'),
+('Physical Education / Sports'),
+('Hotel Management / Hospitality'),
+('Design & Fashion Technology');
+
+******************************************************************************
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'Diploma in Engineering (Polytechnic)' AS ProgramName UNION ALL
+    SELECT 'Bachelor of Engineering (B.E.)' UNION ALL
+    SELECT 'Bachelor of Technology (B.Tech)' UNION ALL
+    SELECT 'Integrated B.Tech + M.Tech / Dual Degree' UNION ALL
+    SELECT 'Master of Engineering (M.E.)' UNION ALL
+    SELECT 'Master of Technology (M.Tech)' UNION ALL
+    SELECT 'Master of Science in Engineering (M.S. / M.Sc)' UNION ALL
+    SELECT 'Ph.D. in Engineering / Technology' UNION ALL
+    SELECT 'Postgraduate Diploma in Engineering / Technology' UNION ALL
+    SELECT 'Certification in AI / Robotics / IoT' UNION ALL
+    SELECT 'MBA in Technology / Engineering Management'
+) AS t
+ON d.DisciplineName = 'Engineering / Technology';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'MBBS (Bachelor of Medicine, Bachelor of Surgery)' AS ProgramName UNION ALL
+    SELECT 'BDS (Bachelor of Dental Surgery)' UNION ALL
+    SELECT 'BAMS (Bachelor of Ayurvedic Medicine & Surgery)' UNION ALL
+    SELECT 'BHMS (Bachelor of Homeopathic Medicine & Surgery)' UNION ALL
+    SELECT 'BUMS (Bachelor of Unani Medicine & Surgery)' UNION ALL
+    SELECT 'BSMS (Bachelor of Siddha Medicine & Surgery)' UNION ALL
+    SELECT 'BPT (Bachelor of Physiotherapy)' UNION ALL
+    SELECT 'B.Sc Nursing' UNION ALL
+    SELECT 'B.Sc Medical Laboratory Technology' UNION ALL
+    SELECT 'B.Sc Radiology / Imaging Technology' UNION ALL
+    SELECT 'B.Sc Operation Theatre Technology' UNION ALL
+    SELECT 'B.Sc Optometry' UNION ALL
+    SELECT 'B.Sc Perfusion Technology' UNION ALL
+    SELECT 'B.Pharm (Bachelor of Pharmacy)' UNION ALL
+    SELECT 'Diploma in Medical Laboratory Technician / Radiology' UNION ALL
+    SELECT 'MD (Doctor of Medicine)' UNION ALL
+    SELECT 'MS (Master of Surgery)' UNION ALL
+    SELECT 'M.Ch (Master of Chirurgiae)' UNION ALL
+    SELECT 'DM (Doctorate of Medicine)' UNION ALL
+    SELECT 'M.Sc in Medical / Biomedical Sciences' UNION ALL
+    SELECT 'Ph.D in Medical Sciences' UNION ALL
+    SELECT 'Fellowship / Postdoctoral Specialization'
+) AS t
+ON d.DisciplineName = 'Medical';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'BDS (Bachelor of Dental Surgery)' AS ProgramName UNION ALL
+    SELECT 'Diploma in Dentistry' UNION ALL
+    SELECT 'MDS (Master of Dental Surgery)' UNION ALL
+    SELECT 'Ph.D in Dental Sciences' UNION ALL
+    SELECT 'Fellowship / PG Diploma in Dental Specialization' UNION ALL
+    SELECT 'Certificate in Dental Hygiene / Dental Technology'
+) AS t
+ON d.DisciplineName = 'Dental';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'D.Pharm (Diploma in Pharmacy)' AS ProgramName UNION ALL
+    SELECT 'B.Pharm (Bachelor of Pharmacy)' UNION ALL
+    SELECT 'Pharm.D (Doctor of Pharmacy)' UNION ALL
+    SELECT 'M.Pharm (Master of Pharmacy)' UNION ALL
+    SELECT 'M.Tech in Pharmaceutical Technology' UNION ALL
+    SELECT 'M.S. in Pharmaceutical Sciences' UNION ALL
+    SELECT 'Ph.D in Pharmacy / Pharmaceutical Sciences' UNION ALL
+    SELECT 'PG Diploma in Regulatory Affairs / Clinical Pharmacy' UNION ALL
+    SELECT 'Fellowship in Clinical Pharmacy'
+) AS t
+ON d.DisciplineName = 'Pharmacy';
+ 
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'ANM (Auxiliary Nursing Midwifery)' AS ProgramName UNION ALL
+    SELECT 'GNM (General Nursing and Midwifery)' UNION ALL
+    SELECT 'B.Sc Nursing' UNION ALL
+    SELECT 'Post Basic B.Sc Nursing' UNION ALL
+    SELECT 'M.Sc Nursing' UNION ALL
+    SELECT 'Ph.D Nursing' UNION ALL
+    SELECT 'Diploma in Medical Laboratory Technology' UNION ALL
+    SELECT 'B.Sc Medical Laboratory Technology' UNION ALL
+    SELECT 'M.Sc Medical Laboratory Technology' UNION ALL
+    SELECT 'B.Sc Radiology / Imaging Technology' UNION ALL
+    SELECT 'M.Sc Radiology / Imaging Technology' UNION ALL
+    SELECT 'B.Sc Operation Theatre Technology' UNION ALL
+    SELECT 'B.Sc Anesthesia Technology' UNION ALL
+    SELECT 'B.Sc Dialysis Technology' UNION ALL
+    SELECT 'B.Sc Respiratory Therapy' UNION ALL
+    SELECT 'B.Sc Cardiac Care Technology' UNION ALL
+    SELECT 'B.Sc Perfusion Technology' UNION ALL
+    SELECT 'B.Sc Emergency / Trauma Care Technology' UNION ALL
+    SELECT 'B.Sc Ophthalmic Technology' UNION ALL
+    SELECT 'B.Sc Physiotherapy' UNION ALL
+    SELECT 'B.Sc Occupational Therapy' UNION ALL
+    SELECT 'Diploma / Certificate in Paramedical Streams'
+) AS t
+ON d.DisciplineName = 'Nursing / Paramedical';
+ 
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'LL.B (Bachelor of Laws)' AS ProgramName UNION ALL
+    SELECT 'BA LL.B (Integrated)' UNION ALL
+    SELECT 'BBA LL.B (Integrated)' UNION ALL
+    SELECT 'B.Com LL.B (Integrated)' UNION ALL
+    SELECT 'B.Sc LL.B (Integrated)' UNION ALL
+    SELECT 'LL.M (Master of Laws)' UNION ALL
+    SELECT 'PG Diploma in Legal Studies / Cyber Law / IPR' UNION ALL
+    SELECT 'Ph.D in Law' UNION ALL
+    SELECT 'Certificate in Legal / Human Rights / Taxation Law'
+) AS t
+ON d.DisciplineName = 'Law';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.Com (Bachelor of Commerce)' AS ProgramName UNION ALL
+    SELECT 'B.B.I (Bachelor of Banking and Insurance)' UNION ALL
+    SELECT 'B.Com in Corporate Secretaryship' UNION ALL
+    SELECT 'B.Com in International Business' UNION ALL
+    SELECT 'BBA (Bachelor of Business Administration)' UNION ALL
+    SELECT 'BBA Finance / Marketing / HR' UNION ALL
+    SELECT 'M.Com (Master of Commerce)' UNION ALL
+    SELECT 'MBA (Master of Business Administration)' UNION ALL
+    SELECT 'M.Phil / Ph.D in Commerce / Finance' UNION ALL
+    SELECT 'CA (Chartered Accountant)' UNION ALL
+    SELECT 'CMA / CWA (Cost and Management Accountant)' UNION ALL
+    SELECT 'CS (Company Secretary)' UNION ALL
+    SELECT 'PG Diploma in Financial Markets / Taxation / Analytics'
+) AS t
+ON d.DisciplineName = 'Commerce';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.A (Bachelor of Arts)' AS ProgramName UNION ALL
+    SELECT 'B.A (Honours)' UNION ALL
+    SELECT 'Bachelor of Fine Arts (BFA)' UNION ALL
+    SELECT 'B.A in Journalism & Mass Communication' UNION ALL
+    SELECT 'B.A in Languages / Cultural Studies / Sociology / Psychology / Philosophy / Geography' UNION ALL
+    SELECT 'Integrated B.A + M.A' UNION ALL
+    SELECT 'M.A (Master of Arts)' UNION ALL
+    SELECT 'M.Phil / Ph.D in Humanities' UNION ALL
+    SELECT 'PG Diploma in Translation / Heritage / Museum Studies'
+) AS t
+ON d.DisciplineName = 'Arts / Humanities';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.Sc (Bachelor of Science – General / Honours)' AS ProgramName UNION ALL
+    SELECT 'B.Sc in Physics / Chemistry / Biology / Mathematics / Computer Science' UNION ALL
+    SELECT 'B.Sc Biotechnology / Microbiology / Environmental Science' UNION ALL
+    SELECT 'B.Sc Zoology / Botany / Geology / Forensic Science' UNION ALL
+    SELECT 'Integrated BS + MS / Dual Degree' UNION ALL
+    SELECT 'M.Sc (Master of Science)' UNION ALL
+    SELECT 'M.Phil / Ph.D in Science' UNION ALL
+    SELECT 'PG Diploma / Certificate in Specialized Science Fields' UNION ALL
+    SELECT 'B.Sc Data Science / Computational Science'
+) AS t
+ON d.DisciplineName = 'Science';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'D.Ed (Diploma in Education)' AS ProgramName UNION ALL
+    SELECT 'B.Ed (Bachelor of Education)' UNION ALL
+    SELECT 'B.Ed Special Education' UNION ALL
+    SELECT 'Integrated B.A + B.Ed' UNION ALL
+    SELECT 'Integrated B.Sc + B.Ed' UNION ALL
+    SELECT 'M.Ed (Master of Education)' UNION ALL
+    SELECT 'Ph.D in Education' UNION ALL
+    SELECT 'PG Diploma in Educational Technology / Counseling'
+) AS t
+ON d.DisciplineName = 'Education';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'Diploma in Engineering / Polytechnic' AS ProgramName UNION ALL
+    SELECT 'Advanced Diploma / Higher Diploma' UNION ALL
+    SELECT 'Diploma in Automobile / Mechatronics / Textile / CAD-CAM' UNION ALL
+    SELECT 'Certificate in Technical Fields' UNION ALL
+    SELECT 'Lateral Entry to B.E / B.Tech'
+) AS t
+ON d.DisciplineName = 'Polytechnic / Diploma Institute';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.Sc Agriculture' AS ProgramName UNION ALL
+    SELECT 'B.Sc Horticulture' UNION ALL
+    SELECT 'B.Sc Forestry' UNION ALL
+    SELECT 'B.Sc Agricultural Biotechnology' UNION ALL
+    SELECT 'B.Tech Agricultural Engineering' UNION ALL
+    SELECT 'Diploma in Agriculture / Horticulture / Forestry' UNION ALL
+    SELECT 'M.Sc Agriculture / Agronomy / Soil Science' UNION ALL
+    SELECT 'MBA / M.Sc Agribusiness Management' UNION ALL
+    SELECT 'Ph.D Agricultural Sciences' UNION ALL
+    SELECT 'PG Diploma in Agri Marketing / Food Technology'
+) AS t
+ON d.DisciplineName = 'Agriculture';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.V.Sc & A.H (Bachelor of Veterinary Science & Animal Husbandry)' AS ProgramName UNION ALL
+    SELECT 'Diploma in Veterinary / Animal Husbandry' UNION ALL
+    SELECT 'M.V.Sc (Master of Veterinary Science)' UNION ALL
+    SELECT 'Ph.D Veterinary Sciences' UNION ALL
+    SELECT 'Certificate in Animal Nutrition / Livestock Management'
+) AS t
+ON d.DisciplineName = 'Veterinary Science';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'BBA (Bachelor of Business Administration)' AS ProgramName UNION ALL
+    SELECT 'Integrated BBA + MBA' UNION ALL
+    SELECT 'MBA (Master of Business Administration)' UNION ALL
+    SELECT 'Executive / Distance MBA' UNION ALL
+    SELECT 'PG Diploma in Management' UNION ALL
+    SELECT 'FPM / Ph.D in Management' UNION ALL
+    SELECT 'Certificate in Business Analytics / Entrepreneurship'
+) AS t
+ON d.DisciplineName = 'Management';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.Arch (Bachelor of Architecture)' AS ProgramName UNION ALL
+    SELECT 'Diploma in Architecture / Assistantship' UNION ALL
+    SELECT 'M.Arch (Master of Architecture)' UNION ALL
+    SELECT 'Ph.D in Architecture / Urban Design' UNION ALL
+    SELECT 'PG Diploma in Urban Planning / Interior Design'
+) AS t
+ON d.DisciplineName = 'Architecture';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'BFA (Bachelor of Fine Arts)' AS ProgramName UNION ALL
+    SELECT 'BA in Fine Arts / Applied Arts / Visual Arts' UNION ALL
+    SELECT 'Diploma / Certificate in Painting / Sculpture / Printmaking' UNION ALL
+    SELECT 'B.Mus (Bachelor of Music)' UNION ALL
+    SELECT 'B.Des (Bachelor of Design - Art Focused)' UNION ALL
+    SELECT 'Bachelor of Performing Arts / Dance / Theatre' UNION ALL
+    SELECT 'MFA / M.Mus / M.Performing Arts' UNION ALL
+    SELECT 'Ph.D in Arts / Music / Performing Arts' UNION ALL
+    SELECT 'PG Diploma in Theatre / Choreography / Film / Dance'
+) AS t
+ON d.DisciplineName = 'Fine Arts / Performing Arts';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'BCA (Bachelor of Computer Applications)' AS ProgramName UNION ALL
+    SELECT 'B.Sc Computer Science / Information Technology' UNION ALL
+    SELECT 'MCA (Master of Computer Applications)' UNION ALL
+    SELECT 'Integrated BCA + MCA' UNION ALL
+    SELECT 'M.Sc (Computer Science / IT)' UNION ALL
+    SELECT 'PG Diploma in Data Science / AI / Cybersecurity' UNION ALL
+    SELECT 'Ph.D in Computer Science'
+) AS t
+ON d.DisciplineName = 'Computer Applications';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'BSW (Bachelor of Social Work)' AS ProgramName UNION ALL
+    SELECT 'BA in Social Work' UNION ALL
+    SELECT 'MSW (Master of Social Work)' UNION ALL
+    SELECT 'M.A in Social Work / Community Development' UNION ALL
+    SELECT 'Ph.D in Social Work' UNION ALL
+    SELECT 'PG Diploma in Counseling / NGO Management'
+) AS t
+ON d.DisciplineName = 'Social Work';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.Sc Home Science' AS ProgramName UNION ALL
+    SELECT 'B.Sc Home Science (Nutrition / Human Development / Textile / Family Resource Management)' UNION ALL
+    SELECT 'M.Sc Home Science' UNION ALL
+    SELECT 'Ph.D Home Science' UNION ALL
+    SELECT 'PG Diploma in Dietetics / Early Childhood Care'
+) AS t
+ON d.DisciplineName = 'Home Science';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.P.Ed (Bachelor of Physical Education)' AS ProgramName UNION ALL
+    SELECT 'B.Sc Physical Education / Sports Science' UNION ALL
+    SELECT 'M.P.Ed (Master of Physical Education)' UNION ALL
+    SELECT 'M.Sc Sports Science / Sports Management' UNION ALL
+    SELECT 'Ph.D Sports / Physical Education' UNION ALL
+    SELECT 'Diploma / Certificate in Coaching / Fitness Training'
+) AS t
+ON d.DisciplineName = 'Physical Education / Sports';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'BHM / BHMCT (Bachelor of Hotel Management / Catering Technology)' AS ProgramName UNION ALL
+    SELECT 'B.Sc Hospitality / Hotel Administration' UNION ALL
+    SELECT 'Diploma in Hotel Management / Catering / Hospitality' UNION ALL
+    SELECT 'MHM (Master of Hotel Management)' UNION ALL
+    SELECT 'M.Sc Hospitality Management' UNION ALL
+    SELECT 'MBA in Hospitality / Tourism Management' UNION ALL
+    SELECT 'PG Diploma in Event / Tourism / Food & Beverage Management'
+) AS t
+ON d.DisciplineName = 'Hotel Management / Hospitality';
+
+INSERT INTO college_records_app_programs (ProgramName, Discipline_id)
+SELECT t.ProgramName, d.id
+FROM college_records_app_discipline d
+JOIN (
+    SELECT 'B.Des (Bachelor of Design – Fashion / Textile / Industrial / Graphic)' AS ProgramName UNION ALL
+    SELECT 'B.FTech (Bachelor of Fashion Technology)' UNION ALL
+    SELECT 'Diploma in Fashion / Textile / Apparel Design' UNION ALL
+    SELECT 'M.Des (Master of Design)' UNION ALL
+    SELECT 'M.FTech (Master of Fashion Technology)' UNION ALL
+    SELECT 'Ph.D Design / Fashion / Textile' UNION ALL
+    SELECT 'PG Diploma in Accessory Design / Fashion Marketing / Textile Science'
+) AS t
+ON d.DisciplineName = 'Design & Fashion Technology';

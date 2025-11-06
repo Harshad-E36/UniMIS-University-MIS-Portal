@@ -279,6 +279,25 @@
     #records_table tbody td {
       border-bottom: none;
     }
+
+    /* Dashboard-style welcome + logout on college page */
+    #welcome_msg {
+      font-size: 0.95rem;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .logout-btn {
+      border-radius: 20px !important;
+      padding: 5px 14px !important;
+      font-size: 0.85rem !important;
+      transition: all 0.2s ease-in-out !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
   </style>
 </head>
 
@@ -289,16 +308,23 @@
       <div class="col-lg-12 mx-auto">
         <div class="header-container text-center">
           <div class="header-banner position-relative">
-            <!-- Login/Signup Button -->
-            <div class="position-absolute top-0 end-0 p-3">
-              <a href="#" id="auth_btn" class="btn btn-outline-light btn-sm fw-semibold shadow-sm login-btn"
-                data-bs-toggle="modal" data-bs-target="#AuthModal">
-                <i class="bi bi-box-arrow-in-right"></i> Login / Signup
-              </a>
+            <div class="position-absolute top-0 end-0 p-3 text-end">
+
+              <!-- Welcome Text -->
+              <span id="welcome_msg" class="text-light fw-semibold d-block mb-1">
+                Welcome, {{ request.user.username }}
+              </span>
+
+              <!-- Logout Button -->
+              <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </button>
+
             </div>
 
+
             <h1 class="fw-bold">College Records</h1>
-            <p>Any Placeholder text here </p>
+            <p>Add your college record here</p>
             <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton" data-bs-toggle="modal"
               data-bs-target="#RecordsModal">
               <i class="bi bi-plus-lg"></i> Add Record
@@ -307,7 +333,7 @@
 
 
         </div>
-        <div class="table-container d-none" id="datatable_wrapper">
+        <div class="table-container" id="datatable_wrapper">
           <table class="table table-hover align-middle" id="records_table">
             <thead>
               <tr>
@@ -329,72 +355,6 @@
               </tr>
             </thead>
           </table>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-
-  <!-- Auth Modal -->
-  <div class="modal fade" id="AuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="auth_modal_title">Login</h1>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body">
-          <form id="auth_form" class="row g-3">
-            <input type="hidden" id="auth_mode" value="login">
-
-            <!-- Username (only in signup mode) -->
-            <div class="col-12 d-none" id="username_group">
-              <label for="username" class="form-label">Username</label>
-              <input type="text" class="form-control" id="username" name="username">
-            </div>
-
-            <!-- Email -->
-            <div class="col-12">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-
-            <!-- Password (used in both modes) -->
-            <div class="col-12">
-              <label for="password" class="form-label" id="password_label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-
-            <!-- Remember Me (only for login) -->
-            <div class="form-check mb-3" id="rememberMeWrapper">
-              <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me" value="1">
-              <label class="form-check-label" for="rememberMe">
-                Remember Me
-              </label>
-            </div>
-
-
-            <!-- Confirm Password (only in signup mode) -->
-            <div class="col-12 d-none" id="confirm_group">
-              <label for="confirm_password" class="form-label">Confirm Password</label>
-              <input type="password" class="form-control" id="confirm_password" name="confirm_password">
-            </div>
-
-            <!-- Submit -->
-            <div class="col-12">
-              <button type="submit" class="btn btn-primary w-100" id="auth_submit">Login</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Footer -->
-        <div class="modal-footer justify-content-center">
-          <small id="auth_footer_text">
-            Don't have an account? <a href="#" id="toggle_auth">Signup</a>
-          </small>
         </div>
 
       </div>
@@ -475,12 +435,14 @@
                 <option value="" disabled selected>Select City</option>
               </select>
             </div>
+
             <!-- Pincode -->
             <div class="col-md-4">
               <label for="pincode" class="form-label">Pincode</label>
               <input type="text" class="form-control" id="pincode" name="pincode" pattern="\d{6}"
                 title="Please enter a valid 6-digit pincode" required>
             </div>
+
             <!-- College Type -->
             <div class="col-md-6">
               <label for="college_type" class="form-label">College Type</label>
@@ -492,7 +454,6 @@
               </select>
             </div>
 
-
             <!-- Belongs To -->
             <div class="col-md-6">
               <label for="belongs_to" class="form-label">Belongs To</label>
@@ -503,7 +464,6 @@
                 {% endfor %}
               </select>
             </div>
-
 
             <!-- Affiliated To -->
             <div class="col-md-6">
@@ -528,8 +488,8 @@
                   style="max-height:300px; overflow:auto;">
                   {% for discipline in disciplines %}
                   <div class="form-check">
-                    <input class="form-check-input discipline-checkbox" type="checkbox" value="{{ discipline.DisciplineName }}"
-                      id="{{discipline.DisciplineName}}" name="discipline[]">
+                    <input class="form-check-input discipline-checkbox" type="checkbox"
+                      value="{{ discipline.DisciplineName }}" id="{{discipline.DisciplineName}}" name="discipline[]">
                     <label class="form-check-label" for="{{discipline.DisciplineName}}">{{ discipline.DisciplineName }}</label>
                   </div>
                   {% endfor %}
@@ -539,7 +499,8 @@
 
             <!-- Dynamic Course Dropdowns -->
             <div id="courseDropdownsContainer" class="col-12 mt-3"></div>
-
+            <input type="hidden" id="courses_validator" name="courses_validator">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
           </form>
         </div>
         <div class="modal-footer">
@@ -580,9 +541,7 @@
       if (xhr.responseJSON && xhr.responseJSON.status === 302) {
         // Session expired or forbidden
         showNotification("Session expired. Please log in again.", "danger");
-        $("#datatable_wrapper").addClass("d-none"); // hide table
-        setupLoginButton();
-        $("#AuthModal").modal("show");
+        window.location.href = "/home/";
       }
     }
   });
@@ -749,79 +708,24 @@
   }
 
 
-  // setting up logout button 
-  function setupLogoutButton() {
-    $("#auth_btn")
-      .off("click")
-      .html('<i class="bi bi-box-arrow-right"></i> Logout')
-      .removeAttr("data-bs-toggle")
-      .removeAttr("data-bs-target")
-      .on("click", function (e) {
-        e.preventDefault();
-        $.ajax({
-          url: "{% url 'logout' %}",
-          type: "POST",
-          success: function (data) {
-            if (data.status === 200) {
-              showNotification("Logout successful", "success");
-
-              // Flip back to Login/Signup
-              setupLoginButton();
-
-              // Hide table again
-              $("#datatable_wrapper").addClass("d-none");
-
-              // reload table safely if already initialized
-              if ($.fn.DataTable.isDataTable('#records_table')) {
-                $('#records_table').DataTable().ajax.reload(null, false);
-              }
-              $("#AuthModal").modal("show");
-            }
-            else {
-              showNotification(data.message || "Logout failed", "danger");
-            }
-          },
-          error: function (xhr, status, error) {
-            console.error("Logout failed:", error);
-            showNotification("Error logging out", "danger");
-          }
-        });
-      });
-  }
-
-  function setupLoginButton() {
-    // Clear any previous handlers first, then set the button to open the Auth modal
-    $("#auth_btn")
-      .off("click")
-      .html('<i class="bi bi-box-arrow-in-right"></i> Login / Signup')
-      .attr("data-bs-toggle", "modal")
-      .attr("data-bs-target", "#AuthModal");
-  }
-
   function createCourseDropdowns(selectedDisciplines, selectedCourses = {}) {
-  // Clear all previously generated dropdowns
-  $("#courseDropdownsContainer").empty();
+    // Clear all previously generated dropdowns
+    $("#courseDropdownsContainer").empty();
 
-  if (selectedDisciplines.length === 0) return;
+    if (selectedDisciplines.length === 0) return;
 
-  // Make AJAX call to Django view
-  $.ajax({
-    url: "{% url 'get_programs' %}", // update with your correct URL path
-    type: "GET",
-    data: { discipline: selectedDisciplines }, // Django will receive a list
-    traditional: true, // ensures list is sent correctly (discipline=one&discipline=two)
-    success: function (response) {
-      // response will look like:
-      // {
-      //   "Engineering / Technology": ["B.Tech", "M.Tech"],
-      //   "Medical": ["MBBS - Medicine"]
-      // }
+    // Make AJAX call to Django view
+    $.ajax({
+      url: "{% url 'get_programs' %}", // update with your correct URL path
+      type: "GET",
+      data: { discipline: selectedDisciplines }, // Django will receive a list
+      traditional: true, // ensures list is sent correctly (discipline=one&discipline=two)
+      success: function (response) {
+        Object.keys(response).forEach((discipline) => {
+          const courses = response[discipline] || [];
 
-      Object.keys(response).forEach((discipline) => {
-        const courses = response[discipline] || [];
-
-        // Build dropdown HTML dynamically
-        let dropdownHtml = `
+          // Build dropdown HTML dynamically
+          let dropdownHtml = `
           <div class="col-12 mt-3 dependent-dropdown">
             <label class="form-label fw-semibold">${discipline} Courses</label>
             <div class="dropdown w-100">
@@ -834,12 +738,12 @@
                   aria-labelledby="${discipline.replace(/\s+/g, '_')}_Dropdown" 
                   style="max-height:300px; overflow:auto;">`;
 
-        // Add available courses and pre-check if present in selectedCourses
-        courses.forEach((course, index) => {
-          const isChecked = (selectedCourses[discipline] || []).some(
-            (c) => c.trim() === course.trim()
-          );
-          dropdownHtml += `
+          // Add available courses and pre-check if present in selectedCourses
+          courses.forEach((course, index) => {
+            const isChecked = (selectedCourses[discipline] || []).some(
+              (c) => c.trim() === course.trim()
+            );
+            dropdownHtml += `
             <div class="form-check">
               <input class="form-check-input course-checkbox" type="checkbox" 
                 value="${course}" 
@@ -850,22 +754,22 @@
                 ${course}
               </label>
             </div>`;
-        });
+          });
 
-        dropdownHtml += `
+          dropdownHtml += `
               </div>
             </div>
           </div>`;
 
-        // Append dropdown to container
-        $("#courseDropdownsContainer").append(dropdownHtml);
-      });
-    },
-    error: function (xhr, status, error) {
-      console.error("Error fetching programs:", error);
-    },
-  });
-}
+          // Append dropdown to container
+          $("#courseDropdownsContainer").append(dropdownHtml);
+        });
+      },
+      error: function (xhr, status, error) {
+        console.error("Error fetching programs:", error);
+      },
+    });
+  }
 
 
   $('document').ready(function () {
@@ -875,23 +779,16 @@
       type: "GET",
       success: function (response) {
         if (response.status === 200) {
-          // Authenticated
-          $("#datatable_wrapper").removeClass("d-none"); // show table
-          setupLogoutButton();
-          // Initialize DataTable now
           initDataTable();
-
         } else {
-          // Not authenticated
-          $("#AuthModal").modal("show");
-          $("#datatable_wrapper").addClass("d-none"); // keep table hidden
-          setupLoginButton();
+          window.location.href = "/home/";
         }
       },
       error: function () {
         console.error("Auth check failed");
       }
     });
+
 
     $(".discipline-checkbox").change(function () {
       const selectedDisciplines = $(".discipline-checkbox:checked")
@@ -901,7 +798,6 @@
         .get();
       createCourseDropdowns(selectedDisciplines, {});
     });
-
 
 
     // Edit modal autofill
@@ -952,13 +848,20 @@
         const coursesByDiscipline = {};
         allRows.forEach(r => {
           const discipline = r[12]?.trim(); // Column 12
-          const course = r[13]?.trim();     // Column 13
-          if (discipline && course) {
-            if (!coursesByDiscipline[discipline]) coursesByDiscipline[discipline] = [];
-            if (!coursesByDiscipline[discipline].includes(course)) {
-              coursesByDiscipline[discipline].push(course);
+          const courseString = r[13];       // Column 13 (comma separated)
+
+          // Split courses into array
+          const courseList = courseString ? courseString.split(',') : [];
+
+          courseList.forEach(c => {
+            const course = c.trim();
+            if (discipline && course) {
+              if (!coursesByDiscipline[discipline]) coursesByDiscipline[discipline] = [];
+              if (!coursesByDiscipline[discipline].includes(course)) {
+                coursesByDiscipline[discipline].push(course);
+              }
             }
-          }
+          });
         });
 
         // Generate dependent course dropdowns with selected courses
@@ -984,117 +887,36 @@
     });
 
 
-
-    // lookup for which mode is in use for login/signup
-    const modes = {
-      login: {
-        title: "Login",
-        submit: "Login",
-        footer: "Don't have an account? <a href='#' id='toggle_auth'>Signup</a>",
-        showConfirm: false,
-        showUsername: false,
-        showRemember: true,
-        passwordLabel: "Password"
-      },
-      signup: {
-        title: "Signup",
-        submit: "Signup",
-        footer: "Already have an account? <a href='#' id='toggle_auth'>Login</a>",
-        showConfirm: true,
-        showUsername: true,
-        showRemember: false,
-        passwordLabel: "Create Password"
-      }
-    };
-
-
-    function setAuthMode(mode) {
-      const config = modes[mode];
-      $("#auth_modal_title").text(config.title);
-      $("#auth_submit").text(config.submit);
-      $("#auth_mode").val(mode);
-      $("#password_label").text(config.passwordLabel);
-      $("#confirm_group").toggleClass("d-none", !config.showConfirm);
-      $("#username_group").toggleClass("d-none", !config.showUsername);
-      $("#rememberMeWrapper").toggleClass("d-none", !config.showRemember);
-      $("#auth_footer_text").html(config.footer);
-    }
-
-    // Default to login on open/close
-    $('#AuthModal').on('show.bs.modal hidden.bs.modal', function () {
-      setAuthMode("login");
-      $('#auth_form')[0].reset();
-    });
-
-    // Toggle mode
-    $(document).on("click", "#toggle_auth", function (e) {
-      e.preventDefault();
-      const newMode = $("#auth_mode").val() === "login" ? "signup" : "login";
-      setAuthMode(newMode);
-    });
-
-    $('#auth_form').validate({
-      rules: {
-        username: {
-          required: function () {
-            return $("#auth_mode").val() === "signup";
-          },
-          minlength: 3
-        },
-        email: {
-          required: true,
-          email: true
-        },
-        password: {
-          required: true,
-          minlength: 6
-        },
-        confirm_password: {
-          required: function () {
-            return $("#auth_mode").val() === "signup"; // Only required in signup mode
-          },
-          equalTo: "#password" // Must match the password field
-        }
-      },
-      messages: {
-        username: {
-          required: "Please enter a username",
-          minlength: "Username must be at least 3 characters"
-        },
-        email: {
-          required: "Please enter your email",
-          email: "Enter a valid email address"
-        },
-        password: {
-          required: "Please enter your password",
-          minlength: "Password must be at least 6 characters"
-        },
-        confirm_password: {
-          required: "Please confirm your password",
-          equalTo: "Passwords do not match"
-        }
-      },
-      submitHandler: function (form) {
-        if ($("#auth_mode").val() === "signup") {
-          signup_ajax();
-        }
-        else {
-          login_ajax();
-        }
-
-      }
-
-    });
-
-    // Add a custom validation method
+    // Add a custom validation method for Discipline
     $.validator.addMethod("disciplineRequired", function (value, element) {
-      // Count how many checkboxes are checked
+      // Must have at least one discipline selected
       return $('.discipline-checkbox:checked').length > 0;
     }, "Please select at least one discipline");
 
+    // Custom validation: at least one course selected per selected discipline
+    $.validator.addMethod("coursesRequired", function (value, element) {
+      let isValid = true;
+
+      // If no disciplines selected, skip this rule
+      const selectedDisciplines = $(".discipline-checkbox:checked").length;
+      if (selectedDisciplines === 0) return true;
+
+      // For each dynamically generated dependent dropdown
+      $(".dependent-dropdown").each(function () {
+        const checkedCourses = $(this).find(".course-checkbox:checked").length;
+        if (checkedCourses === 0) {
+          isValid = false;
+          return false; // break
+        }
+      });
+
+      return isValid;
+    }, "Please select at least one course for each selected discipline");
+
     // Validation for add/edit form
     $('#add_edit_form').validate({
-      ignore: [],
+      // include hidden fields (we need #courses_validator)
+      ignore: ":hidden:not(#courses_validator)",
       rules: {
         college_name: {
           required: true,
@@ -1102,7 +924,10 @@
         },
         'discipline[]': {
           disciplineRequired: true
-        }, // apply custom rule
+        },
+        courses_validator: {
+          coursesRequired: true
+        }
       },
       messages: {
         college_name: {
@@ -1112,11 +937,15 @@
         'discipline[]': {
           disciplineRequired: "Please select at least one discipline"
         },
+        courses_validator: {
+          coursesRequired: "Please select at least one course for each discipline"
+        }
       },
       errorPlacement: function (error, element) {
-        if (element.hasClass('discipline-checkbox')) {
-          // place error below the dropdown button
-          error.insertAfter('#disciplineDropdown');
+        if (element.attr("id") === "courses_validator") {
+          error.insertAfter("#courseDropdownsContainer");
+        } else if (element.hasClass("discipline-checkbox")) {
+          error.insertAfter("#disciplineDropdown");
         } else {
           error.insertAfter(element);
         }
@@ -1124,7 +953,13 @@
       submitHandler: function (form) {
         add_edit_records();
       }
-    })
+    });
+
+    //re-validate when user checks unchecks course or discipline
+    $(document).on("change", ".course-checkbox, .discipline-checkbox", function () {
+      $("#add_edit_form").valid();
+    });
+
 
 
     // Dynamic Taluka and City Syncing
@@ -1187,77 +1022,36 @@
     });
 
 
+    $("#logout_btn").on("click", function (e) {
+      e.preventDefault();
+      $.ajax({
+        url: "{% url 'logout' %}",
+        type: "POST",
+        success: function (data) {
+          if (data.status === 200) {
+            window.location.href = "/home/";
+          }
+        },
+        error: function () {
+          alert("Logout failed. Try again.");
+        }
+      });
+    });
   })
 
-
-  function login_ajax() {
-    $.ajax({
-      url: '{% url "login" %}',
-      type: 'POST',
-      data: $('#auth_form').serialize(),
-      success: function (data, status, xhr) {
-        if (data.status === 200) {
-          $("#AuthModal").modal("hide");
-          $("#datatable_wrapper").removeClass("d-none"); // show table
-
-          // Immediately set the button to Logout and bind the logout handler once
-          setupLogoutButton();
-
-          // Initialize datatable once or reload if it exists
-          if ($.fn.DataTable.isDataTable('#records_table')) {
-            $('#records_table').DataTable().ajax.reload();
-          } else {
-            initDataTable();
-          }
-
-          showNotification("Login Successful", "success");
-        } else if (data.status === 401) {
-          showNotification("Invalid Credentials", "danger");
-          $("#auth_form")[0].reset()
-        }
-      },
-      error: function (xhr, status, error) {
-        showNotification("Error: " + error, "danger");
-      }
-    });
-  }
-
-  function signup_ajax() {
-    $.ajax({
-      url: '{% url "signup" %}',
-      type: 'POST',
-      data: $('#auth_form').serialize(),
-      success: function (data, status, xhr) {
-        if (data.status === 201) {
-          showNotification("Signup successful", "success")
-          $("#AuthModal").modal("hide")
-          setTimeout(function () {
-            $("#AuthModal").modal("show");
-          }, 400);
-        }
-        else if (data.status === 400) {
-          showNotification("User already exixts", "danger")
-        }
-      },
-      error: function (xhr, status, error) {
-        console.log(xhr.responseText)
-        showNotification("Error: " + error, "error");
-      }
-    })
-  }
 
   function add_edit_records() {
     const formData = $('#add_edit_form').serializeArray();
     const dataObj = {};
 
-    // ✅ Collect all simple fields (flat key-value, excluding dynamic programs)
+    // Collect all simple fields (flat key-value, excluding dynamic programs)
     formData.forEach(item => {
       if (!item.name.startsWith('discipline') && !item.name.startsWith('courses')) {
         dataObj[item.name] = item.value;
       }
     });
 
-    // ✅ Collect selected discipline-course mapping as list of objects
+    // Collect selected discipline-course mapping as list of objects
     const selectedPrograms = [];
     $(".discipline-checkbox:checked").each(function () {
       const discipline = $(this).val();
@@ -1269,10 +1063,10 @@
       });
     });
 
-    // ✅ Add JSON string to payload
+    // Add JSON string to payload
     dataObj['disciplines_programs'] = JSON.stringify(selectedPrograms);
 
-    // ✅ AJAX request
+    // AJAX request
     $.ajax({
       url: '{% url "add_edit_record" %}',
       type: 'POST',
@@ -1289,7 +1083,6 @@
       },
     });
   }
-
 
 
   // this function is called by the delete anchor itself with the contact id as a parameter, it sends the id and csrf middleware token and a status code 204 is generated when the contact corresponding to the id is deleted, then the ajax removes it from the front end

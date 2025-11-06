@@ -206,7 +206,29 @@
       align-items: center;
       gap: 1rem;
       /* space between dropdown and apply button */
+      flex-wrap: wrap !important;
+      height: auto !important;
+      padding-top: 12px;
+      padding-bottom: 12px;
+      flex-direction: column;
+      height: auto !important;
+      padding: 12px;
     }
+
+    /* Ensure dropdown row stays wrapped & centered */
+    .filter-navbar>.d-flex {
+      width: 100%;
+    }
+
+    /* Mobile Buttons center */
+    @media (max-width: 768px) {
+
+      .apply-btn,
+      .clear-btn {
+        width: 140px;
+      }
+    }
+
 
     /* Filter button */
     .filter-btn {
@@ -274,6 +296,115 @@
       color: #fff;
       transform: translateY(-1px);
     }
+
+    /* Only styling for create & logout buttons */
+    .create-user-btn,
+    .logout-btn {
+      border-radius: 20px !important;
+      padding: 5px 14px !important;
+      font-size: 0.85rem !important;
+      transition: all 0.2s ease-in-out !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Create user button */
+    .create-user-btn {
+      background: #ffffff;
+      color: #0d6efd;
+      border: none;
+    }
+
+    .create-user-btn:hover {
+      background: #eaf2ff;
+      color: #0959c6;
+    }
+
+    /* Logout button hover */
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Modern Create User Modal */
+    .modern-modal .modal-content {
+      border-radius: 14px;
+      border: none;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    .modern-modal .modal-header {
+      background: linear-gradient(135deg, #0d6efd, #198754);
+      color: #fff;
+      border-top-left-radius: 14px;
+      border-top-right-radius: 14px;
+      padding: 1rem 1.25rem;
+      border-bottom: none;
+    }
+
+    .modern-modal .modal-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #ffffff !important;
+    }
+
+    .modern-modal .btn-close {
+      filter: invert(1) brightness(200%);
+      opacity: 0.85;
+    }
+
+    .modern-modal .btn-close:hover {
+      opacity: 1;
+    }
+
+    /* Inputs */
+    .modern-input {
+      border-radius: 10px;
+      border: 1px solid #d5dce5;
+      padding: 10px 12px;
+      transition: 0.2s;
+    }
+
+    .modern-input:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* Username / Email / Password labels */
+    .modern-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+    }
+
+    /* Button */
+    .modern-modal .create-btn {
+      background: linear-gradient(135deg, #0d6efd, #198754) !important;
+      color: #ffffff !important;
+      border: none !important;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 600;
+      transition: 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modern-modal .create-btn i {
+      color: #ffffff !important;
+    }
+
+    .modern-modal .create-btn:hover {
+      opacity: 0.92;
+      transform: translateY(-2px);
+      color: #ffffff !important;
+    }
+
+
+    /* Spacing inside modal */
+    .modern-modal .modal-body {
+      padding: 1.4rem 1.4rem;
+    }
   </style>
 
 </head>
@@ -286,20 +417,82 @@
       <p class="mb-0">Welcome to your dashboard</p>
     </div>
     <div class="d-flex flex-column align-items-end">
-      <span id="welcome_msg" class="text-light fw-semibold mb-1"></span>
-      <button id="auth_btn" class="btn btn-outline-light">
-        <i class="bi bi-box-arrow-in-right"></i> Login / Signup
-      </button>
+
+      <span id="welcome_msg" class="text-light fw-semibold mb-1">
+        Welcome, {{ request.user.username }}
+      </span>
+
+      <div class="d-flex gap-2">
+        <button id="createUserBtn" class="btn btn-light btn-sm create-user-btn">
+          <i class="bi bi-person-plus"></i> Create User
+        </button>
+
+        <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+      </div>
+
     </div>
+
+
   </header>
 
-  <div id="protected_content" class="d-none">
+  <div id="protected_content">
+
+    <!-- Create User Modal -->
+    <div class="modal fade modern-modal" id="createUserModal" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h5 class="modal-title fw-semibold">Create New User</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <form id="createUserForm">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+              <div class="mb-3">
+                <label class="modern-label">Username</label>
+                <input type="text" class="form-control modern-input" name="username" id="cu_username">
+              </div>
+
+              <div class="mb-3">
+                <label class="modern-label">Email</label>
+                <input type="email" class="form-control modern-input" name="email" id="cu_email">
+              </div>
+
+              <div class="mb-3">
+                <label class="modern-label">Password</label>
+                <input type="password" class="form-control modern-input" name="password" id="cu_password">
+              </div>
+
+              <div class="mb-3">
+                <label class="modern-label">Confirm Password</label>
+                <input type="password" class="form-control modern-input" name="confirm_password"
+                  id="cu_confirm_password">
+              </div>
+
+              <button type="submit" class="btn create-btn w-100">
+                <i class="bi bi-check-circle"></i> Create User
+              </button>
+
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
 
     <!-- Filter Navbar -->
     <div class="container-fluid mb-3">
-      <nav class="navbar filter-navbar shadow-sm px-3">
+      <nav class="navbar filter-navbar shadow-sm px-3 flex-column">
 
-        <div class="d-flex align-items-center gap-3 flex-wrap">
+        <!-- Row 1: Filters -->
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 w-100 mb-2">
+
           <!-- College Code -->
           <div class="dropdown">
             <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterCollegeCode"
@@ -399,11 +592,12 @@
             <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterCollegeType">
               {% for type in Collegetype %}
               <li>
-                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox" id="collegeType{{ forloop.counter }}"
-                    name="collegeType" value="{{ type.CollegeTypeName }}"><label class="form-check-label"
-                    for="collegeType{{ forloop.counter }}">{{ type.CollegeTypeName }}</label></div>
+                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox"
+                    id="collegeType{{ forloop.counter }}" name="collegeType" value="{{ type.CollegeTypeName }}"><label
+                    class="form-check-label" for="collegeType{{ forloop.counter }}">{{ type.CollegeTypeName }}</label>
+                </div>
               <li>
-              {% endfor %}
+                {% endfor %}
             </ul>
           </div>
 
@@ -416,9 +610,10 @@
             <ul class="dropdown-menu filter-dropdown p-3" aria-labelledby="filterBelongsTo">
               <li>
                 {% for belong in BelongsTo %}
-                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox" id="belongsTo{{ forloop.counter }}"
-                    name="belongsTo" value="{{ belong.BelongsToName }}"><label class="form-check-label"
-                    for="belongsTo{{ forloop.counter }}">{{ belong.BelongsToName }}</label></div>
+                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox"
+                    id="belongsTo{{ forloop.counter }}" name="belongsTo" value="{{ belong.BelongsToName }}"><label
+                    class="form-check-label" for="belongsTo{{ forloop.counter }}">{{ belong.BelongsToName }}</label>
+                </div>
                 {% endfor %}
               </li>
             </ul>
@@ -434,16 +629,16 @@
               style="max-height:300px; overflow:auto;">
               {% for discipline in disciplines %}
               <li>
-                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox" id="discipline{{ forloop.counter }}"
-                    name="discipline" value="Engineering / Technology"><label class="form-check-label"
-                    for="discipline1">{{ discipline.DisciplineName }}</label></div>
+                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox"
+                    id="discipline{{ forloop.counter }}" name="discipline" value="Engineering / Technology"><label
+                    class="form-check-label" for="discipline1">{{ discipline.DisciplineName }}</label></div>
               </li>
               {% endfor %}
             </ul>
           </div>
 
           <!-- Programs -->
-            <div class="dropdown">
+          <div class="dropdown">
             <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterProgram"
               data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
               <i class="bi bi-funnel"></i> Program
@@ -455,16 +650,16 @@
               </li>
               {% for program in programs %}
               <li>
-                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox" id="Program{{ forloop.counter }}"
-                    name="Programs" value="{{ program.ProgramName }}"><label class="form-check-label"
-                    for="Program1">{{ program.ProgramName }}</label></div>
+                <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox"
+                    id="Program{{ forloop.counter }}" name="Programs" value="{{ program.ProgramName }}"><label
+                    class="form-check-label" for="Program1">{{ program.ProgramName }}</label></div>
               </li>
               {% endfor %}
             </ul>
           </div>
 
-          <!-- Apply & Clear Filter Buttons -->
-          <div class="d-flex align-items-center gap-2 ms-auto">
+          <!-- Row 2: Buttons -->
+          <div class="d-flex justify-content-center w-100 gap-2 mt-2">
             <button id="applyFilter" class="btn btn-primary apply-btn">
               <i class="bi bi-check2-circle me-1"></i> Apply Filter
             </button>
@@ -514,71 +709,6 @@
     </main>
   </div>
 
-  <!-- Auth Modal -->
-  <div class="modal fade" id="AuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="auth_modal_title">Login</h1>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body">
-          <form id="auth_form" class="row g-3">
-            <input type="hidden" id="auth_mode" value="login">
-
-            <!-- Username (only in signup mode) -->
-            <div class="col-12 d-none" id="username_group">
-              <label for="username" class="form-label">Username</label>
-              <input type="text" class="form-control" id="username" name="username">
-            </div>
-
-            <!-- Email -->
-            <div class="col-12">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-
-            <!-- Password (used in both modes) -->
-            <div class="col-12">
-              <label for="password" class="form-label" id="password_label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-
-            <!-- Remember Me (only for login) -->
-            <div class="form-check mb-3" id="rememberMeWrapper">
-              <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me" value="1">
-              <label class="form-check-label" for="rememberMe">
-                Remember Me
-              </label>
-            </div>
-
-
-            <!-- Confirm Password (only in signup mode) -->
-            <div class="col-12 d-none" id="confirm_group">
-              <label for="confirm_password" class="form-label">Confirm Password</label>
-              <input type="password" class="form-control" id="confirm_password" name="confirm_password">
-            </div>
-
-            <!-- Submit -->
-            <div class="col-12">
-              <button type="submit" class="btn btn-primary w-100" id="auth_submit">Login</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Footer -->
-        <div class="modal-footer justify-content-center">
-          <small id="auth_footer_text">
-            Don't have an account? <a href="#" id="toggle_auth">Signup</a>
-          </small>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
 </body>
 
 <script>
@@ -609,109 +739,11 @@
       if (xhr.responseJSON && xhr.responseJSON.status === 302) {
         // Session expired or forbidden
         showNotification("Session expired. Please log in again.", "danger");
-        setupLoginButton();
-        $("#AuthModal").modal("show");
+        window.location.href = "/home/";
       }
     }
   });
 
-  function setupLogoutButton() {
-    $("#auth_btn")
-      .off("click")
-      .html('<i class="bi bi-box-arrow-right"></i> Logout')
-      .removeAttr("data-bs-toggle")
-      .removeAttr("data-bs-target")
-      .on("click", function (e) {
-        e.preventDefault();
-        $.ajax({
-          url: "{% url 'logout' %}",
-          type: "POST",
-          success: function (data) {
-            if (data.status === 200) {
-              showNotification("Logout successful", "success");
-              $("#AuthModal").modal("show");
-              // Flip back to Login/Signup
-              setupLoginButton();
-              $("#protected_content").addClass("d-none");
-            }
-            else {
-              showNotification(data.message || "Logout failed", "danger");
-            }
-          },
-          error: function (xhr, status, error) {
-            console.error("Logout failed:", error);
-            showNotification("Error logging out", "danger");
-          }
-        });
-      });
-  }
-
-  function setupLoginButton() {
-    // Clear any previous handlers first, then set the button to open the Auth modal
-    $("#auth_btn")
-      .off("click")
-      .html('<i class="bi bi-box-arrow-in-right"></i> Login / Signup')
-      .attr("data-bs-toggle", "modal")
-      .attr("data-bs-target", "#AuthModal");
-
-    $("#welcome_msg").css("opacity", "0").text("");
-  }
-
-  function login_ajax() {
-    $.ajax({
-      url: '{% url "login" %}',
-      type: 'POST',
-      data: $('#auth_form').serialize(),
-      success: function (data, status, xhr) {
-        if (data.status === 200) {
-          $("#AuthModal").modal("hide");
-          $("#protected_content").removeClass("d-none");
-          // Immediately set the button to Logout and bind the logout handler once
-          setupLogoutButton();
-          showNotification("Login Successful", "success");
-          setWelcomeMessage(data.username);
-          $("#colleges_num").text(data.total_colleges_count);
-
-
-        } else if (data.status === 401) {
-          showNotification("Invalid Credentials", "danger");
-          $("#auth_form")[0].reset()
-          $("#protected_content").addClass("d-none");
-        }
-      },
-      error: function (xhr, status, error) {
-        showNotification("Error: " + error, "danger");
-        $("#protected_content").addClass("d-none");
-      }
-    });
-  }
-
-  function signup_ajax() {
-    $.ajax({
-      url: '{% url "signup" %}',
-      type: 'POST',
-      data: $('#auth_form').serialize(),
-      success: function (data, status, xhr) {
-        if (data.status === 201) {
-          showNotification("Signup successful", "success")
-          $("#AuthModal").modal("hide")
-          setTimeout(function () {
-            $("#AuthModal").modal("show");
-          }, 400);
-        }
-        else if (data.status === 400) {
-          showNotification("User already exixts", "danger")
-        }
-      },
-      error: function (xhr, status, error) {
-        console.log(xhr.responseText)
-        showNotification("Error: " + error, "error");
-      }
-    })
-  }
-  function setWelcomeMessage(username) {
-    $("#welcome_msg").text(`Welcome, ${username}`).css("opacity", "1");
-  }
 
   function showNotification(message, type) {
     var notificationClass = type === "success" ? "notification-success" : "notification-error";
@@ -734,24 +766,29 @@
     }, 3000);
   }
 
-  const districtTalukaMap = {
-    "Nagpur": [
-      "Nagpur (Urban)", "Nagpur (Rural)", "Hingna", "Kamptee", "Savner",
-      "Katol", "Ramtek", "Umred", "Narkhed", "Parseoni",
-      "Mauda", "Kuhi", "Kalameshwar", "Bhiwapur"
-    ],
-    "Gadchiroli": [
-      "Gadchiroli", "Aheri", "Armori", "Kurkheda", "Desaiganj (Vadasa)",
-      "Dhanora", "Etapalli", "Sironcha", "Mulchera", "Korchi",
-      "Bhamragad", "Chamorshi"
-    ],
-    "Amravati": [
-      "Amravati", "Achalpur", "Warud", "Chandurbazar", "Dharni",
-      "Morshi", "Daryapur", "Anjangaon Surji", "Dhamangaon Railway",
-      "Nandgaon-Khandeshwar", "Chikhaldara", "Bhatkuli", "Teosa",
-      "Chandur Railway"
-    ]
-  };
+
+  function createUserAjax() {
+    $.ajax({
+      url: "/signup/",
+      type: "POST",
+      data: $("#createUserForm").serialize(),
+
+      success: function (response) {
+        if (response.status === 201) {
+          showNotification("User created successfully!", "success");
+          $("#createUserModal").modal("hide");
+          $("#createUserForm")[0].reset();
+        } else {
+          showNotification(response.message, "error");
+        }
+      },
+
+      error: function () {
+        showNotification("Something went wrong. Try again!", "error");
+      }
+    });
+  }
+
 
   $(document).ready(function () {
 
@@ -763,27 +800,87 @@
     });
 
     $.ajax({
-      url: "{% url 'user_status' %}", // backend endpoint for checking auth
+      url: "{% url 'user_status' %}",
       type: "GET",
       success: function (data) {
         if (data.status === 200) {
           // Authenticated
-          setWelcomeMessage(data.username);
-          setupLogoutButton();
-          $("#protected_content").removeClass("d-none");
           $("#colleges_num").text(data.total_colleges_count);
 
-
         } else {
-          // Not authenticated
-          $("#AuthModal").modal("show");
-          setupLoginButton();
+          window.location.href = "/home/";
         }
       },
       error: function () {
         console.error("Auth check failed");
       }
     });
+
+
+    $("#logout_btn").on("click", function (e) {
+      e.preventDefault();
+      $.ajax({
+        url: "{% url 'logout' %}",
+        type: "POST",
+        success: function (data) {
+          if (data.status === 200) {
+            window.location.href = "/home/";
+          }
+        },
+        error: function () {
+          alert("Logout failed. Try again.");
+        }
+      });
+    });
+
+    // Open Modal
+    $("#createUserBtn").click(() => {
+      $("#createUserModal").modal("show");
+    });
+
+    // Validation rules
+    $("#createUserForm").validate({
+      rules: {
+        username: {
+          required: true,
+          minlength: 3
+        },
+        email: {
+          required: true,
+          email: true
+        },
+        password: {
+          required: true,
+          minlength: 6
+        },
+        confirm_password: {
+          required: true,
+          equalTo: "#cu_password"
+        }
+      },
+      messages: {
+        username: {
+          required: "Please enter a username",
+          minlength: "Username must be at least 3 characters"
+        },
+        email: {
+          required: "Please enter an email",
+          email: "Enter a valid email address"
+        },
+        password: {
+          required: "Please enter a password",
+          minlength: "Password must be at least 6 characters"
+        },
+        confirm_password: {
+          required: "Please confirm the password",
+          equalTo: "Passwords do not match"
+        }
+      },
+      submitHandler: function () {
+        createUserAjax();
+      }
+    });
+
 
     // Make stat cards clickable
     $('.stat-card').css('cursor', 'pointer').click(function () {
@@ -793,53 +890,6 @@
       }
     });
 
-    // lookup for which mode is in use for login/signup 
-    const modes = {
-      login: {
-        title: "Login",
-        submit: "Login",
-        footer: "Don't have an account? <a href='#' id='toggle_auth'>Signup</a>",
-        showConfirm: false,
-        showUsername: false,
-        showRemember: true,
-        passwordLabel: "Password"
-      },
-      signup: {
-        title: "Signup",
-        submit: "Signup",
-        footer: "Already have an account? <a href='#' id='toggle_auth'>Login</a>",
-        showConfirm: true,
-        showUsername: true,
-        showRemember: false,
-        passwordLabel: "Create Password"
-      }
-    };
-
-
-    function setAuthMode(mode) {
-      const config = modes[mode];
-      $("#auth_modal_title").text(config.title);
-      $("#auth_submit").text(config.submit);
-      $("#auth_mode").val(mode);
-      $("#password_label").text(config.passwordLabel);
-      $("#confirm_group").toggleClass("d-none", !config.showConfirm);
-      $("#username_group").toggleClass("d-none", !config.showUsername);
-      $("#rememberMeWrapper").toggleClass("d-none", !config.showRemember);
-      $("#auth_footer_text").html(config.footer);
-    }
-
-    // Default to login on open/close
-    $('#AuthModal').on('show.bs.modal hidden.bs.modal', function () {
-      setAuthMode("login");
-      $('#auth_form')[0].reset();
-    });
-
-    // Toggle mode
-    $(document).on("click", "#toggle_auth", function (e) {
-      e.preventDefault();
-      const newMode = $("#auth_mode").val() === "login" ? "signup" : "login";
-      setAuthMode(newMode);
-    });
 
     function updateTalukas() {
       let selectedDistricts = [];
@@ -855,18 +905,42 @@
         return;
       }
 
-      let counter = 1;
+      // Create a map to store all district→talukas after multiple AJAX calls
+      const districtTalukaMap = {};
+      let ajaxCalls = [];
+
       selectedDistricts.forEach(district => {
-        if (districtTalukaMap[district]) {
-          // Add district header (non-clickable, styled as muted text)
-          $talukaDropdown.append(`
+        const request = $.ajax({
+          url: "{% url 'get_talukas' %}",
+          type: "GET",
+          data: { district: district },
+          success: function (response) {
+            districtTalukaMap[district] = response.talukas || [];
+          },
+          error: function (xhr, status, error) {
+            console.error(`Error fetching talukas for ${district}:`, error);
+            districtTalukaMap[district] = [];
+          }
+        });
+        ajaxCalls.push(request);
+      });
+
+      // Wait for all AJAX calls to finish
+      $.when.apply($, ajaxCalls).done(function () {
+        // ✅ All district responses are ready
+        let counter = 1;
+        selectedDistricts.forEach(district => {
+          const talukas = districtTalukaMap[district];
+          if (talukas && talukas.length > 0) {
+            // Add district header
+            $talukaDropdown.append(`
           <li class="dropdown-header fw-bold text-primary">${district}</li>
         `);
 
-          // Add its talukas
-          districtTalukaMap[district].forEach(taluka => {
-            let id = "taluka" + counter++;
-            $talukaDropdown.append(`
+            // Add talukas
+            talukas.forEach(taluka => {
+              let id = "taluka" + counter++;
+              $talukaDropdown.append(`
             <li>
               <div class="form-check ms-2">
                 <input class="form-check-input" type="checkbox" id="${id}" name="taluka" value="${taluka}">
@@ -874,19 +948,24 @@
               </div>
             </li>
           `);
-          });
+            });
 
-          // Add separator for visual clarity
-          $talukaDropdown.append('<li><hr class="dropdown-divider"></li>');
-        }
+            // Add divider
+            $talukaDropdown.append('<li><hr class="dropdown-divider"></li>');
+          }
+        });
+
+        // Remove last divider for neatness
+        $talukaDropdown.find("li:last-child hr").parent().remove();
+
+        // For debugging, you can log the final map
+        console.log("districtTalukaMap:", districtTalukaMap);
       });
-
-      // Remove trailing divider
-      $talukaDropdown.find("li:last-child hr").parent().remove();
     }
 
     // Event listener for district check/uncheck
     $(document).on("change", "input[name='district']", updateTalukas);
+
 
 
     // Ajax for applying filter
@@ -937,7 +1016,7 @@
       });
     });
 
-    // 🔹 Clear Filters Button
+    //  Clear Filters Button
     $("#clearFilter").click(function () {
       // Uncheck all checkboxes in every filter dropdown
       $(".filter-dropdown .form-check-input").prop("checked", false);
@@ -949,7 +1028,7 @@
         success: function (data) {
           if (data.status === 200) {
             $("#colleges_num").text(data.total_colleges_count);
-             showNotification("Filters cleared successfully!", "success");
+            showNotification("Filters cleared successfully!", "success");
 
           }
         },
@@ -959,61 +1038,8 @@
       });
     });
 
-    // validation for authentication form 
-    $('#auth_form').validate({
-      rules: {
-        username: {
-          required: function () {
-            return $("#auth_mode").val() === "signup";
-          },
-          minlength: 3
-        },
-        email: {
-          required: true,
-          email: true
-        },
-        password: {
-          required: true,
-          minlength: 6
-        },
-        confirm_password: {
-          required: function () {
-            return $("#auth_mode").val() === "signup"; // Only required in signup mode
-          },
-          equalTo: "#password" // Must match the password field
-        }
-      },
-      messages: {
-        username: {
-          required: "Please enter a username",
-          minlength: "Username must be at least 3 characters"
-        },
-        email: {
-          required: "Please enter your email",
-          email: "Enter a valid email address"
-        },
-        password: {
-          required: "Please enter your password",
-          minlength: "Password must be at least 6 characters"
-        },
-        confirm_password: {
-          required: "Please confirm your password",
-          equalTo: "Passwords do not match"
-        }
-      },
-      submitHandler: function (form) {
-        if ($("#auth_mode").val() === "signup") {
-          signup_ajax();
-        }
-        else {
-          login_ajax();
-        }
 
-      }
-    });
     // Search functionality within dropdowns filters
-
-    // Apply search filter for any dropdown
     $('.filter-dropdown input[type="text"]').on('keyup', function () {
       let searchValue = $(this).val().toLowerCase();
 
