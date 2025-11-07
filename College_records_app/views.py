@@ -40,11 +40,16 @@ def home(request):
         "BelongsTo": BelongsTo.objects.all(),
         "programs": Programs.objects.all()
     })
-
    
 
 def college_master(request):
-    return render(request, 'college_master.html', {"disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all()})  # Make sure 'tables.html' exists in templates
+    return render(request, 'college_master.html', {"disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all()}) 
+
+def student_master(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    return render(request, 'student_master.html')
+
 
 
 def get_records(request):

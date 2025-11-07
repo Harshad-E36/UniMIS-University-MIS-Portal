@@ -490,7 +490,7 @@
                   <div class="form-check">
                     <input class="form-check-input discipline-checkbox" type="checkbox"
                       value="{{ discipline.DisciplineName }}" id="{{discipline.DisciplineName}}" name="discipline[]">
-                    <label class="form-check-label" for="{{discipline.DisciplineName}}">{{ discipline.DisciplineName }}</label>
+                    <label class="form-check-label">{{ discipline.DisciplineName }}</label>
                   </div>
                   {% endfor %}
                 </div>
@@ -791,13 +791,33 @@
 
 
     $(".discipline-checkbox").change(function () {
+      // Get all selected disciplines
       const selectedDisciplines = $(".discipline-checkbox:checked")
         .map(function () {
           return $(this).val();
         })
         .get();
-      createCourseDropdowns(selectedDisciplines, {});
+
+      //Capture currently selected courses before dropdowns are rebuilt
+      const selectedCourses = {};
+      $(".dependent-dropdown").each(function () {
+        const disciplineLabel = $(this).find(".form-label").text().replace(" Courses", "").trim();
+        const checkedCourses = $(this)
+          .find(".course-checkbox:checked")
+          .map(function () {
+            return $(this).val().trim();
+          })
+          .get();
+
+        if (checkedCourses.length > 0) {
+          selectedCourses[disciplineLabel] = checkedCourses;
+        }
+      });
+
+      //Rebuild dropdowns but keep previous selections
+      createCourseDropdowns(selectedDisciplines, selectedCourses);
     });
+
 
 
     // Edit modal autofill

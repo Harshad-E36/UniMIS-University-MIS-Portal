@@ -685,28 +685,29 @@
           </div>
         </div>
 
-        <!-- Belongs To -->
+        <!-- Students -->
         <div class="col-12 col-md-4">
-          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+          <div class="card stat-card text-center" data-url="{% url 'student_master' %}">
             <div class="card-body">
               <h6 class="card-title">Students</h6>
-              <p class="stat-number mb-0" id="belongs_to_num" name="belongs_to_num">5</p>
+              <p class="stat-number mb-0" id="students_num" name="students_num"></p>
             </div>
           </div>
         </div>
 
-        <!-- Affiliated To -->
+        <!-- Staff -->
         <div class="col-12 col-md-4">
-          <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
+          <div class="card stat-card text-center" data-url="#">
             <div class="card-body">
               <h6 class="card-title">Staff</h6>
-              <p class="stat-number mb-0" id="affiliated_to_num" name="affiliated_to_num">7</p>
+              <p class="stat-number mb-0" id="staff_num" name="staff_num"></p>
             </div>
           </div>
         </div>
 
       </div>
     </main>
+
   </div>
 
 </body>
@@ -892,79 +893,75 @@
 
 
     function updateTalukas() {
-      let selectedDistricts = [];
-      $("input[name='district']:checked").each(function () {
-        selectedDistricts.push($(this).val());
-      });
+      // 1) Remember selected taluka values
+      const previouslySelected = new Set(
+        $("#talukaDropdown input[name='taluka']:checked")
+          .map(function () { return $(this).val(); })
+          .get()
+      );
 
-      let $talukaDropdown = $("#talukaDropdown");
-      $talukaDropdown.empty(); // reset
+      // 2) Get selected districts
+      const selectedDistricts = $("input[name='district']:checked")
+        .map(function () { return $(this).val(); })
+        .get();
+
+      const $talukaDropdown = $("#talukaDropdown");
+      $talukaDropdown.empty();
 
       if (selectedDistricts.length === 0) {
         $talukaDropdown.append('<li><small class="text-muted">Select district(s) first</small></li>');
         return;
       }
 
-      // Create a map to store all district→talukas after multiple AJAX calls
+      // 3) Fetch talukas for each district
       const districtTalukaMap = {};
-      let ajaxCalls = [];
-
-      selectedDistricts.forEach(district => {
-        const request = $.ajax({
+      const ajaxCalls = selectedDistricts.map(district =>
+        $.ajax({
           url: "{% url 'get_talukas' %}",
           type: "GET",
-          data: { district: district },
-          success: function (response) {
-            districtTalukaMap[district] = response.talukas || [];
-          },
-          error: function (xhr, status, error) {
-            console.error(`Error fetching talukas for ${district}:`, error);
-            districtTalukaMap[district] = [];
-          }
-        });
-        ajaxCalls.push(request);
-      });
+          data: { district },
+          success: resp => { districtTalukaMap[district] = resp.talukas || []; },
+          error: () => { districtTalukaMap[district] = []; }
+        })
+      );
 
-      // Wait for all AJAX calls to finish
+      // 4) Rebuild and restore checks
       $.when.apply($, ajaxCalls).done(function () {
-        // ✅ All district responses are ready
         let counter = 1;
+
         selectedDistricts.forEach(district => {
           const talukas = districtTalukaMap[district];
-          if (talukas && talukas.length > 0) {
-            // Add district header
+          if (!talukas || talukas.length === 0) return;
+
+          // header
+          $talukaDropdown.append(`
+        <li class="dropdown-header fw-bold text-primary">${district}</li>
+      `);
+
+          talukas.forEach(taluka => {
+            const id = "taluka" + counter++;
+            const checkedAttr = previouslySelected.has(taluka) ? "checked" : "";
             $talukaDropdown.append(`
-          <li class="dropdown-header fw-bold text-primary">${district}</li>
+          <li>
+            <div class="form-check ms-2">
+              <input class="form-check-input" type="checkbox" id="${id}" name="taluka" value="${taluka}" ${checkedAttr}>
+              <label class="form-check-label" for="${id}">${taluka}</label>
+            </div>
+          </li>
         `);
+          });
 
-            // Add talukas
-            talukas.forEach(taluka => {
-              let id = "taluka" + counter++;
-              $talukaDropdown.append(`
-            <li>
-              <div class="form-check ms-2">
-                <input class="form-check-input" type="checkbox" id="${id}" name="taluka" value="${taluka}">
-                <label class="form-check-label" for="${id}">${taluka}</label>
-              </div>
-            </li>
-          `);
-            });
-
-            // Add divider
-            $talukaDropdown.append('<li><hr class="dropdown-divider"></li>');
-          }
+          $talukaDropdown.append('<li><hr class="dropdown-divider"></li>');
         });
 
-        // Remove last divider for neatness
+        // remove trailing divider
         $talukaDropdown.find("li:last-child hr").parent().remove();
-
-        // For debugging, you can log the final map
-        console.log("districtTalukaMap:", districtTalukaMap);
       });
     }
 
-    // Event listener for district check/uncheck
+    // Event listener
     $(document).on("change", "input[name='district']", updateTalukas);
+
 
 
 
