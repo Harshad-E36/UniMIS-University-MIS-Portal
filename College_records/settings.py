@@ -133,3 +133,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # --------------------------------------------------
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False   # expire session when browser is closed
 SESSION_COOKIE_AGE = 3600 # by default, session cookies expire when the browser is closed
+
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = False  # True if HTTPS

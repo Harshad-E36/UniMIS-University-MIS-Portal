@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo
 from django.db.models import Prefetch
 from django.db.models import Q
@@ -29,7 +29,18 @@ def get_client_ip(request):
 
 
 def home(request):
-    return render(request, 'index.html', {"Colleges": College.objects.filter(is_deleted = False), "disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all(), "programs":Programs.objects.all()})  # Make sure 'index.html' exists in templates
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    print(Discipline.objects.all())
+    return render(request, 'index.html', {
+        "Colleges": College.objects.filter(is_deleted=False),
+        "disciplines": Discipline.objects.all(),
+        "Collegetype": CollegeType.objects.all(),
+        "BelongsTo": BelongsTo.objects.all(),
+        "programs": Programs.objects.all()
+    })
+
    
 
 def college_master(request):
@@ -183,7 +194,7 @@ def add_edit_record(request):
                     cp.save()
 
             response_data = {
-                'message': 'record updated successfully',
+                'message': 'Record updated successfully',
                 'status': 200
             }
             return JsonResponse(response_data)
@@ -213,7 +224,7 @@ def add_edit_record(request):
                     ProgramName=program_name
                 )
             response_data = {
-                'message': 'record added successfully',
+                'message': 'Record added successfully',
                 'status': 201
             }
             return JsonResponse(response_data)
@@ -251,16 +262,6 @@ def user_status(request):
         }
     return JsonResponse(response_data)  
 
-def clear_filters(request):
-    if request.method == "GET":
-        response_data = {
-            'status' : 200,
-            'total_colleges_count' : College.objects.filter(is_deleted = False).count()
-        }
-        return JsonResponse(response_data)
-
-    return JsonResponse({"status": "error"}, status=400)
-
 
 def signup(request):
     if request.method == 'POST':
@@ -270,7 +271,7 @@ def signup(request):
 
         if User.objects.filter(username = username).exists():
             response_data = {
-                'message' : 'username already exists',
+                'message' : 'Username already exists',
                 'status' : 400
             }
             return JsonResponse(response_data)
@@ -278,7 +279,7 @@ def signup(request):
         if User.objects.filter(email = email).exists():
             print("inside")
             response_data = {
-                'message' : 'email already exists',
+                'message' : 'Email already exists',
                 'status' : 400
             }
             return JsonResponse(response_data)
@@ -287,39 +288,37 @@ def signup(request):
         user.save()
 
         response_data = {
-            'message' : 'user created successfully',
+            'message' : 'User created successfully',
             'status' : 201
         }
         return JsonResponse(response_data)
     
 
 def user_login(request):
+    # If already logged in → go home
+    if request.user.is_authenticated:
+        return redirect('home')
+
+    # If form is POST (login attempt)
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        remember_me = request.POST.get('remember_me', '0')
-        username = User.objects.get(email=email).username
 
-        user = authenticate(request, username = username, password = password)
+        try:
+            username = User.objects.get(email=email).username
+        except User.DoesNotExist:
+            return JsonResponse({'status': 401, 'message': 'Invalid email or password'})
 
-        if user is not None:
+        user = authenticate(request, username=username, password=password)
+
+        if user:
             login(request, user)
-            if remember_me == '1':
-                request.session.set_expiry(86400)  # 24 hrs
-            response_data = {
-                'message' : 'login successful',
-                'status' : 200,
-                'username' : username,
-                'total_colleges_count' : College.objects.filter(is_deleted = False).count()
-            }
+            return JsonResponse({'status': 200, 'message': 'Login successful'})
 
-            return JsonResponse(response_data)
-        else:
-            response_data = {
-                'message' : 'invalid credentials',
-                'status' : 401
-            }
-            return JsonResponse(response_data)
+        return JsonResponse({'status': 401, 'message': 'Invalid email or password'})
+
+    # Show login page
+    return render(request, 'login_page.html')
         
         
 def user_logout(request):
@@ -388,6 +387,17 @@ def apply_filters(request):
 
         return JsonResponse(response_data)
     
+
+def clear_filters(request):
+    if request.method == "GET":
+        response_data = {
+            'status' : 200,
+            'total_colleges_count' : College.objects.filter(is_deleted = False).count()
+        }
+        return JsonResponse(response_data)
+
+    return JsonResponse({"status": "error"}, status=400)
+
 
 def get_talukas(request):
     if request.method == "GET":
