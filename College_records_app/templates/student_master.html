@@ -36,26 +36,37 @@
   <title>Student Records</title>
 
   <style>
-    /* Validator error messages */
+    /* Validation */
     label.error {
       color: #dc3545;
       font-size: 0.9rem;
     }
 
+
     body {
       background: #f8f9fa;
       font-family: "Segoe UI", Roboto, sans-serif;
       caret-color: transparent;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: hidden;
     }
+
 
     .modal-body {
       caret-color: auto;
+      max-height: 88vh;
+      overflow-y: auto;
     }
 
-    /* Modern header */
+
+    /* Header */
     .header-container {
       margin-top: 0.5rem;
     }
+
 
     .header-banner {
       background: linear-gradient(135deg, #0d6efd, #198754);
@@ -65,7 +76,8 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    /* Table styling */
+
+    /* Table */
     .table-container {
       background: white;
       border-radius: 1rem;
@@ -73,153 +85,10 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
+
     table.dataTable thead {
       background: #0d6efd;
       color: white;
-    }
-
-    /* Action buttons */
-    .action-icons a {
-      color: #0d6efd;
-      transition: 0.3s ease;
-    }
-
-    .action-icons a:hover {
-      color: #198754;
-    }
-
-    /* Modal styling */
-    .modal-content {
-      border-radius: 1rem;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-    }
-
-    .modal-header {
-      background: #0d6efd;
-      color: white;
-      border-top-left-radius: 1rem;
-      border-top-right-radius: 1rem;
-    }
-
-    .btn-primary {
-      background: #0d6efd;
-      border: none;
-    }
-
-    .btn-primary:hover {
-      background: #0b5ed7;
-    }
-
-    .btn-success {
-      background: #198754;
-      border: none;
-    }
-
-    .btn-success:hover {
-      background: #157347;
-    }
-
-    .table {
-      table-layout: fixed;
-      width: 100%;
-    }
-
-    /* Reset unwanted browser default spacing */
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow-x: hidden;
-      /* prevent sideways scroll */
-      overflow-y: hidden;
-      /* remove vertical scrollbar */
-    }
-
-    .modal-body {
-      max-height: 88vh;
-      /* fits within viewport */
-      overflow-y: auto;
-      /* scroll only inside modal if needed */
-    }
-
-
-    /* Fix header spacing */
-    .container,
-    .container-fluid {
-      margin-top: 0 !important;
-      padding-top: 0 !important;
-    }
-
-    /* Optional: adjust the hero/banner card */
-    .hero-section,
-    .card {
-      margin-top: 0 !important;
-      border-radius: 0;
-      /* optional if you want flush look */
-    }
-
-    /* Datatables tweaks */
-    .dataTables_wrapper {
-      margin-bottom: 0 !important;
-      padding-bottom: 0 !important;
-    }
-
-    .login-btn {
-      border-radius: 20px;
-      padding: 6px 16px;
-      font-size: 0.9rem;
-      transition: all 0.3s ease-in-out;
-    }
-
-    .login-btn:hover {
-      background-color: #0d6efd;
-      /* Bootstrap primary */
-      color: #fff;
-      border-color: #0d6efd;
-    }
-
-    .modal .modal-dialog {
-      margin-top: 10px !important;
-      /* remove big gap */
-    }
-
-    body.modal-open {
-      overflow: hidden !important;
-      padding-right: 0 !important;
-      /* removes Bootstrap’s auto padding */
-    }
-
-    /* Apply only inside table cells */
-    tr td .truncate-text {
-      display: block;
-      /* stay inside the cell */
-      max-width: 100%;
-      /* match column width */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .tooltip-inner {
-      max-width: 300px;
-      /* wider tooltips */
-      background-color: #333;
-      /* dark background */
-      color: #fff;
-      /* white text */
-      font-size: 0.9rem;
-      padding: 8px 12px;
-      border-radius: 8px;
-      text-align: left;
-    }
-
-    .tooltip.bs-tooltip-top .tooltip-arrow::before {
-      border-top-color: #333;
-    }
-
-    .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
-      border-bottom-color: #333;
     }
 
     .notification {
@@ -228,8 +97,6 @@
       left: 50%;
       transform: translateX(-50%);
       padding: 15px 30px;
-      background-color: #28a745;
-      color: white;
       font-size: 1rem;
       font-weight: bold;
       border-radius: 8px;
@@ -241,10 +108,12 @@
 
     .notification-success {
       background-color: #28a745;
+      color: white;
     }
 
     .notification-error {
       background-color: #dc3545;
+      color: white;
     }
 
     .show-notification {
@@ -252,51 +121,50 @@
       transform: translateX(-50%) translateY(20px);
     }
 
-    #records_table tbody tr.group-end {
-      border-bottom: none;
+    /* Collapsible cassette container (hidden by default) */
+    #collegeCodeCassette {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height .35s ease, opacity .3s ease;
     }
 
-    #records_table tbody tr.separator-row td {
-      padding: 0;
-      border: 0;
-      height: 8px;
-      position: relative;
+    /* Inner slim card */
+    #collegeCodeCassette .inner-cassette {
+      background: white;
+      padding: .6rem .9rem;
+      border-radius: .75rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem
     }
 
-    #records_table tbody tr.separator-row td::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-bottom: 2px solid #444;
+
+    /* Show state */
+    #collegeCodeCassette.show {
+      max-height: 90px;
+      opacity: 1;
     }
 
-    #records_table {
-      border-collapse: collapse;
+    /* Input styling refined */
+    #collegeCodeInput {
+      text-align: center;
+      background: #f8f9fa;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      width: 140px;
     }
 
-    #records_table tbody td {
-      border-bottom: none;
-    }
-
-    /* Dashboard-style welcome + logout on student page */
-    #welcome_msg {
-      font-size: 0.95rem;
-      color: #fff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-    }
-
-    .logout-btn {
-      border-radius: 20px !important;
-      padding: 5px 14px !important;
-      font-size: 0.85rem !important;
-      transition: all 0.2s ease-in-out !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
+    #collegeCodeInput:focus {
+      background: #fff;
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, .15);
     }
   </style>
 </head>
@@ -325,28 +193,156 @@
 
             <h1 class="fw-bold">Student Records</h1>
             <p>Add your student record here</p>
-            <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton" data-bs-toggle="modal"
-              data-bs-target="#RecordsModal">
+            <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton">
               <i class="bi bi-plus-lg"></i> Add Record
             </button>
+
+            <!-- Cascading Input Cassette -->
+
+            <div id="collegeCodeCassette" class="cassette">
+              <div class="inner-cassette d-flex align-items-center gap-2">
+                <input type="text" id="collegeCodeInput" class="form-control form-control-sm" placeholder="College code"
+                  inputmode="numeric">
+                <button class="btn btn-primary btn-sm" id="submitCollegeCode">Submit</button>
+              </div>
+            </div>
+
+
           </div>
 
 
+          <div class="table-container" id="datatable_wrapper">
+            <table class="table table-hover align-middle" id="records_table">
+              <thead>
+                <tr>
+                  <!-- add column names here -->
+                </tr>
+              </thead>
+            </table>
+          </div>
+
         </div>
-        <div class="table-container" id="datatable_wrapper">
-          <table class="table table-hover align-middle" id="records_table">
-            <thead>
-              <tr>
-                <!-- add column names here -->
-              </tr>
-            </thead>
-          </table>
+      </div>
+    </div>
+
+
+    <!-- Add Student Records Modal -->
+    <div class="modal fade" id="collegeModal" tabindex="-1">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <div>
+              <h2 class="fw-bold mb-0" id="modalCollegeName"></h2>
+              <small class="text-muted" id="modalCollegeAddress"></small>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+
+            <!-- Academic Year -->
+            <div class="col-md-4">
+              <label class="fw-semibold">Academic Year</label>
+              <select id="academicYear" class="form-select">
+                <option value="">Select Year</option>
+                <option>2023-2024</option>
+                <option>2024-2025</option>
+                <option>2025-2026</option>
+              </select>
+            </div>
+
+            <!-- Dynamic Program Sections Will Appear Here -->
+            <div id="programSectionsContainer"></div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-success" id="submitRecordForm">Submit Records</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <template id="programTemplate">
+      <div class="program-section">
+
+        <hr>
+        <h4 class="fw-bold mt-3 program-title"></h4>
+
+        <!-- TOTAL STUDENTS -->
+        <div class="row mt-2">
+          <div class="col-md-4">
+            <label class="fw-semibold">Total Students</label>
+            <input type="number" class="form-control total-students">
+          </div>
+        </div>
+
+        <!-- GENDER COUNT -->
+        <h6 class="mt-3">Gender Count</h6>
+        <div class="row">
+          <div class="col-md-3">
+            <label>Male</label>
+            <input type="number" class="form-control gender-male" min="0">
+          </div>
+          <div class="col-md-3">
+            <label>Female</label>
+            <input type="number" class="form-control gender-female" min="0">
+          </div>
+        </div>
+
+        <!-- CATEGORY COUNT -->
+        <h6 class="mt-3">Category Count</h6>
+        <div class="row">
+          <div class="col-md-3"><label>OPEN</label><input type="number" class="form-control cat-open"></div>
+          <div class="col-md-3"><label>OBC</label><input type="number" class="form-control cat-obc"></div>
+          <div class="col-md-3"><label>SC</label><input type="number" class="form-control cat-sc"></div>
+          <div class="col-md-3"><label>ST</label><input type="number" class="form-control cat-st"></div>
+        </div>
+
+        <div class="row mt-2">
+          <div class="col-md-3"><label>NT</label><input type="number" class="form-control cat-nt"></div>
+          <div class="col-md-3"><label>VJNT</label><input type="number" class="form-control cat-vjnt"></div>
+          <div class="col-md-3"><label>EWS</label><input type="number" class="form-control cat-ews"></div>
+        </div>
+
+        <!-- RELIGION COUNT -->
+        <h6 class="mt-3">Religion Count</h6>
+        <div class="row">
+          <div class="col-md-3"><label>Hindu</label><input type="number" class="form-control rel-hindu"></div>
+          <div class="col-md-3"><label>Muslim</label><input type="number" class="form-control rel-muslim"></div>
+          <div class="col-md-3"><label>Sikh</label><input type="number" class="form-control rel-sikh"></div>
+          <div class="col-md-3"><label>Christian</label><input type="number" class="form-control rel-christian"></div>
+        </div>
+
+        <div class="row mt-2">
+          <div class="col-md-3"><label>Jain</label><input type="number" class="form-control rel-jain"></div>
+          <div class="col-md-3"><label>Buddhist</label><input type="number" class="form-control rel-buddhist"></div>
+          <div class="col-md-3"><label>Other</label><input type="number" class="form-control rel-other"></div>
+        </div>
+
+        <!-- DISABILITY COUNT -->
+        <h6 class="mt-3">Disability Count</h6>
+        <div class="row">
+          <div class="col-md-3"><label>None</label><input type="number" class="form-control dis-none"></div>
+          <div class="col-md-3"><label>Low Vision</label><input type="number" class="form-control dis-lowvision"></div>
+          <div class="col-md-3"><label>Blindness</label><input type="number" class="form-control dis-blindness"></div>
+          <div class="col-md-3"><label>Hearing Impaired</label><input type="number" class="form-control dis-hearing">
+          </div>
+        </div>
+
+        <div class="row mt-2">
+          <div class="col-md-3"><label>Locomotor Disability</label><input type="number"
+              class="form-control dis-locomotor">
+          </div>
+          <div class="col-md-3"><label>Autism</label><input type="number" class="form-control dis-autism"></div>
+          <div class="col-md-3"><label>Other</label><input type="number" class="form-control dis-other"></div>
         </div>
 
       </div>
-    </div>
-  </div>
-
+    </template>
 
 </body>
 
@@ -383,6 +379,91 @@
     }
   });
 
+  function populateCollegeModal(data) {
+
+    $("#modalCollegeName").text(data.college_name);
+    $("#modalCollegeAddress").text(data.college_address);
+
+    // Clear previous items
+    $("#programSectionsContainer").empty();
+
+    data.programs.forEach(program => {
+      addProgramSection(program);
+    });
+
+    // Store college code for submit
+    $("#collegeModal").data("college-code", data.college_code);
+  }
+
+
+  function addProgramSection(programName) {
+
+    const template = document.querySelector("#programTemplate");
+    const clone = template.content.cloneNode(true);
+
+    clone.querySelector(".program-title").innerText = programName;
+    clone.querySelector(".program-section").dataset.program = programName;
+
+    document.querySelector("#programSectionsContainer").appendChild(clone);
+  }
+
+  function validateProgramSection(section) {
+
+    let programName = section.data("program");
+    let total = parseInt(section.find(".total-students").val()) || 0;
+
+    if (!total || total <= 0) {
+      return {
+        valid: false,
+        message: `${programName}: Total Students is required and must be greater than 0.`
+      };
+    }
+
+    function sumFields(selector) {
+      let sum = 0;
+      section.find(selector).each(function () {
+        let val = parseInt($(this).val()) || 0;
+        sum += val;
+      });
+      return sum;
+    }
+
+    // Calculate aggregates
+    let genderSum = sumFields(".gender-male, .gender-female");
+    let categorySum = sumFields(".cat-open, .cat-obc, .cat-sc, .cat-st, .cat-nt, .cat-vjnt, .cat-ews");
+    let religionSum = sumFields(".rel-hindu, .rel-muslim, .rel-sikh, .rel-christian, .rel-jain, .rel-buddhist, .rel-other");
+    let disabilitySum = sumFields(".dis-none, .dis-lowvision, .dis-blindness, .dis-hearing, .dis-locomotor, .dis-autism, .dis-other");
+
+    // Validate each
+    if (genderSum !== total) {
+      return {
+        valid: false,
+        message: `${programName}: Gender total (${genderSum}) does not match Total Students (${total}).`
+      };
+    }
+    if (categorySum !== total) {
+      return {
+        valid: false,
+        message: `${programName}: Category total (${categorySum}) does not match Total Students (${total}).`
+      };
+    }
+    if (religionSum !== total) {
+      return {
+        valid: false,
+        message: `${programName}: Religion total (${religionSum}) does not match Total Students (${total}).`
+      };
+    }
+    if (disabilitySum !== total) {
+      return {
+        valid: false,
+        message: `${programName}: Disability total (${disabilitySum}) does not match Total Students (${total}).`
+      };
+    }
+
+    return { valid: true };
+  }
+
+
 
   $('document').ready(function () {
 
@@ -400,6 +481,158 @@
         console.error("Auth check failed");
       }
     });
+
+
+    // Toggle the cassette
+    $("#AddRecordButton").on("click", function (e) {
+      e.stopPropagation();
+      $("#collegeCodeCassette").toggleClass("show");
+
+      if ($("#collegeCodeCassette").hasClass("show")) {
+        $("#collegeCodeInput").focus();
+      }
+    });
+
+    // Click outside closes cassette
+    $(document).on("click", function (e) {
+      if (!$(e.target).closest("#collegeCodeCassette, #AddRecordButton").length) {
+        $("#collegeCodeCassette").removeClass("show");
+      }
+    });
+
+    // Prevent inner clicks from closing it
+    $("#collegeCodeCassette").on("click", function (e) {
+      e.stopPropagation();
+    });
+
+    // from here starts the adding record logic 
+    $("#submitCollegeCode").on("click", function () {
+      const collegeCode = $("#collegeCodeInput").val().trim();
+
+      if (!collegeCode) {
+        showNotification("Please enter a college code", "danger");
+        return;
+      }
+
+      $.ajax({
+        url: "/get-college-data/",
+        type: "POST",
+        data: { college_code: collegeCode },
+        success: function (response) {
+          if (response.status === 200) {
+            populateCollegeModal(response);
+            $("#collegeModal").modal("show");
+          } else {
+            showNotification("Invalid college code", "danger");
+          }
+        },
+        error: function () {
+          showNotification("Server error", "danger");
+        }
+      });
+    });
+
+
+    $("#submitRecordForm").on("click", function () {
+      const collegeCode = $("#collegeModal").data("college-code");
+      const academicYear = $("#academicYear").val();
+
+      if (!academicYear) {
+        showNotification("Please select academic year", "danger");
+        return;
+      }
+
+      let records = {};
+      let failedValidation = null;
+
+      $(".program-section").each(function () {
+
+        let section = $(this);
+
+        // VALIDATE THIS PROGRAM FIRST
+        let check = validateProgramSection(section);
+        if (!check.valid) {
+          failedValidation = check.message;
+          return false; // stop loop
+        }
+
+        let program = section.data("program");
+
+        records[program] = {
+
+          total_students: section.find(".total-students").val(),
+
+          gender: {
+            male: section.find(".gender-male").val(),
+            female: section.find(".gender-female").val(),
+          },
+
+          category: {
+            open: section.find(".cat-open").val(),
+            obc: section.find(".cat-obc").val(),
+            sc: section.find(".cat-sc").val(),
+            st: section.find(".cat-st").val(),
+            nt: section.find(".cat-nt").val(),
+            vjnt: section.find(".cat-vjnt").val(),
+            ews: section.find(".cat-ews").val(),
+          },
+
+          religion: {
+            hindu: section.find(".rel-hindu").val(),
+            muslim: section.find(".rel-muslim").val(),
+            sikh: section.find(".rel-sikh").val(),
+            christian: section.find(".rel-christian").val(),
+            jain: section.find(".rel-jain").val(),
+            buddhist: section.find(".rel-buddhist").val(),
+            other: section.find(".rel-other").val(),
+          },
+
+          disability: {
+            none: section.find(".dis-none").val(),
+            lowvision: section.find(".dis-lowvision").val(),
+            blindness: section.find(".dis-blindness").val(),
+            hearing: section.find(".dis-hearing").val(),
+            locomotor: section.find(".dis-locomotor").val(),
+            autism: section.find(".dis-autism").val(),
+            other: section.find(".dis-other").val(),
+          }
+        };
+      });
+
+      // IF ANY PROGRAM FAILED → STOP SUBMISSION
+      if (failedValidation) {
+        showNotification(failedValidation, "danger");
+        return;
+      }
+
+      let payload = {
+        college_code: collegeCode,
+        academic_year: academicYear,
+        records: records
+      };
+
+      console.log("Sending payload to backend...");
+      console.log(payload);
+
+      $.ajax({
+        url: "/submit-student-records/",
+        type: "POST",
+        data: JSON.stringify(payload),
+        contentType: "application/json",
+        success: function (response) {
+          if (response.status === 200) {
+            showNotification("Student records saved successfully!", "success");
+            $("#collegeModal").modal("hide");
+          } else {
+            showNotification(response.message || "Something went wrong", "danger");
+          }
+        },
+        error: function () {
+          showNotification("Server error", "danger");
+        }
+      });
+    });
+
 
 
     $("#logout_btn").on("click", function (e) {
