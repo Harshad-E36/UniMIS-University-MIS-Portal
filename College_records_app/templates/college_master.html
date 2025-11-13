@@ -36,25 +36,33 @@
   <title>College Records</title>
 
   <style>
-    /* Validator error messages */
+    /* =========================================================
+   GLOBAL BASE STYLES
+   ========================================================= */
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow-x: hidden;
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f8f9fa;
+    }
+
+    /* Form error messages */
     label.error {
       color: #dc3545;
       font-size: 0.9rem;
     }
 
-    body {
-      background: #f8f9fa;
-      font-family: "Segoe UI", Roboto, sans-serif;
-      caret-color: transparent;
-    }
+    /* =========================================================
+   HEADER / HERO SECTION
+   ========================================================= */
 
-    .modal-body {
-      caret-color: auto;
-    }
-
-    /* Modern header */
     .header-container {
       margin-top: 0.5rem;
+      text-align: center;
     }
 
     .header-banner {
@@ -63,9 +71,31 @@
       border-radius: 1rem;
       padding: 2.5rem 1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      position: relative;
     }
 
-    /* Table styling */
+    #welcome_msg {
+      font-size: 0.95rem;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .logout-btn {
+      border-radius: 20px !important;
+      padding: 5px 14px !important;
+      font-size: 0.85rem !important;
+      transition: all 0.2s ease-in-out !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* =========================================================
+   TABLE CONTAINER + DATATABLES
+   ========================================================= */
+
     .table-container {
       background: white;
       border-radius: 1rem;
@@ -73,186 +103,28 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
-    table.dataTable thead {
-      background: #0d6efd;
-      color: white;
-    }
-
-    /* Action buttons */
-    .action-icons a {
-      color: #0d6efd;
-      transition: 0.3s ease;
-    }
-
-    .action-icons a:hover {
-      color: #198754;
-    }
-
-    /* Modal styling */
-    .modal-content {
-      border-radius: 1rem;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-    }
-
-    .modal-header {
-      background: #0d6efd;
-      color: white;
-      border-top-left-radius: 1rem;
-      border-top-right-radius: 1rem;
-    }
-
-    .btn-primary {
-      background: #0d6efd;
-      border: none;
-    }
-
-    .btn-primary:hover {
-      background: #0b5ed7;
-    }
-
-    .btn-success {
-      background: #198754;
-      border: none;
-    }
-
-    .btn-success:hover {
-      background: #157347;
-    }
-
+    /* Ensures predictable sizing for truncate-text */
     .table {
       table-layout: fixed;
       width: 100%;
     }
 
-    /* Reset unwanted browser default spacing */
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow-x: hidden;
-      /* prevent sideways scroll */
-      overflow-y: hidden;
-      /* remove vertical scrollbar */
+    table.dataTable thead {
+      background: #0d6efd;
+      color: #fff;
     }
 
-    .modal-body {
-      max-height: 88vh;
-      /* fits within viewport */
-      overflow-y: auto;
-      /* scroll only inside modal if needed */
-    }
-
-
-    /* Fix header spacing */
-    .container,
-    .container-fluid {
-      margin-top: 0 !important;
-      padding-top: 0 !important;
-    }
-
-    /* Optional: adjust the hero/banner card */
-    .hero-section,
-    .card {
-      margin-top: 0 !important;
-      border-radius: 0;
-      /* optional if you want flush look */
-    }
-
-    /* Datatables tweaks */
     .dataTables_wrapper {
       margin-bottom: 0 !important;
       padding-bottom: 0 !important;
     }
 
-    .login-btn {
-      border-radius: 20px;
-      padding: 6px 16px;
-      font-size: 0.9rem;
-      transition: all 0.3s ease-in-out;
+    /* Row grouping helpers (JS-generated) */
+    #records_table {
+      border-collapse: collapse;
     }
 
-    .login-btn:hover {
-      background-color: #0d6efd;
-      /* Bootstrap primary */
-      color: #fff;
-      border-color: #0d6efd;
-    }
-
-    .modal .modal-dialog {
-      margin-top: 10px !important;
-      /* remove big gap */
-    }
-
-    body.modal-open {
-      overflow: hidden !important;
-      padding-right: 0 !important;
-      /* removes Bootstrap’s auto padding */
-    }
-
-    /* Apply only inside table cells */
-    tr td .truncate-text {
-      display: block;
-      /* stay inside the cell */
-      max-width: 100%;
-      /* match column width */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .tooltip-inner {
-      max-width: 300px;
-      /* wider tooltips */
-      background-color: #333;
-      /* dark background */
-      color: #fff;
-      /* white text */
-      font-size: 0.9rem;
-      padding: 8px 12px;
-      border-radius: 8px;
-      text-align: left;
-    }
-
-    .tooltip.bs-tooltip-top .tooltip-arrow::before {
-      border-top-color: #333;
-    }
-
-    .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
-      border-bottom-color: #333;
-    }
-
-    .notification {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 15px 30px;
-      background-color: #28a745;
-      color: white;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      opacity: 0;
-      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-      z-index: 2000;
-    }
-
-    .notification-success {
-      background-color: #28a745;
-    }
-
-    .notification-error {
-      background-color: #dc3545;
-    }
-
-    .show-notification {
-      opacity: 1;
-      transform: translateX(-50%) translateY(20px);
-    }
-
-    #records_table tbody tr.group-end {
+    #records_table tbody td {
       border-bottom: none;
     }
 
@@ -272,31 +144,166 @@
       border-bottom: 2px solid #444;
     }
 
-    #records_table {
-      border-collapse: collapse;
-    }
-
-    #records_table tbody td {
+    #records_table tbody tr.group-end {
       border-bottom: none;
     }
 
-    /* Dashboard-style welcome + logout on college page */
-    #welcome_msg {
-      font-size: 0.95rem;
+    /* =========================================================
+   ACTION ICONS INSIDE DATATABLE
+   ========================================================= */
+
+    .action-icons a {
+      color: #0d6efd;
+      transition: color 0.3s ease;
+    }
+
+    .action-icons a:hover {
+      color: #198754;
+    }
+
+    /* =========================================================
+   MODAL STYLING
+   ========================================================= */
+
+    .modal-content {
+      border-radius: 1rem;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-header {
+      background: #0d6efd;
+      color: white;
+      border-top-left-radius: 1rem;
+      border-top-right-radius: 1rem;
+    }
+
+    /* Scroll only inside modal body */
+    .modal-body {
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+
+    .modal .modal-dialog {
+      margin-top: 10px !important;
+    }
+
+    body.modal-open {
+      overflow: hidden !important;
+      padding-right: 0 !important;
+    }
+
+    /* =========================================================
+   BOOTSTRAP BUTTON OVERRIDES
+   ========================================================= */
+
+    .btn-primary {
+      background: #0d6efd;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: #0b5ed7;
+    }
+
+    .btn-success {
+      background: #198754;
+      border: none;
+    }
+
+    .btn-success:hover {
+      background: #157347;
+    }
+
+    /* Login button utility (kept if used elsewhere) */
+    .login-btn {
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .login-btn:hover {
+      background-color: #0d6efd;
       color: #fff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      border-color: #0d6efd;
     }
 
-    .logout-btn {
-      border-radius: 20px !important;
-      padding: 5px 14px !important;
-      font-size: 0.85rem !important;
-      transition: all 0.2s ease-in-out !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    /* =========================================================
+   TRUNCATE UTILITY (used in DataTables)
+   ========================================================= */
+
+    .truncate-text {
+      display: block;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
+    /* =========================================================
+   TOOLTIPS
+   ========================================================= */
+
+    .tooltip-inner {
+      max-width: 300px;
+      background-color: #333;
+      color: #fff;
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-align: left;
+    }
+
+    .tooltip.bs-tooltip-top .tooltip-arrow::before {
+      border-top-color: #333;
+    }
+
+    .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+      border-bottom-color: #333;
+    }
+
+    /* =========================================================
+   NOTIFICATION SYSTEM (JS APPENDS DOM)
+   ========================================================= */
+
+    .notification {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+      z-index: 2000;
+    }
+
+    .notification-success {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .notification-error {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .show-notification {
+      opacity: 1;
+      transform: translateX(-50%) translateY(20px);
+    }
+
+    /* =========================================================
+   CARDS / OPTIONAL FLUSH LOOK
+   ========================================================= */
+
+    .hero-section,
+    .card {
+      margin-top: 0 !important;
+      border-radius: 0;
     }
   </style>
 </head>

@@ -35,37 +35,49 @@
 
 
   <style>
-    /* Validator error messages */
-    label.error {
-      color: #dc3545;
-      font-size: 0.9rem;
+    :root {
+      --brand-blue: #0d6efd;
+      --brand-blue-dark: #0b5ed7;
+      --brand-green: #198754;
+      --danger: #dc3545;
+      --muted: #6c757d;
+      --bg: #f8f9fa;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --card-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
+      --modal-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+      --radius-lg: 1rem;
+      --radius-md: 12px;
+      --radius-sm: 10px;
     }
 
+    /* Base */
     body {
-      background: #f8f9fa;
+      background: var(--bg);
       font-family: "Segoe UI", Roboto, sans-serif;
-      caret-color: transparent;
       margin: 0;
       padding: 0;
       height: 100%;
       overflow-x: hidden;
+      caret-color: transparent;
     }
 
-    .modal-body {
-      caret-color: auto;
-      max-height: 88vh;
-      overflow-y: auto;
+    /* Small helpers */
+    label.error {
+      color: var(--danger);
+      font-size: 0.9rem;
     }
 
     /* Header */
     .header {
-      background: linear-gradient(135deg, #0d6efd, #198754);
-      color: white;
-      border-radius: 1rem;
+      background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
+      color: #fff;
+      border-radius: var(--radius-lg);
       padding: 2.5rem 1rem;
       margin: 0.5rem;
-      /* ✅ margin on all sides */
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .header h1 {
@@ -74,70 +86,264 @@
       font-weight: 600;
     }
 
+    /* Welcome */
+    #welcome_msg {
+      font-size: 0.95rem;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      transition: opacity .3s ease;
+    }
+
+    /* Content section (consolidated) */
     .content-section {
       padding: 0.5rem 0;
+      margin: 0.5rem;
     }
 
-    /* Modal */
-    .modal-content {
-      border-radius: 1rem;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    /* Stat cards */
+    .stat-card {
+      border-radius: var(--radius-lg);
+      box-shadow: var(--card-shadow);
+      transition: transform .2s ease, box-shadow .2s ease;
+      height: 100%;
+      padding: 1rem;
     }
 
-    .modal-header {
-      background: #0d6efd;
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .stat-card .card-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--brand-blue);
+    }
+
+    /* Filter Navbar (cleaned) */
+    .filter-navbar {
+      background: linear-gradient(90deg, var(--brand-blue), var(--brand-green));
+      border-radius: var(--radius-md);
       color: white;
-      border-top-left-radius: 1rem;
-      border-top-right-radius: 1rem;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
     }
 
-    .btn-primary {
-      background: #0d6efd;
+    .filter-navbar>.d-flex {
+      width: 100%;
+    }
+
+    /* Filter buttons */
+    .filter-btn {
+      border-radius: 20px;
+      font-weight: 500;
+      transition: all .25s ease;
+    }
+
+    .filter-btn:hover {
+      background: #f8f9fa;
+      color: var(--brand-blue);
+      transform: translateY(-1px);
+    }
+
+    /* Dropdowns and dropdown contents */
+    .filter-dropdown {
+      border-radius: var(--radius-md);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      min-width: 220px;
+      max-height: 250px;
+      overflow-y: auto;
+      padding: .5rem;
+    }
+
+    /* College name dropdown: preserve responsive sizing */
+    #filterCollegeName+.dropdown-menu {
+      min-width: 472px;
+      width: 100%;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* Apply / Clear buttons */
+    .apply-btn {
+      border-radius: 20px;
+      font-weight: 600;
+      padding: 6px 16px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+      transition: all .2s ease;
+    }
+
+    .apply-btn:hover {
+      background: var(--brand-blue-dark);
+      transform: translateY(-1px);
+    }
+
+    .clear-btn {
+      border-radius: 20px;
+      font-weight: 600;
+      padding: 6px 16px;
+      background: #f8d7da;
+      color: #842029;
+      border: none;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      transition: all .2s ease;
+    }
+
+    .clear-btn:hover {
+      background: var(--danger);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* Create / Logout (kept concise) */
+    .create-user-btn,
+    .logout-btn {
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: .85rem;
+      transition: all .18s ease-in-out;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .create-user-btn {
+      background: #fff;
+      color: var(--brand-blue);
       border: none;
     }
 
-    .btn-primary:hover {
-      background: #0b5ed7;
+    .create-user-btn:hover {
+      background: #eaf2ff;
+      color: #0959c6;
     }
 
-    .login-btn {
-      border-radius: 20px;
-      padding: 6px 16px;
-      font-size: 0.9rem;
-      transition: all 0.3s ease-in-out;
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
     }
 
-    .login-btn:hover {
-      background-color: #0d6efd;
+    /* Modal (modern modal styles consolidated) */
+    .modern-modal .modal-content {
+      border-radius: 14px;
+      border: none;
+      box-shadow: var(--modal-shadow);
+    }
+
+    .modern-modal .modal-header {
+      background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
       color: #fff;
-      border-color: #0d6efd;
+      border-top-left-radius: 14px;
+      border-top-right-radius: 14px;
+      padding: 1rem 1.25rem;
+      border-bottom: none;
     }
 
-    .modal .modal-dialog {
-      margin-top: 10px !important;
+    .modern-modal .modal-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff !important;
     }
 
-    body.modal-open {
-      overflow: hidden !important;
-      padding-right: 0 !important;
+    /* Close button style */
+    .modern-modal .btn-close {
+      filter: invert(1) brightness(200%);
+      opacity: .85;
     }
 
-    /* Notification */
+    .modern-modal .btn-close:hover {
+      opacity: 1;
+    }
+
+    /* Modal body / spacing & scrolling */
+    .modal-body {
+      max-height: 88vh;
+      overflow-y: auto;
+      caret-color: auto;
+    }
+
+    .modern-modal .modal-body {
+      padding: 1.4rem;
+    }
+
+    /* Inputs / labels */
+    .modern-input {
+      border-radius: var(--radius-sm);
+      border: 1px solid #d5dce5;
+      padding: 10px 12px;
+      transition: .18s;
+    }
+
+    .modern-input:focus {
+      border-color: var(--brand-blue);
+      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+    }
+
+    .modern-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+    }
+
+    /* Create button in modal */
+    .modern-modal .create-btn {
+      background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 600;
+      transition: .18s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modern-modal .create-btn i {
+      color: #fff;
+    }
+
+    .modern-modal .create-btn:hover {
+      opacity: .92;
+      transform: translateY(-2px);
+    }
+
+    /* Responsive tweaks */
+    @media (max-width:768px) {
+
+      .apply-btn,
+      .clear-btn {
+        width: 140px;
+      }
+
+      .filter-navbar {
+        padding: 12px;
+      }
+    }
+
+    /* Notifications (required by showNotification JS) */
     .notification {
       position: fixed;
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
       padding: 15px 30px;
-      background-color: #28a745;
       color: white;
       font-size: 1rem;
       font-weight: bold;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       opacity: 0;
-      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
       z-index: 2000;
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
     }
 
     .notification-success {
@@ -151,259 +357,6 @@
     .show-notification {
       opacity: 1;
       transform: translateX(-50%) translateY(20px);
-    }
-
-    #welcome_msg {
-      font-size: 0.95rem;
-      color: #fff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-      transition: opacity 0.3s ease;
-    }
-
-    .content-section {
-      margin: 0.5rem;
-      /* same as header */
-    }
-
-    .stat-card {
-      border-radius: 1rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      height: 100%;
-      padding: 1rem;
-      /* extra breathing space inside */
-    }
-
-    .stat-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    .stat-card .card-title {
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: #6c757d;
-      /* muted gray */
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-card .stat-number {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #0d6efd;
-      /* consistent professional blue */
-    }
-
-    /* Filter Navbar */
-    .filter-navbar {
-      background: linear-gradient(90deg, #0d6efd, #198754);
-      border-radius: 12px;
-      height: 55px;
-      color: white;
-
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 1rem;
-      /* space between dropdown and apply button */
-      flex-wrap: wrap !important;
-      height: auto !important;
-      padding-top: 12px;
-      padding-bottom: 12px;
-      flex-direction: column;
-      height: auto !important;
-      padding: 12px;
-    }
-
-    /* Ensure dropdown row stays wrapped & centered */
-    .filter-navbar>.d-flex {
-      width: 100%;
-    }
-
-    /* Mobile Buttons center */
-    @media (max-width: 768px) {
-
-      .apply-btn,
-      .clear-btn {
-        width: 140px;
-      }
-    }
-
-
-    /* Filter button */
-    .filter-btn {
-      border-radius: 20px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-    }
-
-    .filter-btn:hover {
-      background: #f8f9fa;
-      color: #0d6efd;
-      transform: translateY(-1px);
-    }
-
-    /* Dropdown styling */
-    .filter-dropdown {
-      border-radius: 12px;
-      box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
-      min-width: 220px;
-      max-height: 250px;
-      /* prevent going off screen */
-      overflow-y: auto;
-      /* add scroll if needed */
-    }
-
-    /* College Name dropdown specific max-width */
-    #filterCollegeName+.dropdown-menu {
-      min-width: 472px;
-      width: 100%;
-      /* makes it responsive */
-      max-height: 300px;
-      /* optional, height limit */
-      overflow-y: auto;
-    }
-
-    /* Apply Filter Button */
-    .apply-btn {
-      border-radius: 20px;
-      font-weight: 600;
-      padding: 6px 16px;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease;
-    }
-
-    .apply-btn:hover {
-      background: #0b5ed7;
-      transform: translateY(-1px);
-    }
-
-    /* Clear Filter Button */
-    .clear-btn {
-      border-radius: 20px;
-      font-weight: 600;
-      padding: 6px 16px;
-      background: #f8d7da;
-      color: #842029;
-      border: none;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    .clear-btn:hover {
-      background: #dc3545;
-      /* vibrant red */
-      color: #fff;
-      transform: translateY(-1px);
-    }
-
-    /* Only styling for create & logout buttons */
-    .create-user-btn,
-    .logout-btn {
-      border-radius: 20px !important;
-      padding: 5px 14px !important;
-      font-size: 0.85rem !important;
-      transition: all 0.2s ease-in-out !important;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Create user button */
-    .create-user-btn {
-      background: #ffffff;
-      color: #0d6efd;
-      border: none;
-    }
-
-    .create-user-btn:hover {
-      background: #eaf2ff;
-      color: #0959c6;
-    }
-
-    /* Logout button hover */
-    .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    /* Modern Create User Modal */
-    .modern-modal .modal-content {
-      border-radius: 14px;
-      border: none;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
-    }
-
-    .modern-modal .modal-header {
-      background: linear-gradient(135deg, #0d6efd, #198754);
-      color: #fff;
-      border-top-left-radius: 14px;
-      border-top-right-radius: 14px;
-      padding: 1rem 1.25rem;
-      border-bottom: none;
-    }
-
-    .modern-modal .modal-title {
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: #ffffff !important;
-    }
-
-    .modern-modal .btn-close {
-      filter: invert(1) brightness(200%);
-      opacity: 0.85;
-    }
-
-    .modern-modal .btn-close:hover {
-      opacity: 1;
-    }
-
-    /* Inputs */
-    .modern-input {
-      border-radius: 10px;
-      border: 1px solid #d5dce5;
-      padding: 10px 12px;
-      transition: 0.2s;
-    }
-
-    .modern-input:focus {
-      border-color: #0d6efd;
-      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
-    }
-
-    /* Username / Email / Password labels */
-    .modern-label {
-      font-weight: 600;
-      font-size: 0.9rem;
-      margin-bottom: 5px;
-    }
-
-    /* Button */
-    .modern-modal .create-btn {
-      background: linear-gradient(135deg, #0d6efd, #198754) !important;
-      color: #ffffff !important;
-      border: none !important;
-      border-radius: 10px;
-      padding: 10px;
-      font-weight: 600;
-      transition: 0.2s;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .modern-modal .create-btn i {
-      color: #ffffff !important;
-    }
-
-    .modern-modal .create-btn:hover {
-      opacity: 0.92;
-      transform: translateY(-2px);
-      color: #ffffff !important;
-    }
-
-
-    /* Spacing inside modal */
-    .modern-modal .modal-body {
-      padding: 1.4rem 1.4rem;
     }
   </style>
 

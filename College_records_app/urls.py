@@ -17,4 +17,7 @@ urlpatterns = [
     path("clear_filters/", views.clear_filters, name="clear_filters"),
     path('get_talukas/', views.get_talukas, name='get_talukas'),
     path('get_programs/', views.get_programs_for_discipline, name='get_programs'),
+    path("get-college-data/", views.get_college_data, name="get_college_data"),
+    path("submit-student-records/", views.submit_student_records, name="submit_student_records"),
+
 ]

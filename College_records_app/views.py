@@ -434,3 +434,30 @@ def get_programs_for_discipline(request):
             response_data[discipline_name] = ["No programs available"]
 
     return JsonResponse(response_data)
+
+def get_college_data(request):
+
+    data = {
+        "status": 200,
+        "college_code": "1234",
+        "college_name": "St. Vincent Pallotti college of engineering",
+        "college_address": "Gavsi Manapur 440027",
+        "programs": ["Engineering", "Medical",]
+    }
+
+    return JsonResponse(data)
+
+def submit_student_records(request):
+    if request.method != "POST":
+        return JsonResponse({"status": 405, "message": "Invalid method"}, status=405)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except:
+        return JsonResponse({"status": 400, "message": "Invalid JSON"}, status=400)
+
+    print("\n===== RECEIVED PAYLOAD FROM AJAX =====")
+    print(json.dumps(data, indent=2))
+    print("=======================================\n")
+
+    return JsonResponse({"status": 200, "message": "Payload received"})
