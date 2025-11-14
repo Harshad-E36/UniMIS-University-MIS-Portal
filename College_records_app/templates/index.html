@@ -760,6 +760,7 @@
         if (data.status === 200) {
           // Authenticated
           $("#colleges_num").text(data.total_colleges_count);
+          $("#students_num").text(data.total_students_count);
 
         } else {
           window.location.href = "/home/";

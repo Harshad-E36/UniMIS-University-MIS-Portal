@@ -18,6 +18,6 @@ urlpatterns = [
     path('get_talukas/', views.get_talukas, name='get_talukas'),
     path('get_programs/', views.get_programs_for_discipline, name='get_programs'),
     path("get-college-data/", views.get_college_data, name="get_college_data"),
-    path("submit-student-records/", views.submit_student_records, name="submit_student_records"),
+    path("submit-student-records/", views.add_edit_student_aggregate, name="submit_student_records"),
 
 ]

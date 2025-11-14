@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import College, CollegeProgram, Discipline, Programs, District, Taluka, CollegeType, BelongsTo
+from .models import College, CollegeProgram, Discipline, Programs, District, Taluka, CollegeType, BelongsTo, student_aggregate_master,academic_year
 
 # Register your models here.
 
@@ -41,3 +41,11 @@ class CollegeTypeAdmin(admin.ModelAdmin):
 @admin.register(BelongsTo)
 class BelongsToAdmin(admin.ModelAdmin):   
     list_display = ('id', 'BelongsToName')
+
+@admin.register(student_aggregate_master)
+class StudentAggregateMasterAdmin(admin.ModelAdmin):
+    list_display = ('id', 'College', 'Academic_Year', 'Program', 'total_students', 'created_at', 'updated_at')
+
+@admin.register(academic_year)
+class AcademicYearAdmin(admin.ModelAdmin):  
+    list_display = ('id', 'Academic_Year')

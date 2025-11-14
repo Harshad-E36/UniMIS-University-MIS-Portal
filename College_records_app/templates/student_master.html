@@ -246,9 +246,9 @@
               <label class="fw-semibold">Academic Year</label>
               <select id="academicYear" class="form-select">
                 <option value="">Select Year</option>
-                <option>2023-2024</option>
-                <option>2024-2025</option>
-                <option>2025-2026</option>
+                {% for year in academic_year %}
+                <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
+                {% endfor %}
               </select>
             </div>
 
@@ -290,6 +290,10 @@
           <div class="col-md-3">
             <label>Female</label>
             <input type="number" class="form-control gender-female" min="0">
+          </div>
+           <div class="col-md-3">
+            <label>Others</label>
+            <input type="number" class="form-control gender-others" min="0">
           </div>
         </div>
 
@@ -381,18 +385,19 @@
 
   function populateCollegeModal(data) {
 
-    $("#modalCollegeName").text(data.college_name);
-    $("#modalCollegeAddress").text(data.college_address);
+    $("#modalCollegeName").text(data.college_data.College_Name);
+    $("#modalCollegeAddress").text(data.college_data.address + ", " +
+      data.college_data.Taluka + ", " + data.college_data.District + " - " + data.college_data.pincode);
 
     // Clear previous items
     $("#programSectionsContainer").empty();
-
-    data.programs.forEach(program => {
+    console.log("Adding program sections:", data.college_data.programs);
+    data.college_data.programs.forEach(program => {
       addProgramSection(program);
     });
 
     // Store college code for submit
-    $("#collegeModal").data("college-code", data.college_code);
+    $("#collegeModal").data("college-code", data.college_data.College_Code);
   }
 
 
@@ -429,7 +434,7 @@
     }
 
     // Calculate aggregates
-    let genderSum = sumFields(".gender-male, .gender-female");
+    let genderSum = sumFields(".gender-male, .gender-female, .gender-others");
     let categorySum = sumFields(".cat-open, .cat-obc, .cat-sc, .cat-st, .cat-nt, .cat-vjnt, .cat-ews");
     let religionSum = sumFields(".rel-hindu, .rel-muslim, .rel-sikh, .rel-christian, .rel-jain, .rel-buddhist, .rel-other");
     let disabilitySum = sumFields(".dis-none, .dis-lowvision, .dis-blindness, .dis-hearing, .dis-locomotor, .dis-autism, .dis-other");
@@ -508,6 +513,7 @@
     // from here starts the adding record logic 
     $("#submitCollegeCode").on("click", function () {
       const collegeCode = $("#collegeCodeInput").val().trim();
+      console.log("Submitting college code:", collegeCode);
 
       if (!collegeCode) {
         showNotification("Please enter a college code", "danger");
@@ -516,12 +522,16 @@
 
       $.ajax({
         url: "/get-college-data/",
-        type: "POST",
+        type: "GET",
         data: { college_code: collegeCode },
         success: function (response) {
           if (response.status === 200) {
+            console.log("College data received:", response);
             populateCollegeModal(response);
             $("#collegeModal").modal("show");
+          }
+          else if (response.status === 409) {
+            showNotification(response.message, "danger");
           } else {
             showNotification("Invalid college code", "danger");
           }
@@ -565,6 +575,7 @@
           gender: {
             male: section.find(".gender-male").val(),
             female: section.find(".gender-female").val(),
+            others: section.find(".gender-others").val(),
           },
 
           category: {
