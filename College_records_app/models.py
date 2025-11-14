@@ -93,7 +93,53 @@ class CollegeProgram(models.Model):
         return f"({self.Discipline}) {self.ProgramName}"
     
 
+# static table for academic year
+class academic_year(models.Model):
+    Academic_Year = models.CharField(max_length=20)
 
+    def __str__(self):
+        return self.Academic_Year
+
+class student_aggregate_master(models.Model):
+    College = models.ForeignKey(College, on_delete=models.CASCADE, related_name='student_aggregates')
+    Program = models.ForeignKey(CollegeProgram, on_delete=models.CASCADE, related_name='student_aggregates') 
+    Academic_Year = models.CharField(max_length=20)
+    total_students = models.IntegerField(default=0)
+    total_male = models.IntegerField(default=0)
+    total_female = models.IntegerField(default=0)
+    total_others = models.IntegerField(default=0)
+    total_open = models.IntegerField(default=0)
+    total_obc = models.IntegerField(default=0)      
+    total_sc = models.IntegerField(default=0)
+    total_st = models.IntegerField(default=0)
+    total_nt = models.IntegerField(default=0)
+    total_vjnt = models.IntegerField(default=0)
+    total_ews = models.IntegerField(default=0)
+    total_hindu = models.IntegerField(default=0)
+    total_muslim = models.IntegerField(default=0)
+    total_sikh = models.IntegerField(default=0)
+    total_christian = models.IntegerField(default=0)
+    total_jain = models.IntegerField(default=0)
+    total_buddhist = models.IntegerField(default=0)
+    total_other_religion = models.IntegerField(default=0)
+    total_no_disability = models.IntegerField(default=0)
+    total_low_vision = models.IntegerField(default=0)
+    total_blindness = models.IntegerField(default=0)
+    total_hearing = models.IntegerField(default=0)
+    total_locomotor = models.IntegerField(default=0)
+    total_autism = models.IntegerField(default=0)
+    total_other_disability = models.IntegerField(default=0)
+    created_by = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.GenericIPAddressField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('College', 'Program', 'Academic_Year')
+
+    def __str__(self):
+        return f"{self.College.College_Code} - {self.Academic_Year}"
 
 
 

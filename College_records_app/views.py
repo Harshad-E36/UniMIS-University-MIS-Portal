@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
-from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo
+from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo, academic_year, student_aggregate_master
 from django.db.models import Prefetch
-from django.db.models import Q
-from django.http import JsonResponse
+from django.db.models import Q, Sum
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from functools import wraps
+from django.db import transaction
 import json
 # Create your views here.
 
@@ -26,6 +27,16 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     
     return ip
+
+# Helper function to safely convert values to int
+def _to_int(value, default=0):
+    """Convert value to int safely, treating None/'' as default."""
+    try:
+        if value is None or value == "":
+            return default
+        return int(value)
+    except (ValueError, TypeError):
+        return default
 
 
 def home(request):
@@ -48,7 +59,7 @@ def college_master(request):
 def student_master(request):
     if not request.user.is_authenticated:
         return redirect('login')
-    return render(request, 'student_master.html')
+    return render(request, 'student_master.html', {"academic_year": academic_year.objects.all()})
 
 
 
@@ -257,7 +268,9 @@ def user_status(request):
             'is_authenticated' : True,
             'username' : request.user.username,
             'status' : 200,
-            'total_colleges_count' : College.objects.filter(is_deleted = False).count()
+            'total_colleges_count' : College.objects.filter(is_deleted = False).count(),
+            # aggreagate function also returns dictionary if no records found so we have to handle that case by using 'or 0' at the end
+            'total_students_count' : student_aggregate_master.objects.filter(College__is_deleted = False).aggregate(total=Sum('total_students'))['total'] or 0
         }
         print(response_data)
     else:
@@ -436,28 +449,168 @@ def get_programs_for_discipline(request):
     return JsonResponse(response_data)
 
 def get_college_data(request):
+    if request.method == "GET":
+        college_code = request.GET.get('college_code')
+        print("College Code received:", college_code)
+        if college_code:
+            if student_aggregate_master.objects.filter(College__College_Code=college_code, College__is_deleted=False).exists():
+                return JsonResponse({'status': 409, 'message': 'Data for this college already exists'})
+            try:
+                college = College.objects.get(College_Code=college_code, is_deleted=False)
+                programs = CollegeProgram.objects.filter(College=college, is_deleted=False).values_list('ProgramName', flat=True)
+                college_data = {
+                    'College_Code': college.College_Code,
+                    'College_Name': college.College_Name,
+                    'address': college.address,
+                    'District': college.District,
+                    'Taluka': college.taluka,
+                    'pincode': college.pincode,
+                    'programs': list(programs)
+                }
+                print(list(programs))
+                return JsonResponse({'status': 200, 'college_data': college_data})
+            except College.DoesNotExist:
+                return JsonResponse({'status': 404, 'message': 'College not found'})
+    return JsonResponse({'status': 400, 'message': 'Invalid request'})
 
-    data = {
-        "status": 200,
-        "college_code": "1234",
-        "college_name": "St. Vincent Pallotti college of engineering",
-        "college_address": "Gavsi Manapur 440027",
-        "programs": ["Engineering", "Medical",]
-    }
 
-    return JsonResponse(data)
 
-def submit_student_records(request):
-    if request.method != "POST":
-        return JsonResponse({"status": 405, "message": "Invalid method"}, status=405)
 
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-    except:
-        return JsonResponse({"status": 400, "message": "Invalid JSON"}, status=400)
+def add_edit_student_aggregate(request):
+    if request.method == "POST":
+        try:
+            payload = json.loads(request.body)
+        except json.JSONDecodeError:
+            return HttpResponseBadRequest("Invalid JSON")
+        
+        college_code = payload.get('college_code')
+        academic_year = payload.get('academic_year')
+        records = payload.get('records', [])
 
-    print("\n===== RECEIVED PAYLOAD FROM AJAX =====")
-    print(json.dumps(data, indent=2))
-    print("=======================================\n")
+        if not college_code or not academic_year:
+            return JsonResponse({'status': 400, 'message': 'Missing required fields'})
 
-    return JsonResponse({"status": 200, "message": "Payload received"})
+        try:
+            college = College.objects.get(College_Code=college_code, is_deleted=False)      
+        except College.DoesNotExist:
+            return JsonResponse({'status': 404, 'message': 'College not found'})
+        
+        if not isinstance(records, dict) or len(records) == 0:
+            return JsonResponse({"status": 400, "message": "No records provided"}, status=400)
+        
+        saved = []
+        errors = []
+
+        # We'll do everything in a transaction so you get all-or-nothing.
+        # If you prefer partial saves, remove the transaction.atomic block.
+        with transaction.atomic():
+            for program_name, data in records.items():
+                program_obj = CollegeProgram.objects.filter(College=college, ProgramName=program_name,is_deleted=False).first()
+                
+                if not program_obj:
+                    errors.append(f"Program '{program_name}' not found for college '{college_code}'")
+                    continue
+                
+                # --- parse numeric fields safe ---
+                total_students = _to_int(data.get("total_students"), 0)
+
+                gender = data.get("gender", {}) or {}
+                male = _to_int(gender.get("male"), 0)
+                female = _to_int(gender.get("female"), 0)
+                others = _to_int(gender.get("others") or gender.get("other"), 0)
+
+                category = data.get("category", {}) or {}
+                total_open = _to_int(category.get("open") or category.get("general"), 0)
+                total_obc = _to_int(category.get("obc"), 0)
+                total_sc = _to_int(category.get("sc"), 0)
+                total_st = _to_int(category.get("st"), 0)
+                total_nt = _to_int(category.get("nt"), 0)
+                total_vjnt = _to_int(category.get("vjnt"), 0)
+                total_ews = _to_int(category.get("ews"), 0)
+
+                religion = data.get("religion", {}) or {}
+                total_hindu = _to_int(religion.get("hindu"), 0)
+                total_muslim = _to_int(religion.get("muslim"), 0)
+                total_sikh = _to_int(religion.get("sikh"), 0)
+                total_christian = _to_int(religion.get("christian"), 0)
+                total_jain = _to_int(religion.get("jain"), 0)
+                total_buddhist = _to_int(religion.get("buddhist"), 0)
+                total_other_religion = _to_int(religion.get("other"), 0)
+
+
+                dis = data.get("disability", {}) or {}
+                total_no_disability = _to_int(dis.get("none") or dis.get("no_disability"), 0)
+                total_low_vision = _to_int(dis.get("lowvision"), 0)
+                total_blindness = _to_int(dis.get("blindness"), 0)
+                total_hearing = _to_int(dis.get("hearing"), 0)
+                total_locomotor = _to_int(dis.get("locomotor"), 0)
+                total_autism = _to_int(dis.get("autism"), 0)
+                total_other_disability = _to_int(dis.get("other"), 0)
+
+
+                defaults = {
+                    "total_students": total_students,
+                    "total_male": male,
+                    "total_female": female,
+                    "total_others": others,
+
+                    "total_open": total_open,
+                    "total_obc": total_obc,
+                    "total_sc": total_sc,
+                    "total_st": total_st,
+                    "total_nt": total_nt,
+                    "total_vjnt": total_vjnt,
+                    "total_ews": total_ews,
+
+                    "total_hindu": total_hindu,
+                    "total_muslim": total_muslim,
+                    "total_sikh": total_sikh,
+                    "total_christian": total_christian,
+                    "total_jain": total_jain,
+                    "total_buddhist": total_buddhist,
+                    "total_other_religion": total_other_religion,
+
+                    "total_no_disability": total_no_disability,
+                    "total_low_vision": total_low_vision,
+                    "total_blindness": total_blindness,
+                    "total_hearing": total_hearing,
+                    "total_locomotor": total_locomotor,
+                    "total_autism": total_autism,
+                    "total_other_disability": total_other_disability,
+
+                    
+                }
+
+                try:
+                    obj, created = student_aggregate_master.objects.update_or_create(
+                        College=college,
+                        Program=program_obj,
+                        Academic_Year=academic_year,
+                        defaults=defaults
+                    )
+                    if  created:
+                        obj.created_by = get_client_ip(request)
+                        obj.save(update_fields=["created_by"])
+                    if not created:
+                        obj.updated_by = get_client_ip(request)
+                        obj.save(update_fields=["updated_by"])
+
+
+
+                    saved.append({"program": program_name, "id": obj.pk, "created": created})
+                except Exception as e:
+                    errors.append({"program": program_name, "error": f"DB error: {str(e)}"})
+                    continue
+
+        response_status = 200 if not errors else 207
+        resp = {
+            "status": response_status,
+            "saved": saved,
+            "errors": errors,
+            "summary": {
+                "created": sum(1 for s in saved if s.get("created")),
+                "updated": sum(1 for s in saved if not s.get("created")),
+                "failed": len(errors)
+            }
+        }
+        return JsonResponse(resp)
