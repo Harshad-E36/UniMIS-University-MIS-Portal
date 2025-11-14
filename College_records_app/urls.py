@@ -19,5 +19,7 @@ urlpatterns = [
     path('get_programs/', views.get_programs_for_discipline, name='get_programs'),
     path("get-college-data/", views.get_college_data, name="get_college_data"),
     path("submit-student-records/", views.add_edit_student_aggregate, name="submit_student_records"),
+    path("get-student-records/", views.get_student_records, name="get_student_records"),
+    path("delete-student-record/", views.delete_student_record, name="delete_student_record"),
 
 ]
