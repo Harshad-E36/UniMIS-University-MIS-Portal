@@ -200,29 +200,42 @@
         <div class="header-container text-center">
           <div class="header-banner position-relative">
             <div class="position-absolute top-0 end-0 p-3 text-end">
-
               <!-- Welcome Text -->
               <span id="welcome_msg" class="text-light fw-semibold d-block mb-1">
                 Welcome, {{ request.user.username }}
               </span>
 
-              <!-- Logout Button -->
-              <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
-                <i class="bi bi-box-arrow-right"></i> Logout
-              </button>
+              <!-- TOP ROW: Logout + Export -->
+              <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
 
+                <!-- Logout -->
+                <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
+                  <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
 
-              <div class="d-inline-block me-2">
-                <label for="globalAcademicYear" class="text-light small mb-1 d-block">Academic Year</label>
+                <!-- Export Excel (small button) -->
+                <button type="button" class="btn btn-warning btn-sm shadow-sm" id="ExportStudentExcelButton">
+                  <i class="bi bi-file-earmark-excel"></i>
+                  Export to Excel
+                </button>
 
-                <select id="globalAcademicYear" class="form-select form-select-sm">
+              </div>
+
+              <!-- BOTTOM ROW: Academic Year -->
+              <div class="d-flex justify-content-end align-items-center mt-1">
+
+                <div class="text-light small me-2 fw-semibold">Academic Year</div>
+
+                <select id="globalAcademicYear" class="form-select form-select-sm" style="width: 110px;">
                   {% for year in academic_year %}
                   <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
                   {% endfor %}
                 </select>
+
               </div>
 
             </div>
+
 
 
             <h1 class="fw-bold">Student Records</h1>
@@ -812,6 +825,20 @@
         }
       });
     });
+
+    // Export Student Excel
+    $(document).on("click", "#ExportStudentExcelButton", function () {
+      const year = $("#globalAcademicYear").val();
+
+      if (!year) {
+        showNotification("Please select an academic year first", "danger");
+        return;
+      }
+
+      // Direct download request
+      window.location.href = "/export-student-excel/?year=" + encodeURIComponent(year);
+    });
+
   })
 
   let selectedYear = $("#globalAcademicYear").val();
