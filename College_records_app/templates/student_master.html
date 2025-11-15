@@ -42,7 +42,6 @@
       font-size: 0.9rem;
     }
 
-
     body {
       background: #f8f9fa;
       font-family: "Segoe UI", Roboto, sans-serif;
@@ -51,22 +50,33 @@
       padding: 0;
       height: 100%;
       overflow-x: hidden;
-      overflow-y: hidden;
+      overflow-y: auto;
+      /* IMPORTANT */
     }
 
+    /* Modal scroll fixes */
+    .modal-dialog {
+      max-width: 90%;
+      margin: 1.5rem auto;
+    }
+
+    .modal-content {
+      max-height: 95vh;
+      overflow: hidden;
+    }
 
     .modal-body {
       caret-color: auto;
-      max-height: 88vh;
       overflow-y: auto;
+      max-height: calc(95vh - 120px);
+      /* Fix overflow */
+      padding-right: 15px;
     }
-
 
     /* Header */
     .header-container {
       margin-top: 0.5rem;
     }
-
 
     .header-banner {
       background: linear-gradient(135deg, #0d6efd, #198754);
@@ -85,12 +95,12 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
-
     table.dataTable thead {
       background: #0d6efd;
       color: white;
     }
 
+    /* Notification styles */
     .notification {
       position: fixed;
       top: 10px;
@@ -121,7 +131,7 @@
       transform: translateX(-50%) translateY(20px);
     }
 
-    /* Collapsible cassette container (hidden by default) */
+    /* College code cassette */
     #collegeCodeCassette {
       width: 100%;
       display: flex;
@@ -133,7 +143,6 @@
       transition: max-height .35s ease, opacity .3s ease;
     }
 
-    /* Inner slim card */
     #collegeCodeCassette .inner-cassette {
       background: white;
       padding: .6rem .9rem;
@@ -143,17 +152,14 @@
       width: auto;
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem
+      gap: 0.5rem;
     }
 
-
-    /* Show state */
     #collegeCodeCassette.show {
       max-height: 90px;
       opacity: 1;
     }
 
-    /* Input styling refined */
     #collegeCodeInput {
       text-align: center;
       background: #f8f9fa;
@@ -165,6 +171,23 @@
       background: #fff;
       border-color: #0d6efd;
       box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, .15);
+    }
+
+    /* Fix right white space in DataTables child accordion */
+    .dt-child-scroll .row {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    /* Ensure accordion inside DataTable row uses 100% width */
+    .dt-child-scroll .accordion-item,
+    .dt-child-scroll .accordion-button,
+    .dt-child-scroll .accordion-body,
+    .dt-child-scroll .container-fluid,
+    .dt-child-scroll .row {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden;
     }
   </style>
 </head>
@@ -187,6 +210,17 @@
               <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
                 <i class="bi bi-box-arrow-right"></i> Logout
               </button>
+
+
+              <div class="d-inline-block me-2">
+                <label for="globalAcademicYear" class="text-light small mb-1 d-block">Academic Year</label>
+
+                <select id="globalAcademicYear" class="form-select form-select-sm">
+                  {% for year in academic_year %}
+                  <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
+                  {% endfor %}
+                </select>
+              </div>
 
             </div>
 
@@ -212,13 +246,19 @@
 
 
           <div class="table-container" id="datatable_wrapper">
-            <table class="table table-hover align-middle" id="records_table">
+            <table id="records_table" class="table table-hover align-middle" width="100%">
               <thead>
                 <tr>
-                  <!-- add column names here -->
+                  <th>Action</th>
+                  <th>College Code</th>
+                  <th>College Name</th>
+                  <th>Academic Year</th>
+                  <th>Total Students</th>
+                  <th>Edit/Delete</th>
                 </tr>
               </thead>
             </table>
+
           </div>
 
         </div>
@@ -291,7 +331,7 @@
             <label>Female</label>
             <input type="number" class="form-control gender-female" min="0">
           </div>
-           <div class="col-md-3">
+          <div class="col-md-3">
             <label>Others</label>
             <input type="number" class="form-control gender-others" min="0">
           </div>
@@ -348,6 +388,55 @@
       </div>
     </template>
 
+    <template id="programAccordionTemplate">
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button"></button>
+        </h2>
+
+        <div class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <div class="row program-content-row"></div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="metricCardTemplate">
+      <div class="col-md-2 mb-3 metric-col">
+        <div class="card shadow-sm">
+          <div class="card-header text-white py-2 text-center fw-bold metric-title"></div>
+          <div class="card-body p-2">
+            <table class="table table-sm mb-0">
+              <tbody class="metric-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="totalCardTemplate">
+      <div class="col-md-2 mb-3">
+        <div class="card shadow-sm">
+          <div class="card-header bg-secondary text-white py-2 text-center fw-bold">Total</div>
+          <div class="card-body p-2">
+            <h4 class="text-center fw-bold mb-0 total-value"></h4>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="actionButtonsTemplate">
+      <div class="d-flex justify-content-center align-items-center gap-2 action-icons">
+        <a class="btn btn-sm btn-outline-primary btn-edit" title="Edit">
+          <i class="bi bi-pencil-square"></i>
+        </a>
+        <a class="btn btn-sm btn-outline-danger btn-delete" title="Delete">
+          <i class="bi bi-trash"></i>
+        </a>
+      </div>
+    </template>
+
 </body>
 
 <script>
@@ -383,21 +472,26 @@
     }
   });
 
-  function populateCollegeModal(data) {
+  function populateAddModal(response) {
+    const data = response.college_data;
 
-    $("#modalCollegeName").text(data.college_data.College_Name);
-    $("#modalCollegeAddress").text(data.college_data.address + ", " +
-      data.college_data.Taluka + ", " + data.college_data.District + " - " + data.college_data.pincode);
+    // Set header
+    $("#modalCollegeName").text(data.College_Name);
+    $("#modalCollegeAddress").text(data.address);
 
-    // Clear previous items
+    // Clear existing fields
     $("#programSectionsContainer").empty();
-    console.log("Adding program sections:", data.college_data.programs);
-    data.college_data.programs.forEach(program => {
+
+    // Build program sections (empty)
+    data.programs.forEach(program => {
       addProgramSection(program);
     });
 
-    // Store college code for submit
-    $("#collegeModal").data("college-code", data.college_data.College_Code);
+    // Clear academic year selection
+    $("#academicYear").val("");
+
+    // Store college code for submission
+    $("#collegeModal").data("college-code", data.College_Code);
   }
 
 
@@ -411,6 +505,7 @@
 
     document.querySelector("#programSectionsContainer").appendChild(clone);
   }
+
 
   function validateProgramSection(section) {
 
@@ -469,6 +564,63 @@
   }
 
 
+  function populateEditModal(response) {
+
+    const data = response.college_data;
+    const records = response.records;   // already structured per program
+
+    $("#modalCollegeName").text(data.College_Name);
+    $("#modalCollegeAddress").text(data.address);
+
+    // Set academic year
+    $("#academicYear").val(response.academic_year);
+
+    $("#programSectionsContainer").empty();
+
+    data.programs.forEach(programName => {
+      addProgramSection(programName);
+
+      // Fill values if they exist
+      let section = $(`.program-section[data-program='${programName}']`);
+      let saved = records[programName];
+
+      if (!saved) return; // no record for this program
+
+      section.find(".total-students").val(saved.total_students);
+
+      section.find(".gender-male").val(saved.gender.male);
+      section.find(".gender-female").val(saved.gender.female);
+      section.find(".gender-others").val(saved.gender.others);
+
+      section.find(".cat-open").val(saved.category.open);
+      section.find(".cat-obc").val(saved.category.obc);
+      section.find(".cat-sc").val(saved.category.sc);
+      section.find(".cat-st").val(saved.category.st);
+      section.find(".cat-nt").val(saved.category.nt);
+      section.find(".cat-vjnt").val(saved.category.vjnt);
+      section.find(".cat-ews").val(saved.category.ews);
+
+      section.find(".rel-hindu").val(saved.religion.hindu);
+      section.find(".rel-muslim").val(saved.religion.muslim);
+      section.find(".rel-sikh").val(saved.religion.sikh);
+      section.find(".rel-christian").val(saved.religion.christian);
+      section.find(".rel-jain").val(saved.religion.jain);
+      section.find(".rel-buddhist").val(saved.religion.buddhist);
+      section.find(".rel-other").val(saved.religion.other);
+
+      section.find(".dis-none").val(saved.disability.none);
+      section.find(".dis-lowvision").val(saved.disability.lowvision);
+      section.find(".dis-blindness").val(saved.disability.blindness);
+      section.find(".dis-hearing").val(saved.disability.hearing);
+      section.find(".dis-locomotor").val(saved.disability.locomotor);
+      section.find(".dis-autism").val(saved.disability.autism);
+      section.find(".dis-other").val(saved.disability.other);
+    });
+
+    // Store college code
+    $("#collegeModal").data("college-code", data.College_Code);
+  }
+
 
   $('document').ready(function () {
 
@@ -510,10 +662,9 @@
       e.stopPropagation();
     });
 
-    // from here starts the adding record logic 
+    // ADD MODE - When user enters college code to add new records
     $("#submitCollegeCode").on("click", function () {
       const collegeCode = $("#collegeCodeInput").val().trim();
-      console.log("Submitting college code:", collegeCode);
 
       if (!collegeCode) {
         showNotification("Please enter a college code", "danger");
@@ -523,16 +674,19 @@
       $.ajax({
         url: "/get-college-data/",
         type: "GET",
-        data: { college_code: collegeCode },
+        data: {
+          college_code: collegeCode,
+          mode: "add"
+        },
         success: function (response) {
-          if (response.status === 200) {
-            console.log("College data received:", response);
-            populateCollegeModal(response);
+          if (response.status === 200 && response.mode === "add") {
+            populateAddModal(response);
             $("#collegeModal").modal("show");
           }
           else if (response.status === 409) {
             showNotification(response.message, "danger");
-          } else {
+          }
+          else {
             showNotification("Invalid college code", "danger");
           }
         },
@@ -622,9 +776,6 @@
         records: records
       };
 
-      console.log("Sending payload to backend...");
-      console.log(payload);
-
       $.ajax({
         url: "/submit-student-records/",
         type: "POST",
@@ -634,6 +785,7 @@
           if (response.status === 200) {
             showNotification("Student records saved successfully!", "success");
             $("#collegeModal").modal("hide");
+            table.ajax.reload(null, false);
           } else {
             showNotification(response.message || "Something went wrong", "danger");
           }
@@ -643,7 +795,6 @@
         }
       });
     });
-
 
 
     $("#logout_btn").on("click", function (e) {
@@ -662,6 +813,249 @@
       });
     });
   })
+
+  let selectedYear = $("#globalAcademicYear").val();
+
+  const table = $("#records_table").DataTable({
+    serverSide: true,
+    processing: true,
+    ajax: {
+      url: "/get-student-records/",
+      type: "GET",
+      data: function (d) {
+        d.year = selectedYear;
+      }
+    },
+    pageLength: 10,
+    columns: [
+      {
+        data: null,
+        orderable: false,
+        searchable: false,
+        render: function () {
+          return `
+                        <button class="btn btn-sm btn-outline-primary toggle-programs">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>`;
+        }
+      },
+      { data: "college_code" },
+      { data: "college_name" },
+      { data: "academic_year" },
+      {
+        data: "total_students",
+        render: (d) => d ?? "-"
+      },
+      {
+        data: null,
+        render: function (data, type, row) {
+          const tpl = document.querySelector("#actionButtonsTemplate");
+          const clone = tpl.content.cloneNode(true);
+
+          // set edit attributes
+          clone.querySelector(".btn-edit").setAttribute("data-college", row.college_code);
+          clone.querySelector(".btn-edit").setAttribute("data-year", row.academic_year);
+
+          // set delete handler
+          clone.querySelector(".btn-delete").setAttribute("data-college", row.college_code);
+          clone.querySelector(".btn-delete").setAttribute("data-year", row.academic_year);
+
+
+          return $("<div>").append(clone).html();
+        }
+      }
+    ],
+    order: [[2, "asc"]]
+  });
+
+  //  YEAR CHANGE → RELOAD TABLE
+
+  $("#globalAcademicYear").on("change", function () {
+    selectedYear = $(this).val();
+    table.ajax.reload();
+  });
+
+  //  BUILD FULL PROGRAM ACCORDION USING TEMPLATES
+
+  function formatPrograms(row) {
+    // wrapper will be returned as HTML string (DataTables expects HTML)
+    const wrapper = document.createElement("div");
+    wrapper.className = "dt-child-scroll";
+
+    // Use container-fluid to offset the bootstrap row negative margins correctly
+    const container = document.createElement("div");
+    container.className = "container-fluid p-0";
+
+    // small inner padding area so accordion header isn't flush to border
+    const inner = document.createElement("div");
+    inner.className = "px-3 py-3";
+
+    // main accordion element
+    const accordion = document.createElement("div");
+    accordion.className = "accordion";
+    accordion.id = `acc-${row.college_code}`;
+
+    row.programs.forEach((p, i) => {
+      // clone accordion-item template
+      const tplItem = document.querySelector("#programAccordionTemplate");
+      const acc = tplItem.content.cloneNode(true);
+
+      // header button
+      const btn = acc.querySelector(".accordion-button");
+      btn.textContent = `${p.name} (${p.total_students} students)`;
+      btn.setAttribute("data-bs-toggle", "collapse");
+      btn.setAttribute("data-bs-target", `#collapse-${row.college_code}-${i}`);
+
+      // collapse block and parent link
+      const collapse = acc.querySelector(".accordion-collapse");
+      collapse.id = `collapse-${row.college_code}-${i}`;
+      collapse.setAttribute("data-bs-parent", `#acc-${row.college_code}`);
+
+      // row container inside accordion body (already .row in template)
+      const rowContainer = acc.querySelector(".program-content-row");
+
+      // ---- TOTAL CARD ----
+      const tplTotal = document.querySelector("#totalCardTemplate");
+      const totalClone = tplTotal.content.cloneNode(true);
+      totalClone.querySelector(".total-value").textContent = p.total_students;
+
+      // Append total card to the row container
+      rowContainer.appendChild(totalClone);
+
+      // ---- METRICS GROUPS ----
+      const metricGroups = {
+        "Gender": { color: "bg-primary", data: p.gender },
+        "Category": { color: "bg-success", data: p.category },
+        "Religion": { color: "bg-warning text-dark", data: p.religion },
+        "Disability": { color: "bg-danger", data: p.disability }
+      };
+
+      Object.entries(metricGroups).forEach(([title, meta]) => {
+        const tplMetric = document.querySelector("#metricCardTemplate");
+        const clone = tplMetric.content.cloneNode(true);
+
+        // set title and color
+        const titleEl = clone.querySelector(".metric-title");
+        titleEl.textContent = title;
+        titleEl.classList.add(...meta.color.split(" "));
+
+        // fill table body rows
+        const tbody = clone.querySelector(".metric-body");
+        Object.entries(meta.data).forEach(([label, value]) => {
+          const tr = document.createElement("tr");
+          const td1 = document.createElement("td");
+          const td2 = document.createElement("td");
+          // capitalize first letter of label for display
+          td1.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+          td2.textContent = value;
+          tr.appendChild(td1);
+          tr.appendChild(td2);
+          tbody.appendChild(tr);
+        });
+
+        // ensure metric col uses flexible class so layout flows
+        const metricCol = clone.querySelector(".metric-col");
+        metricCol.classList.add("d-flex", "flex-column");
+
+        rowContainer.appendChild(clone);
+      });
+
+      // append the built accordion-item clone
+      accordion.appendChild(acc);
+    });
+
+    inner.appendChild(accordion);
+    container.appendChild(inner);
+    wrapper.appendChild(container);
+
+    return wrapper.outerHTML;
+  }
+
+
+
+  //  EXPAND / COLLAPSE CHILD ROWS
+
+  $("#records_table tbody").on("click", ".toggle-programs", function () {
+
+    const tr = $(this).closest("tr");
+    const row = table.row(tr);
+    const btn = $(this);
+
+    if (row.child.isShown()) {
+      row.child.hide();
+      btn.html('<i class="bi bi-plus-lg"></i>');
+    } else {
+      row.child(formatPrograms(row.data())).show();
+      btn.html('<i class="bi bi-dash-lg"></i>');
+    }
+  });
+
+
+  // EDIT MODE - When user clicks on "Edit"
+  $(document).on("click", ".btn-edit", function () {
+    const collegeCode = $(this).data("college");
+    const academicYear = $(this).data("year");
+
+    $.ajax({
+      url: "/get-college-data/",
+      type: "GET",
+      data: {
+        college_code: collegeCode,
+        academic_year: academicYear,
+        mode: "edit"
+      },
+      success: function (response) {
+        if (response.status === 200 && response.mode === "edit") {
+          populateEditModal(response);
+          $("#collegeModal").modal("show");
+        } else {
+          showNotification(response.message || "Error loading record", "danger");
+        }
+      },
+      error: function () {
+        showNotification("Server error", "danger");
+      }
+    });
+  });
+
+
+  // DELETE RECORD HANDLER 
+  $(document).on("click", ".btn-delete", function () {
+    const college = $(this).data("college");
+    const year = $(this).data("year");
+
+    if (!college || !year) {
+      showNotification("Invalid record selected.", "danger");
+      return;
+    }
+
+    // Confirm deletion
+    if (!confirm(`Delete records for ${college} (${year})?`)) {
+      return;
+    }
+
+    $.ajax({
+      url: "/delete-student-record/",
+      type: "POST",
+      data: JSON.stringify({
+        college_code: college,
+        academic_year: year
+      }),
+      contentType: "application/json",
+      success: function (response) {
+        if (response.status === 200) {
+          showNotification("Record deleted successfully.", "success");
+          $("#records_table").DataTable().ajax.reload(null, false);
+        } else {
+          showNotification(response.message || "Delete failed", "danger");
+        }
+      },
+      error: function () {
+        showNotification("Server error", "danger");
+      }
+    });
+  });
+
 
 
   function showNotification(message, type) {

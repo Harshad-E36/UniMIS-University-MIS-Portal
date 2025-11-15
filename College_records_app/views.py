@@ -18,6 +18,7 @@ def ajax_login_required(view_func):
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
+
 def get_client_ip(request):
     """Get the real client IP address from request headers"""
     x_forwarded_for = request.META.get(('HTTP_X_FORWARDED_FOR'))
@@ -27,6 +28,7 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     
     return ip
+
 
 # Helper function to safely convert values to int
 def _to_int(value, default=0):
@@ -56,11 +58,11 @@ def home(request):
 def college_master(request):
     return render(request, 'college_master.html', {"disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all()}) 
 
+
 def student_master(request):
     if not request.user.is_authenticated:
         return redirect('login')
     return render(request, 'student_master.html', {"academic_year": academic_year.objects.all()})
-
 
 
 def get_records(request):
@@ -155,7 +157,6 @@ def get_records(request):
     return JsonResponse(response)
 
 
-
 @ajax_login_required
 def add_edit_record(request):
     if request.method == "POST":
@@ -244,7 +245,6 @@ def add_edit_record(request):
                 'status': 201
             }
             return JsonResponse(response_data)
-        
 
 
 @ajax_login_required
@@ -348,6 +348,7 @@ def user_logout(request):
         }
         return JsonResponse(response_data)
     
+
 def apply_filters(request):
     if request.method == "POST":
         college_codes = request.POST.getlist('ColegeCode[]')
@@ -448,32 +449,121 @@ def get_programs_for_discipline(request):
 
     return JsonResponse(response_data)
 
+
 def get_college_data(request):
-    if request.method == "GET":
-        college_code = request.GET.get('college_code')
-        print("College Code received:", college_code)
-        if college_code:
-            if student_aggregate_master.objects.filter(College__College_Code=college_code, College__is_deleted=False).exists():
-                return JsonResponse({'status': 409, 'message': 'Data for this college already exists'})
-            try:
-                college = College.objects.get(College_Code=college_code, is_deleted=False)
-                programs = CollegeProgram.objects.filter(College=college, is_deleted=False).values_list('ProgramName', flat=True)
-                college_data = {
-                    'College_Code': college.College_Code,
-                    'College_Name': college.College_Name,
-                    'address': college.address,
-                    'District': college.District,
-                    'Taluka': college.taluka,
-                    'pincode': college.pincode,
-                    'programs': list(programs)
+    if request.method != "GET":
+        return JsonResponse({'status': 400, 'message': 'Invalid request'})
+
+    college_code = request.GET.get('college_code')
+    academic_year = request.GET.get('academic_year')
+    mode = request.GET.get('mode', 'add')
+
+    if not college_code:
+        return JsonResponse({'status': 400, 'message': 'Missing college_code'})
+
+    try:
+        college = College.objects.get(College_Code=college_code, is_deleted=False)
+    except College.DoesNotExist:
+        return JsonResponse({'status': 404, 'message': 'College not found'})
+
+    # Programs list
+    programs = CollegeProgram.objects.filter(
+        College=college, is_deleted=False
+    ).values_list("ProgramName", flat=True)
+
+    # Full address exactly like before
+    full_address = f"{college.address}, {college.taluka}, {college.District} - {college.pincode}"
+
+    base_college_data = {
+        "College_Code": college.College_Code,
+        "College_Name": college.College_Name,
+        "address": full_address,
+        "District": college.District,
+        "Taluka": college.taluka,
+        "pincode": college.pincode,
+        "programs": list(programs)
+    }
+
+    # ---------------------------------------------------------
+    # ADD MODE
+    # ---------------------------------------------------------
+    if mode == "add":
+
+        return JsonResponse({
+            "status": 200,
+            "mode": "add",
+            "academic_year": academic_year,   # <-- IMPORTANT
+            "college_data": base_college_data,
+            "records": {}                     # empty for add mode
+        })
+
+    # ---------------------------------------------------------
+    # EDIT MODE
+    # ---------------------------------------------------------
+    if mode == "edit":
+        if not academic_year:
+            return JsonResponse({'status': 400, 'message': 'Missing academic_year'})
+
+        aggregates = student_aggregate_master.objects.filter(
+            College=college,
+            Academic_Year=academic_year,
+            is_deleted=False
+        ).select_related("Program")
+
+        if not aggregates.exists():
+            return JsonResponse({
+                "status": 404,
+                "message": "No records found for this year"
+            })
+
+        filled_records = {}
+
+        for agg in aggregates:
+            filled_records[agg.Program.ProgramName] = {
+                "total_students": agg.total_students,
+                "gender": {
+                    "male": agg.total_male,
+                    "female": agg.total_female,
+                    "others": agg.total_others,
+                },
+                "category": {
+                    "open": agg.total_open,
+                    "obc": agg.total_obc,
+                    "sc": agg.total_sc,
+                    "st": agg.total_st,
+                    "nt": agg.total_nt,
+                    "vjnt": agg.total_vjnt,
+                    "ews": agg.total_ews,
+                },
+                "religion": {
+                    "hindu": agg.total_hindu,
+                    "muslim": agg.total_muslim,
+                    "sikh": agg.total_sikh,
+                    "christian": agg.total_christian,
+                    "jain": agg.total_jain,
+                    "buddhist": agg.total_buddhist,
+                    "other": agg.total_other_religion,
+                },
+                "disability": {
+                    "none": agg.total_no_disability,
+                    "lowvision": agg.total_low_vision,
+                    "blindness": agg.total_blindness,
+                    "hearing": agg.total_hearing,
+                    "locomotor": agg.total_locomotor,
+                    "autism": agg.total_autism,
+                    "other": agg.total_other_disability,
                 }
-                print(list(programs))
-                return JsonResponse({'status': 200, 'college_data': college_data})
-            except College.DoesNotExist:
-                return JsonResponse({'status': 404, 'message': 'College not found'})
-    return JsonResponse({'status': 400, 'message': 'Invalid request'})
+            }
 
+        return JsonResponse({
+            "status": 200,
+            "mode": "edit",
+            "academic_year": academic_year,    
+            "college_data": base_college_data,
+            "records": filled_records
+        })
 
+    return JsonResponse({"status": 400, "message": "Invalid mode"})
 
 
 def add_edit_student_aggregate(request):
@@ -614,3 +704,136 @@ def add_edit_student_aggregate(request):
             }
         }
         return JsonResponse(resp)
+    
+
+def get_student_records(request):
+    """
+    Server-side DataTables endpoint.
+    One row per college (that has student_aggregate_master entries for the selected year).
+    Each row includes `programs` array (per-program census).
+    """
+    try:
+        draw = int(request.GET.get("draw", 1))
+        start = int(request.GET.get("start", 0))
+        length = int(request.GET.get("length", 10))
+    except ValueError:
+        return HttpResponseBadRequest("Invalid paging parameters")
+
+    search_value = request.GET.get("search[value]", "").strip()
+    order_col_index = request.GET.get("order[0][column]")
+    order_dir = request.GET.get("order[0][dir]", "asc")
+    year = request.GET.get("year", None)  # must be provided by frontend
+
+    if not year:
+        # default to latest if not provided
+        latest = academic_year.objects.order_by("-Academic_Year").first()
+        year = latest.Academic_Year if latest else ""
+
+    # base: colleges that have aggregates for this year and not deleted
+    colleges_qs = College.objects.filter(is_deleted=False, student_aggregates__Academic_Year=year).distinct()
+
+    # Search filter
+    if search_value:
+        colleges_qs = colleges_qs.filter(
+            Q(College_Code__icontains=search_value) | Q(College_Name__icontains=search_value)
+        )
+
+    records_total = colleges_qs.count()
+    records_filtered = records_total  # after search (already applied)
+
+    # Simple ordering mapping:
+    # 0 = Action (ignore), 1 = College Code, 2 = College Name, 3 = Academic Year, 4 = Total Students
+    order_map = {
+        "1": "College_Code",
+        "2": "College_Name",
+        # total_students (4) we will order manually by annotating
+    }
+
+    # If ordering by total_students (column index 4), we annotate sums and order accordingly
+    order_by_annotation = None
+    if order_col_index == "4":
+        # annotate total_students per college for the requested year and order
+        # annotate using related_name student_aggregates
+        colleges_qs = colleges_qs.annotate(
+            agg_total=Sum('student_aggregates__total_students', filter=Q(student_aggregates__Academic_Year=year))
+        )
+        order_by_annotation = "agg_total"
+        if order_dir == "desc":
+            order_by_annotation = "-" + order_by_annotation
+        colleges_qs = colleges_qs.order_by(order_by_annotation, "College_Name")
+    else:
+        order_field = order_map.get(order_col_index, "College_Name")
+        if order_dir == "desc":
+            order_field = "-" + order_field
+        colleges_qs = colleges_qs.order_by(order_field)
+
+    # pagination (slice)
+    colleges_page = colleges_qs[start:start + length]
+
+    data = []
+    # Build row per college (with programs for the year)
+    for col in colleges_page:
+        # fetch program aggregates for this college and year
+        pc_qs = student_aggregate_master.objects.filter(College=col, Academic_Year=year, is_deleted=False).select_related("Program")
+        programs = []
+        total_students_for_college = 0
+        for pc in pc_qs:
+            # map DB fields into structures
+            prog = {
+                "name": pc.Program.ProgramName if pc.Program else str(pc.Program_id),
+                "total_students": pc.total_students or 0,
+                "gender": {
+                    "male": pc.total_male or 0,
+                    "female": pc.total_female or 0,
+                    "others": pc.total_others or 0
+                },
+                "category": {
+                    "open": pc.total_open or 0,
+                    "obc": pc.total_obc or 0,
+                    "sc": pc.total_sc or 0,
+                    "st": pc.total_st or 0,
+                    "nt": pc.total_nt or 0,
+                    "vjnt": pc.total_vjnt or 0,
+                    "ews": pc.total_ews or 0
+                },
+                "religion": {
+                    "hindu": pc.total_hindu or 0,
+                    "muslim": pc.total_muslim or 0,
+                    "sikh": pc.total_sikh or 0,
+                    "christian": pc.total_christian or 0,
+                    "jain": pc.total_jain or 0,
+                    "buddhist": pc.total_buddhist or 0,
+                    "other": pc.total_other_religion or 0
+                },
+                "disability": {
+                    "none": pc.total_no_disability or 0,
+                    "lowvision": pc.total_low_vision or 0,
+                    "blindness": pc.total_blindness or 0,
+                    "hearing": pc.total_hearing or 0,
+                    "locomotor": pc.total_locomotor or 0,
+                    "autism": pc.total_autism or 0,
+                    "other": pc.total_other_disability or 0
+                }
+            }
+            programs.append(prog)
+            total_students_for_college += (pc.total_students or 0)
+
+        data.append({
+            "college_code": col.College_Code,
+            "college_name": col.College_Name,
+            "academic_year": year,
+            "total_students": total_students_for_college,
+            "programs": programs
+        })
+
+    resp = {
+        "draw": draw,
+        "recordsTotal": records_total,
+        "recordsFiltered": records_filtered,
+        "data": data
+    }
+    return JsonResponse(resp)
+
+def delete_student_record(request):
+    pass
+    
