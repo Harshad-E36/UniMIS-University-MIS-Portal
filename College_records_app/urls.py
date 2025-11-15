@@ -7,7 +7,6 @@ urlpatterns = [
     path('login/', views.user_login, name="login"),
     path('signup/', views.signup, name="signup"),
     path('logout/', views.user_logout, name="logout"),
-    path('get_records/', views.get_records, name='get_records'),
     path('add_edit_record/', views.add_edit_record, name="add_edit_record"),
     path('delete_record/', views.delete_record, name="delete_record"),
     path('user_status/', views.user_status, name="user_status"),
@@ -21,5 +20,8 @@ urlpatterns = [
     path("submit-student-records/", views.add_edit_student_aggregate, name="submit_student_records"),
     path("get-student-records/", views.get_student_records, name="get_student_records"),
     path("delete-student-record/", views.delete_student_record, name="delete_student_record"),
+    path('get-college-records/', views.get_college_records, name='get_college_records'),
+    path("export-colleges-excel/", views.export_colleges_excel, name="export_colleges_excel"),
+    path("export-student-excel/", views.export_student_excel, name="export_student_excel"),
 
 ]

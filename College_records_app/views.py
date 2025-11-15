@@ -2,12 +2,17 @@ from django.shortcuts import render, redirect
 from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo, academic_year, student_aggregate_master
 from django.db.models import Prefetch
 from django.db.models import Q, Sum
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from functools import wraps
 from django.db import transaction
 import json
+import openpyxl
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+
+
 # Create your views here.
 
 def ajax_login_required(view_func):
@@ -65,186 +70,101 @@ def student_master(request):
     return render(request, 'student_master.html', {"academic_year": academic_year.objects.all()})
 
 
-def get_records(request):
-    draw = int(request.GET.get('draw', 1))
-    start = int(request.GET.get('start', 0))
-    length = int(request.GET.get('length', 10))
-    search_value = request.GET.get('search[value]', '')
-
-    TotalRecord = College.objects.filter(is_deleted=False).count()
-
-    program_prefetch = Prefetch(
-        'college_programs',
-        queryset=CollegeProgram.objects.filter(is_deleted=False),
-        to_attr='program_list'
-    )
-
-    college_queryset = College.objects.filter(is_deleted=False)
-
-    if search_value:
-        college_queryset = college_queryset.filter(
-            Q(College_Code__icontains=search_value)
-            | Q(College_Name__icontains=search_value)
-            | Q(address__icontains=search_value)
-            | Q(country__icontains=search_value)
-            | Q(state__icontains=search_value)
-            | Q(District__icontains=search_value)
-            | Q(taluka__icontains=search_value)
-            | Q(city__icontains=search_value)
-            | Q(pincode__icontains=search_value)
-            | Q(college_type__icontains=search_value)
-            | Q(belongs_to__icontains=search_value)
-            | Q(affiliated__icontains=search_value)
-            | Q(college_programs__Discipline__icontains=search_value)
-            | Q(college_programs__ProgramName__icontains=search_value)
-        ).distinct()
-
-    college_queryset = college_queryset.prefetch_related(program_prefetch)
-    FilteredRecord = college_queryset.count()
-
-    # Sorting
-    column_index = int(request.GET.get('order[0][column]', 0))
-    direction = request.GET.get('order[0][dir]', 'asc')
-    column_map = [
-        'College_Code', 'College_Name', 'address', 'country', 'state',
-        'District', 'taluka', 'city', 'pincode', 'college_type',
-        'belongs_to', 'affiliated'
-    ]
-    column_name = column_map[column_index] if column_index < len(column_map) else 'College_Code'
-    if direction == 'desc':
-        column_name = f'-{column_name}'
-    college_queryset = college_queryset.order_by(column_name)
-
-    # Pagination
-    college_queryset = college_queryset[start:start + length]
-
-    data = []
-
-    for college in college_queryset:
-        disciplines_map = {}
-
-        for prog in getattr(college, 'program_list', []):
-            disciplines_map.setdefault(prog.Discipline, []).append(prog.ProgramName)
-
-        first_row = True
-        for discipline, programs in disciplines_map.items():
-            data.append([
-                college.College_Code if first_row else "",
-                college.College_Name if first_row else "",
-                college.address if first_row else "",
-                college.country if first_row else "",
-                college.state if first_row else "",
-                college.District if first_row else "",
-                college.taluka if first_row else "",
-                college.city if first_row else "",
-                college.pincode if first_row else "",
-                college.college_type if first_row else "",
-                college.belongs_to if first_row else "",
-                college.affiliated if first_row else "",
-                discipline,
-                ", ".join(programs),
-                college.id if first_row else "",  # visible action cell
-                college.id  # hidden group key (NEW)
-            ])
-            first_row = False
-
-    response = {
-        'draw': draw,
-        'recordsTotal': TotalRecord,
-        'recordsFiltered': FilteredRecord,
-        'data': data
-    }
-    return JsonResponse(response)
-
 
 @ajax_login_required
 def add_edit_record(request):
-    if request.method == "POST":
-        id = int(request.POST.get('id'))
-        college_code = request.POST.get('college_code')
-        college_name = request.POST.get('college_name')
-        address = request.POST.get('address')
-        country = request.POST.get('country')
-        state = request.POST.get('state')
-        district = request.POST.get('district')
-        taluka = request.POST.get('taluka')
-        city = request.POST.get('city')
-        pincode = request.POST.get('pincode')
-        college_type = request.POST.get('college_type')
-        belongs_to = request.POST.get('belongs_to')
-        affiliated = request.POST.get('affiliated_to')
-        disciplines_programs_json = request.POST.get('disciplines_programs')
+    if request.method != "POST":
+        return JsonResponse({"status": 400, "message": "Invalid method"}, status=400)
 
-        disciplines_programs = json.loads(disciplines_programs_json)
+    # Safe ID parsing
+    raw_id = request.POST.get('id', '').strip()
+    try:
+        record_id = int(raw_id) if raw_id else 0
+    except ValueError:
+        return JsonResponse({"status": 400, "message": "Invalid ID"}, status=400)
 
-        if id > 0:
-            # Edit existing record
-            college = College.objects.get(id=id)
-            college.College_Code = college_code
-            college.College_Name = college_name
-            college.address = address
-            college.country = country
-            college.state = state
-            college.District = district
-            college.taluka = taluka
-            college.city = city
-            college.pincode = pincode
-            college.college_type = college_type
-            college.belongs_to = belongs_to
-            college.affiliated = affiliated
-            college.updated_by = get_client_ip(request)
-            college.save()
+    college_code = request.POST.get('college_code')
+    college_name = request.POST.get('college_name')
+    address = request.POST.get('address')
+    country = request.POST.get('country')
+    state = request.POST.get('state')
+    district = request.POST.get('district')
+    taluka = request.POST.get('taluka')
+    city = request.POST.get('city')
+    pincode = request.POST.get('pincode')
+    college_type = request.POST.get('college_type')
+    belongs_to = request.POST.get('belongs_to')
+    affiliated = request.POST.get('affiliated_to')
 
-            # Update CollegeProgram entries
-            CollegeProgram.objects.filter(College=college).update(is_deleted=True)
-            for item in disciplines_programs:
-                discipline = item['Discipline']
-                program_name = item['ProgramName']
-                cp, created = CollegeProgram.objects.get_or_create(
-                    College=college,
-                    Discipline=discipline,
-                    ProgramName=program_name,
-                    defaults={'is_deleted': False}
-                )
-                if not created:
-                    cp.is_deleted = False
-                    cp.save()
+    # Parse JSON safely
+    programs_json = request.POST.get('disciplines_programs', '[]')
+    try:
+        programs = json.loads(programs_json)
+    except Exception as e:
+        return JsonResponse({"status": 400, "message": "Invalid programs JSON"}, status=400)
 
-            response_data = {
-                'message': 'Record updated successfully',
-                'status': 200
-            }
-            return JsonResponse(response_data)
-        else:
-            # Add new record
-            college = College.objects.create(
-                College_Code=college_code,
-                College_Name=college_name,
-                address=address,
-                country=country,
-                state=state,
-                District=district,
-                taluka=taluka,
-                city=city,
-                pincode=pincode,
-                college_type=college_type,
-                belongs_to=belongs_to,
-                affiliated=affiliated,
-                created_by=get_client_ip(request)
-            )   
-            for item in disciplines_programs:
-                discipline = item['Discipline']
-                program_name = item['ProgramName']
-                CollegeProgram.objects.create(
-                    College=college,
-                    Discipline=discipline,
-                    ProgramName=program_name
-                )
-            response_data = {
-                'message': 'Record added successfully',
-                'status': 201
-            }
-            return JsonResponse(response_data)
+    # =============== EDIT MODE ===============
+    if record_id > 0:
+        try:
+            college = College.objects.get(id=record_id)
+        except College.DoesNotExist:
+            return JsonResponse({"status": 404, "message": "Record not found"}, status=404)
+
+        college.College_Code = college_code
+        college.College_Name = college_name
+        college.address = address
+        college.country = country
+        college.state = state
+        college.District = district
+        college.taluka = taluka
+        college.city = city
+        college.pincode = pincode
+        college.college_type = college_type
+        college.belongs_to = belongs_to
+        college.affiliated = affiliated
+        college.updated_by = get_client_ip(request)
+        college.save()
+
+        CollegeProgram.objects.filter(College=college).update(is_deleted=True)
+        for item in programs:
+            cp, created = CollegeProgram.objects.get_or_create(
+                College=college,
+                Discipline=item['Discipline'],
+                ProgramName=item['ProgramName'],
+                defaults={'is_deleted': False}
+            )
+            if not created:
+                cp.is_deleted = False
+                cp.save()
+
+        return JsonResponse({"status": 200, "message": "Record updated successfully"})
+
+    # =============== ADD MODE ===============
+    college = College.objects.create(
+        College_Code=college_code,
+        College_Name=college_name,
+        address=address,
+        country=country,
+        state=state,
+        District=district,
+        taluka=taluka,
+        city=city,
+        pincode=pincode,
+        college_type=college_type,
+        belongs_to=belongs_to,
+        affiliated=affiliated,
+        created_by=get_client_ip(request)
+    )
+
+    for item in programs:
+        CollegeProgram.objects.create(
+            College=college,
+            Discipline=item['Discipline'],
+            ProgramName=item['ProgramName']
+        )
+
+    return JsonResponse({"status": 201, "message": "Record added successfully"})
+
 
 
 @ajax_login_required
@@ -837,3 +757,383 @@ def get_student_records(request):
 def delete_student_record(request):
     pass
     
+def get_college_records(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    total_count = College.objects.filter(is_deleted=False).count()
+
+    program_prefetch = Prefetch(
+        'college_programs',
+        queryset=CollegeProgram.objects.filter(is_deleted=False),
+        to_attr='program_list'
+    )
+    qs = College.objects.filter(is_deleted=False)
+
+    if search_value:
+        qs = qs.filter(
+            Q(College_Code__icontains=search_value) |
+            Q(College_Name__icontains=search_value) |
+            Q(address__icontains=search_value) |
+            Q(country__icontains=search_value) |
+            Q(state__icontains=search_value) |
+            Q(District__icontains=search_value) |
+            Q(taluka__icontains=search_value) |
+            Q(city__icontains=search_value) |
+            Q(pincode__icontains=search_value) |
+            Q(college_type__icontains=search_value) |
+            Q(belongs_to__icontains=search_value) |
+            Q(affiliated__icontains=search_value) |
+            Q(college_programs__Discipline__icontains=search_value) |
+            Q(college_programs__ProgramName__icontains=search_value)
+        ).distinct()
+
+    qs = qs.prefetch_related(program_prefetch)
+    filtered_count = qs.count()
+
+    # ordering (optional - keep simple)
+    column_index = int(request.GET.get('order[0][column]', 2))
+    direction = request.GET.get('order[0][dir]', 'asc')
+    column_map = {
+        1: 'College_Code',
+        2: 'College_Name',
+        3: 'state',
+        4: 'District',
+        5: 'city'
+    }
+    order_field = column_map.get(column_index, 'College_Name')
+    if direction == 'desc':
+        order_field = '-' + order_field
+    qs = qs.order_by(order_field)
+
+    # pagination
+    qs_page = qs[start:start + length]
+
+    # Build response rows as objects (so JS can access by property)
+    data = []
+    for college in qs_page:
+        # build programs grouped by discipline
+        programs_map = {}
+        for p in getattr(college, 'program_list', []):
+            programs_map.setdefault(p.Discipline or "Other", []).append(p.ProgramName)
+
+        row = {
+            "college_code": college.College_Code,
+            "college_name": college.College_Name,
+            "address": college.address,
+            "country": college.country if hasattr(college, "country") else "",
+            "state": college.state,
+            "district": college.District,
+            "taluka": college.taluka,
+            "city": college.city,
+            "pincode": college.pincode,
+            "college_type": college.college_type,
+            "belongs_to": college.belongs_to,
+            "affiliated": college.affiliated if hasattr(college, "affiliated") else "",
+            "programs": programs_map,
+            "id": college.id
+        }
+        data.append(row)
+
+    return JsonResponse({
+        "draw": draw,
+        "recordsTotal": total_count,
+        "recordsFiltered": filtered_count,
+        "data": data
+    })
+
+
+def export_colleges_excel(request):
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "College Records"
+
+    # ========= HEADER ==========
+    headers = [
+        "College Code", "College Name", "Address", "Pincode", "Country",
+        "State", "District", "Taluka", "City",
+        "College Type", "Belongs To", "Affiliated To",
+        "Discipline", "Program"
+    ]
+    ws.append(headers)
+
+    # Style header
+    header_fill = PatternFill(start_color="006699", end_color="006699", fill_type="solid")
+    for col in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row_num = 2  # start from row 2
+
+    colleges = College.objects.filter(is_deleted=False).prefetch_related("college_programs")
+
+    for college in colleges:
+
+        # Group programs under each discipline
+        discipline_map = {}
+        for cp in college.college_programs.all():
+            discipline_map.setdefault(cp.Discipline, []).append(cp.ProgramName)
+
+        if not discipline_map:
+            discipline_map = {"No Discipline": ["No Programs"]}
+
+        discipline_list = list(discipline_map.items())
+
+        # Total rows needed = sum of all programs across all disciplines
+        total_program_rows = sum(len(programs) for _, programs in discipline_list)
+
+        start_row = row_num
+        end_row = row_num + total_program_rows - 1
+
+        # ========== MERGE ALL COLLEGE INFO CELLS ==========
+        college_fields = [
+            college.College_Code,
+            college.College_Name,
+            college.address,
+            college.pincode,
+            college.country,
+            college.state,
+            college.District,
+            college.taluka,
+            college.city,
+            college.college_type,
+            college.belongs_to,
+            college.affiliated,
+        ]
+
+        for col_index, value in enumerate(college_fields, start=1):
+            ws.merge_cells(
+                start_row=start_row, start_column=col_index,
+                end_row=end_row, end_column=col_index
+            )
+            cell = ws.cell(row=start_row, column=col_index, value=value)
+            cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+        # ========== WRITE DISCIPLINE + PROGRAM CELLS ==========
+        current_row = row_num
+
+        for discipline, programs in discipline_list:
+
+            discipline_rowspan = len(programs)
+            discipline_start_row = current_row
+            discipline_end_row = current_row + discipline_rowspan - 1
+
+            # Merge discipline cell
+            ws.merge_cells(
+                start_row=discipline_start_row, start_column=13,
+                end_row=discipline_end_row, end_column=13
+            )
+            disc_cell = ws.cell(row=discipline_start_row, column=13, value=discipline)
+            disc_cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+            # Write each program in its own row
+            for p in programs:
+                prog_cell = ws.cell(current_row, 14, p)
+                prog_cell.alignment = Alignment(vertical="center", horizontal="left", wrap_text=True)
+                current_row += 1
+
+        # Move pointer after writing all rows for this college
+        row_num = end_row + 1
+
+    # Auto column widths
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 20
+
+    # ========= RETURN FILE ==========
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="College_Detailed_Report.xlsx"'
+    wb.save(response)
+    return response
+
+
+def export_student_excel(request):
+    year = request.GET.get("year")
+    if not year:
+        return HttpResponse("Missing academic year", status=400)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Student Records"
+
+    # ============================
+    #   HEADER ROW
+    # ============================
+    headers = [
+        "College Code", "College Name", "Address", "Pincode", "Country",
+        "State", "District", "Taluka", "City",
+        "College Type", "Belongs To", "Affiliated To",
+        "Discipline", "Program",
+
+        # STUDENT CENSUS COLUMNS (index 14 onward)
+        "Total Students",
+        "Male", "Female", "Others",
+        "OPEN", "OBC", "SC", "ST", "NT", "VJNT", "EWS",
+        "Hindu", "Muslim", "Sikh", "Christian", "Jain", "Buddhist", "Other Religion",
+        "No Disability", "Low Vision", "Blindness", "Hearing Impaired",
+        "Locomotor Disability", "Autism", "Other Disability"
+    ]
+
+    ws.append(headers)
+
+    # Header styling
+    header_fill = PatternFill(start_color="006699", end_color="006699", fill_type="solid")
+    for col in range(1, len(headers) + 1):
+        c = ws.cell(row=1, column=col)
+        c.font = Font(bold=True, color="FFFFFF")
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    row_num = 2
+
+    # ============================
+    #   FETCH ALL NECESSARY DATA
+    # ============================
+    colleges = (
+        College.objects.filter(is_deleted=False)
+        .prefetch_related("college_programs", "student_aggregates")
+    )
+
+    # student fields order used for writing and aggregation
+    student_fields = [
+        "total_students",
+        "total_male", "total_female", "total_others",
+        "total_open", "total_obc", "total_sc", "total_st", "total_nt", "total_vjnt", "total_ews",
+        "total_hindu", "total_muslim", "total_sikh", "total_christian", "total_jain", "total_buddhist", "total_other_religion",
+        "total_no_disability", "total_low_vision", "total_blindness", "total_hearing",
+        "total_locomotor", "total_autism", "total_other_disability"
+    ]
+
+    for college in colleges:
+
+        # map program_id -> student_aggregate record for the given year
+        year_records = {
+            r.Program_id: r
+            for r in college.student_aggregates.filter(Academic_Year=year, is_deleted=False)
+        }
+
+        # Group programs by discipline (only non-deleted programs)
+        discipline_map = {}
+        for cp in college.college_programs.filter(is_deleted=False):
+            discipline_map.setdefault(cp.Discipline, []).append(cp)
+
+        # if no disciplines/programs exist, show a placeholder discipline with no programs
+        if not discipline_map:
+            discipline_map = {"No Discipline": []}
+
+        # compute total rows needed for the college (sum of program counts, at least 1 per discipline)
+        total_program_rows = 0
+        for disc, plist in discipline_map.items():
+            if plist:
+                total_program_rows += len(plist)
+            else:
+                total_program_rows += 1  # one row to show 'No Program'
+
+        start_row = row_num
+        end_row = row_num + total_program_rows - 1
+
+        # ============================
+        #   MERGE COLLEGE INFO CELLS OVER THE FULL BLOCK
+        # ============================
+        college_fields = [
+            college.College_Code,
+            college.College_Name,
+            college.address,
+            college.pincode,
+            college.country,
+            college.state,
+            college.District,
+            college.taluka,
+            college.city,
+            college.college_type,
+            college.belongs_to,
+            college.affiliated
+        ]
+
+        for col_index, value in enumerate(college_fields, start=1):
+            ws.merge_cells(start_row=start_row, start_column=col_index,
+                           end_row=end_row, end_column=col_index)
+            c = ws.cell(row=start_row, column=col_index, value=value)
+            c.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+        # ============================
+        #   WRITE DISCIPLINE (rowspan) AND PROGRAM ROWS
+        #   Also build per-college aggregate sums for student census
+        # ============================
+        current_row = row_num
+        # initialize aggregate counters to zero
+        agg = {f: 0 for f in student_fields}
+
+        for discipline, program_list in discipline_map.items():
+            # ensure at least one program row (placeholder if empty)
+            programs = program_list if program_list else [None]
+            discipline_rowspan = len(programs)
+            discipline_start = current_row
+            discipline_end = current_row + discipline_rowspan - 1
+
+            # merge the discipline cell for its rowspan
+            ws.merge_cells(start_row=discipline_start, start_column=13,
+                           end_row=discipline_end, end_column=13)
+            disc_cell = ws.cell(row=discipline_start, column=13, value=discipline)
+            disc_cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+            # write each program row
+            for prog in programs:
+                # program name or placeholder
+                if prog:
+                    ws.cell(current_row, 14, prog.ProgramName)
+                    record = year_records.get(prog.id)
+                else:
+                    ws.cell(current_row, 14, "No Program")
+                    record = None
+
+                # write student census values starting at column 15
+                if record:
+                    for i, field in enumerate(student_fields):
+                        val = getattr(record, field, 0) or 0
+                        ws.cell(current_row, 15 + i, val)
+                        agg[field] += val
+                else:
+                    # write zeros or dashes (choose zeros to make aggregation easier)
+                    for i, field in enumerate(student_fields):
+                        ws.cell(current_row, 15 + i, 0)
+
+                current_row += 1
+
+        # ============================
+        #   AGGREGATE ROW — sums for this college
+        # ============================
+        agg_row = current_row
+        # Merge the left columns (1..14) for label cell
+        ws.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=14)
+        label_cell = ws.cell(agg_row, 1, "Aggregate Value")
+        label_cell.font = Font(bold=True)
+        label_cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # write aggregated totals starting at column 15
+        for i, field in enumerate(student_fields):
+            tot = agg[field]
+            cell = ws.cell(agg_row, 15 + i, tot)
+            cell.font = Font(bold=True, color="CC6600")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # move pointer to next row after this block
+        row_num = agg_row + 1
+
+    # Auto column width
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 18
+
+    # RESPONSE
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="Student_Report_{year}.xlsx"'
+    wb.save(response)
+    return response
