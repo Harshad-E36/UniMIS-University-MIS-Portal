@@ -99,6 +99,7 @@
       background: #0d6efd;
       color: white;
     }
+
     table.dataTable thead th {
       text-align: center;
       vertical-align: middle;
@@ -193,6 +194,182 @@
       max-width: 100% !important;
       overflow-x: hidden;
     }
+
+    /* ------------------------------
+   DISCIPLINE HEADER STYLING
+------------------------------ */
+    .discipline-wrapper {
+      background: #f1f5f9;
+      border: 1px solid #d6dbe1;
+      padding: 1rem 1.2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .discipline-title {
+      font-size: 1.35rem !important;
+      font-weight: 700 !important;
+      color: #0d6efd !important;
+    }
+
+    .toggle-discipline i {
+      font-size: 1.1rem;
+    }
+
+    /* ------------------------------
+   PROGRAM BLOCK STYLING
+------------------------------ */
+    .program-section {
+      background: #ffffff;
+      border: 1px solid #e3e6ea;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.2s ease;
+    }
+
+    .program-section:hover {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Program Title */
+    .program-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #198754;
+      margin-bottom: 10px;
+    }
+
+    /* ------------------------------
+   SECTION HEADINGS (Gender / Category / Religion etc.)
+------------------------------ */
+    .program-section h6 {
+      font-size: 1.1rem !important;
+      font-weight: 700 !important;
+      color: #333 !important;
+      margin-top: 1.2rem !important;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    /* “Total Students” label */
+    .program-section label.fw-semibold {
+      font-size: 1.05rem;
+      font-weight: 600 !important;
+    }
+
+    /* ------------------------------
+   FORM INPUT SPACING
+------------------------------ */
+    .program-section .row {
+      margin-bottom: 0.6rem;
+    }
+
+    .program-section input {
+      border-radius: 6px !important;
+    }
+
+    /* ------------------------------
+   SEPARATOR LINE between programs
+------------------------------ */
+    .discipline-programs-container .program-section:not(:last-child) {
+      border-bottom: 2px dashed #d2d6da;
+      padding-bottom: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ------------------------------
+   Smooth collapse animation
+------------------------------ */
+    .discipline-programs-container {
+      overflow: hidden;
+    }
+
+    /* ------------------------------
+   CLEAN DISCIPLINE HEADER (DATATABLE ACCORDION)
+------------------------------ */
+
+    .discipline-header-row {
+      display: flex;
+      align-items: center;
+      padding: 2px 4px;
+      margin: 4px 0 2px 0;
+      width: 100%;
+    }
+
+    .discipline-header-text {
+      font-size: 1rem;
+      /* same size as program titles */
+      font-weight: 600;
+      color: #0d6efd;
+      text-align: left;
+      display: inline-block;
+    }
+
+    /* subtle divider between discipline header and programs */
+    .discipline-divider {
+      border-top: 1px solid #d7dce2;
+      margin: 4px 0 10px 0;
+    }
+
+    /* Override Bootstrap accordion spacing interference */
+    .accordion .discipline-header-row,
+    .accordion .discipline-header-text {
+      padding-left: 0 !important;
+      margin-left: 0 !important;
+      text-align: left !important;
+    }
+
+    /* =========================================================
+   MODAL HEADER - MATCH PAGE GRADIENT
+   ========================================================= */
+    #collegeModal .modal-header {
+      background: linear-gradient(135deg, #0d6efd, #198754) !important;
+      color: #fff !important;
+      border-top-left-radius: 1rem !important;
+      border-top-right-radius: 1rem !important;
+      padding: 1.4rem 1.6rem !important;
+    }
+
+    /* Make close button white */
+    #collegeModal .btn-close {
+      filter: invert(1) brightness(200%) !important;
+      opacity: 0.9;
+    }
+
+    #collegeModal .btn-close:hover {
+      opacity: 1;
+    }
+
+    /* Ensure college name + address become white */
+    #modalCollegeName {
+      color: #fff !important;
+    }
+
+    #modalCollegeAddress {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+    /* Fix white tips on modal header corners */
+#collegeModal .modal-content {
+  background: #ffffff;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  overflow: visible !important;   /* allow header to round properly */
+}
+
+/* Ensure FULL modal box has smooth corner radius except header */
+#collegeModal .modal-dialog {
+  border-radius: 1rem !important;
+  overflow: hidden; /* clips corners cleanly */
+}
+
+/* Reapply bottom corners to modal-content */
+#collegeModal .modal-content {
+  border-bottom-left-radius: 1rem !important;
+  border-bottom-right-radius: 1rem !important;
+}
+
   </style>
 </head>
 
@@ -249,7 +426,6 @@
             </button>
 
             <!-- Cascading Input Cassette -->
-
             <div id="collegeCodeCassette" class="cassette">
               <div class="inner-cassette d-flex align-items-center gap-2">
                 <input type="text" id="collegeCodeInput" class="form-control form-control-sm" placeholder="College code"
@@ -310,7 +486,7 @@
             </div>
 
             <!-- Dynamic Program Sections Will Appear Here -->
-            <div id="programSectionsContainer"></div>
+            <div id="programSectionsContainer" class="mt-4"></div>
 
           </div>
 
@@ -322,24 +498,40 @@
       </div>
     </div>
 
+    <!-- DISCIPLINE WRAPPER TEMPLATE -->
+    <template id="disciplineTemplate">
+      <div class="discipline-wrapper mb-4 border rounded p-3 bg-light shadow-sm">
+
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h3 class="fw-bold text-primary discipline-title mb-0"></h3>
+
+          <button class="btn btn-sm btn-outline-secondary toggle-discipline">
+            <i class="bi bi-chevron-down"></i>
+          </button>
+        </div>
+
+        <!-- Holds ALL PROGRAM SECTIONS under this discipline -->
+        <div class="discipline-programs-container mt-2"></div>
+
+      </div>
+    </template>
 
     <template id="programTemplate">
-      <div class="program-section">
+      <div class="program-section mb-4 p-3 border rounded shadow-sm bg-white">
 
-        <hr>
-        <h4 class="fw-bold mt-3 program-title"></h4>
+        <h4 class="fw-bold text-dark program-title mb-3"></h4>
 
         <!-- TOTAL STUDENTS -->
+        <h6 class="fw-bold text-secondary border-bottom pb-1">Total Students</h6>
         <div class="row mt-2">
           <div class="col-md-4">
-            <label class="fw-semibold">Total Students</label>
-            <input type="number" class="form-control total-students">
+            <input type="number" class="form-control total-students" placeholder="Enter total students">
           </div>
         </div>
 
         <!-- GENDER COUNT -->
-        <h6 class="mt-3">Gender Count</h6>
-        <div class="row">
+        <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Gender Count</h6>
+        <div class="row mt-2">
           <div class="col-md-3">
             <label>Male</label>
             <input type="number" class="form-control gender-male" min="0">
@@ -354,24 +546,30 @@
           </div>
         </div>
 
-        <!-- CATEGORY COUNT -->
-        <h6 class="mt-3">Category Count</h6>
-        <div class="row">
-          <div class="col-md-3"><label>OPEN</label><input type="number" class="form-control cat-open"></div>
-          <div class="col-md-3"><label>OBC</label><input type="number" class="form-control cat-obc"></div>
-          <div class="col-md-3"><label>SC</label><input type="number" class="form-control cat-sc"></div>
-          <div class="col-md-3"><label>ST</label><input type="number" class="form-control cat-st"></div>
+        <!-- CATEGORY COUNT (4 per row) -->
+        <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Category Count</h6>
+
+        <div class="row mt-2">
+          <div class="col-md-3"><label>Open (OPEN)</label><input type="number" class="form-control cat-open"></div>
+          <div class="col-md-3"><label>Other Backward Class (OBC)</label><input type="number"
+              class="form-control cat-obc"></div>
+          <div class="col-md-3"><label>Scheduled Caste (SC)</label><input type="number" class="form-control cat-sc">
+          </div>
+          <div class="col-md-3"><label>Scheduled Tribe (ST)</label><input type="number" class="form-control cat-st">
+          </div>
         </div>
 
         <div class="row mt-2">
-          <div class="col-md-3"><label>NT</label><input type="number" class="form-control cat-nt"></div>
-          <div class="col-md-3"><label>VJNT</label><input type="number" class="form-control cat-vjnt"></div>
-          <div class="col-md-3"><label>EWS</label><input type="number" class="form-control cat-ews"></div>
+          <div class="col-md-3"><label>Nomadic Tribe (NT)</label><input type="number" class="form-control cat-nt"></div>
+          <div class="col-md-3"><label>VJNT (Vimukta Jati Nomadic Tribe)</label><input type="number"
+              class="form-control cat-vjnt"></div>
+          <div class="col-md-3"><label>Economically Weaker Section (EWS)</label><input type="number"
+              class="form-control cat-ews"></div>
         </div>
 
         <!-- RELIGION COUNT -->
-        <h6 class="mt-3">Religion Count</h6>
-        <div class="row">
+        <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Religion Count</h6>
+        <div class="row mt-2">
           <div class="col-md-3"><label>Hindu</label><input type="number" class="form-control rel-hindu"></div>
           <div class="col-md-3"><label>Muslim</label><input type="number" class="form-control rel-muslim"></div>
           <div class="col-md-3"><label>Sikh</label><input type="number" class="form-control rel-sikh"></div>
@@ -381,13 +579,13 @@
         <div class="row mt-2">
           <div class="col-md-3"><label>Jain</label><input type="number" class="form-control rel-jain"></div>
           <div class="col-md-3"><label>Buddhist</label><input type="number" class="form-control rel-buddhist"></div>
-          <div class="col-md-3"><label>Other</label><input type="number" class="form-control rel-other"></div>
+          <div class="col-md-3"><label>Other Religions</label><input type="number" class="form-control rel-other"></div>
         </div>
 
         <!-- DISABILITY COUNT -->
-        <h6 class="mt-3">Disability Count</h6>
-        <div class="row">
-          <div class="col-md-3"><label>None</label><input type="number" class="form-control dis-none"></div>
+        <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Disability Count</h6>
+        <div class="row mt-2">
+          <div class="col-md-3"><label>No Disability</label><input type="number" class="form-control dis-none"></div>
           <div class="col-md-3"><label>Low Vision</label><input type="number" class="form-control dis-lowvision"></div>
           <div class="col-md-3"><label>Blindness</label><input type="number" class="form-control dis-blindness"></div>
           <div class="col-md-3"><label>Hearing Impaired</label><input type="number" class="form-control dis-hearing">
@@ -396,14 +594,15 @@
 
         <div class="row mt-2">
           <div class="col-md-3"><label>Locomotor Disability</label><input type="number"
-              class="form-control dis-locomotor">
-          </div>
+              class="form-control dis-locomotor"></div>
           <div class="col-md-3"><label>Autism</label><input type="number" class="form-control dis-autism"></div>
-          <div class="col-md-3"><label>Other</label><input type="number" class="form-control dis-other"></div>
+          <div class="col-md-3"><label>Other Disabilities</label><input type="number" class="form-control dis-other">
+          </div>
         </div>
 
       </div>
     </template>
+
 
     <template id="programAccordionTemplate">
       <div class="accordion-item">
@@ -492,36 +691,54 @@
   function populateAddModal(response) {
     const data = response.college_data;
 
-    // Set header
     $("#modalCollegeName").text(data.College_Name);
     $("#modalCollegeAddress").text(data.address);
 
-    // Clear existing fields
     $("#programSectionsContainer").empty();
 
-    // Build program sections (empty)
-    data.programs.forEach(program => {
-      addProgramSection(program);
+    const programsByDiscipline = data.programs || {};
+
+    Object.entries(programsByDiscipline).forEach(([discipline, programList]) => {
+
+      const discTpl = document.querySelector("#disciplineTemplate");
+      const discClone = discTpl.content.cloneNode(true);
+
+      // Set discipline header
+      discClone.querySelector(".discipline-title").innerText = discipline;
+
+      const programContainer = discClone.querySelector(".discipline-programs-container");
+
+      // Loop programs
+      programList.forEach(programName => {
+        const progTpl = document.querySelector("#programTemplate");
+        const progClone = progTpl.content.cloneNode(true);
+
+        // Set program name
+        progClone.querySelector(".program-title").innerText = programName;
+        progClone.querySelector(".program-section").dataset.program = programName;
+
+        programContainer.appendChild(progClone);
+      });
+
+      $("#programSectionsContainer").append(discClone);
     });
 
-    // Clear academic year selection
     $("#academicYear").val("");
-
-    // Store college code for submission
     $("#collegeModal").data("college-code", data.College_Code);
   }
 
 
-  function addProgramSection(programName) {
-
+  function addProgramSection(disciplineName, programName) {
     const template = document.querySelector("#programTemplate");
     const clone = template.content.cloneNode(true);
 
-    clone.querySelector(".program-title").innerText = programName;
+    clone.querySelector(".program-title").innerText = `${programName}`;
     clone.querySelector(".program-section").dataset.program = programName;
+    clone.querySelector(".program-section").dataset.discipline = disciplineName;
 
-    document.querySelector("#programSectionsContainer").appendChild(clone);
+    return clone;
   }
+
 
 
   function validateProgramSection(section) {
@@ -582,61 +799,79 @@
 
 
   function populateEditModal(response) {
-
     const data = response.college_data;
-    const records = response.records;   // already structured per program
+    const savedRecords = response.records || {};
 
     $("#modalCollegeName").text(data.College_Name);
     $("#modalCollegeAddress").text(data.address);
-
-    // Set academic year
     $("#academicYear").val(response.academic_year);
 
     $("#programSectionsContainer").empty();
 
-    data.programs.forEach(programName => {
-      addProgramSection(programName);
+    const programsByDiscipline = data.programs || {};
 
-      // Fill values if they exist
-      let section = $(`.program-section[data-program='${programName}']`);
-      let saved = records[programName];
+    Object.entries(programsByDiscipline).forEach(([discipline, programList]) => {
 
-      if (!saved) return; // no record for this program
+      const discTpl = document.querySelector("#disciplineTemplate");
+      const discClone = discTpl.content.cloneNode(true);
 
-      section.find(".total-students").val(saved.total_students);
+      discClone.querySelector(".discipline-title").innerText = discipline;
 
-      section.find(".gender-male").val(saved.gender.male);
-      section.find(".gender-female").val(saved.gender.female);
-      section.find(".gender-others").val(saved.gender.others);
+      const programContainer = discClone.querySelector(".discipline-programs-container");
 
-      section.find(".cat-open").val(saved.category.open);
-      section.find(".cat-obc").val(saved.category.obc);
-      section.find(".cat-sc").val(saved.category.sc);
-      section.find(".cat-st").val(saved.category.st);
-      section.find(".cat-nt").val(saved.category.nt);
-      section.find(".cat-vjnt").val(saved.category.vjnt);
-      section.find(".cat-ews").val(saved.category.ews);
+      programList.forEach(programName => {
+        const progTpl = document.querySelector("#programTemplate");
+        const progClone = progTpl.content.cloneNode(true);
 
-      section.find(".rel-hindu").val(saved.religion.hindu);
-      section.find(".rel-muslim").val(saved.religion.muslim);
-      section.find(".rel-sikh").val(saved.religion.sikh);
-      section.find(".rel-christian").val(saved.religion.christian);
-      section.find(".rel-jain").val(saved.religion.jain);
-      section.find(".rel-buddhist").val(saved.religion.buddhist);
-      section.find(".rel-other").val(saved.religion.other);
+        const section = $(progClone).find(".program-section");
+        section.attr("data-program", programName);
 
-      section.find(".dis-none").val(saved.disability.none);
-      section.find(".dis-lowvision").val(saved.disability.lowvision);
-      section.find(".dis-blindness").val(saved.disability.blindness);
-      section.find(".dis-hearing").val(saved.disability.hearing);
-      section.find(".dis-locomotor").val(saved.disability.locomotor);
-      section.find(".dis-autism").val(saved.disability.autism);
-      section.find(".dis-other").val(saved.disability.other);
+        progClone.querySelector(".program-title").innerText = programName;
+
+        const saved = savedRecords[programName];
+
+        if (saved) {
+          $(progClone).find(".total-students").val(saved.total_students);
+
+          $(progClone).find(".gender-male").val(saved.gender.male);
+          $(progClone).find(".gender-female").val(saved.gender.female);
+          $(progClone).find(".gender-others").val(saved.gender.others);
+
+          $(progClone).find(".cat-open").val(saved.category.open);
+          $(progClone).find(".cat-obc").val(saved.category.obc);
+          $(progClone).find(".cat-sc").val(saved.category.sc);
+          $(progClone).find(".cat-st").val(saved.category.st);
+          $(progClone).find(".cat-nt").val(saved.category.nt);
+          $(progClone).find(".cat-vjnt").val(saved.category.vjnt);
+          $(progClone).find(".cat-ews").val(saved.category.ews);
+
+          $(progClone).find(".rel-hindu").val(saved.religion.hindu);
+          $(progClone).find(".rel-muslim").val(saved.religion.muslim);
+          $(progClone).find(".rel-sikh").val(saved.religion.sikh);
+          $(progClone).find(".rel-christian").val(saved.religion.christian);
+          $(progClone).find(".rel-jain").val(saved.religion.jain);
+          $(progClone).find(".rel-buddhist").val(saved.religion.buddhist);
+          $(progClone).find(".rel-other").val(saved.religion.other);
+
+          $(progClone).find(".dis-none").val(saved.disability.none);
+          $(progClone).find(".dis-lowvision").val(saved.disability.lowvision);
+          $(progClone).find(".dis-blindness").val(saved.disability.blindness);
+          $(progClone).find(".dis-hearing").val(saved.disability.hearing);
+          $(progClone).find(".dis-locomotor").val(saved.disability.locomotor);
+          $(progClone).find(".dis-autism").val(saved.disability.autism);
+          $(progClone).find(".dis-other").val(saved.disability.other);
+        }
+
+        programContainer.appendChild(progClone);
+      });
+
+      $("#programSectionsContainer").append(discClone);
     });
 
-    // Store college code
     $("#collegeModal").data("college-code", data.College_Code);
   }
+
+
 
 
   $('document').ready(function () {
@@ -660,10 +895,16 @@
     // Toggle the cassette
     $("#AddRecordButton").on("click", function (e) {
       e.stopPropagation();
-      $("#collegeCodeCassette").toggleClass("show");
 
-      if ($("#collegeCodeCassette").hasClass("show")) {
+      const cassette = $("#collegeCodeCassette");
+      cassette.toggleClass("show");
+
+      if (cassette.hasClass("show")) {
+        // Opening → focus but DO NOT clear
         $("#collegeCodeInput").focus();
+      } else {
+        // Closing → clear input
+        $("#collegeCodeInput").val("");
       }
     });
 
@@ -671,12 +912,24 @@
     $(document).on("click", function (e) {
       if (!$(e.target).closest("#collegeCodeCassette, #AddRecordButton").length) {
         $("#collegeCodeCassette").removeClass("show");
+        // Clear input when closed
+        $("#collegeCodeInput").val("");
       }
     });
 
     // Prevent inner clicks from closing it
     $("#collegeCodeCassette").on("click", function (e) {
       e.stopPropagation();
+    });
+
+
+    // toggle collapsible discipline
+    $(document).on("click", ".toggle-discipline", function () {
+      const container = $(this).closest(".discipline-wrapper").find(".discipline-programs-container");
+      container.slideToggle(200);
+
+      const icon = $(this).find("i");
+      icon.toggleClass("bi-chevron-down bi-chevron-up");
     });
 
     // ADD MODE - When user enters college code to add new records
@@ -931,93 +1184,135 @@
     table.ajax.reload();
   });
 
-  //  BUILD FULL PROGRAM ACCORDION USING TEMPLATES
+  //  LABEL MAP FOR FULL DESCRIPTIONS
+  const LABEL_MAP = {
+    // Gender
+    male: "Male",
+    female: "Female",
+    others: "Others",
 
+    // Category
+    open: "Open",
+    obc: "OBC",
+    sc: "SC",
+    st: "ST",
+    nt: "NT",
+    vjnt: "VJNT",
+    ews: "EWS",
+
+    // Religion
+    hindu: "Hindu",
+    muslim: "Muslim",
+    sikh: "Sikh",
+    christian: "Christian",
+    jain: "Jain",
+    buddhist: "Buddhist",
+    other: "Other Religions",
+
+    // Disability
+    none: "No Disability",
+    lowvision: "Low Vision",
+    blindness: "Blindness",
+    hearing: "Hearing Impaired",
+    locomotor: "Locomotor Disability",
+    autism: "Autism",
+    other_disability: "Other Disabilities"
+  };
+
+  //  BUILD FULL PROGRAM ACCORDION USING TEMPLATES
   function formatPrograms(row) {
-    // wrapper will be returned as HTML string (DataTables expects HTML)
     const wrapper = document.createElement("div");
     wrapper.className = "dt-child-scroll";
 
-    // Use container-fluid to offset the bootstrap row negative margins correctly
     const container = document.createElement("div");
     container.className = "container-fluid p-0";
 
-    // small inner padding area so accordion header isn't flush to border
     const inner = document.createElement("div");
     inner.className = "px-3 py-3";
 
-    // main accordion element
+    // Main accordion container
     const accordion = document.createElement("div");
     accordion.className = "accordion";
     accordion.id = `acc-${row.college_code}`;
 
-    row.programs.forEach((p, i) => {
-      // clone accordion-item template
-      const tplItem = document.querySelector("#programAccordionTemplate");
-      const acc = tplItem.content.cloneNode(true);
+    // row.programs = [{ discipline: "", programs: [ ... ] }]
+    row.programs.forEach((group, groupIndex) => {
 
-      // header button
-      const btn = acc.querySelector(".accordion-button");
-      btn.textContent = `${p.name} (${p.total_students} students)`;
-      btn.setAttribute("data-bs-toggle", "collapse");
-      btn.setAttribute("data-bs-target", `#collapse-${row.college_code}-${i}`);
+      // ---------------------------
+      // Discipline Header (inside accordion)
+      // ---------------------------
+      const discHeader = document.createElement("div");
+      discHeader.className = "discipline-header-row";
 
-      // collapse block and parent link
-      const collapse = acc.querySelector(".accordion-collapse");
-      collapse.id = `collapse-${row.college_code}-${i}`;
-      collapse.setAttribute("data-bs-parent", `#acc-${row.college_code}`);
+      const discText = document.createElement("span");
+      discText.className = "discipline-header-text";
+      discText.textContent = group.discipline;
 
-      // row container inside accordion body (already .row in template)
-      const rowContainer = acc.querySelector(".program-content-row");
+      discHeader.appendChild(discText);
+      accordion.appendChild(discHeader);
 
-      // ---- TOTAL CARD ----
-      const tplTotal = document.querySelector("#totalCardTemplate");
-      const totalClone = tplTotal.content.cloneNode(true);
-      totalClone.querySelector(".total-value").textContent = p.total_students;
+      // Divider for proper top border before first program
+      const divider = document.createElement("div");
+      divider.className = "discipline-divider";
+      accordion.appendChild(divider);
 
-      // Append total card to the row container
-      rowContainer.appendChild(totalClone);
 
-      // ---- METRICS GROUPS ----
-      const metricGroups = {
-        "Gender": { color: "bg-primary", data: p.gender },
-        "Category": { color: "bg-success", data: p.category },
-        "Religion": { color: "bg-warning text-dark", data: p.religion },
-        "Disability": { color: "bg-danger", data: p.disability }
-      };
+      // ---------------------------
+      // Programs inside this discipline
+      // ---------------------------
+      group.programs.forEach((p, i) => {
+        const tplItem = document.querySelector("#programAccordionTemplate");
+        const acc = tplItem.content.cloneNode(true);
 
-      Object.entries(metricGroups).forEach(([title, meta]) => {
-        const tplMetric = document.querySelector("#metricCardTemplate");
-        const clone = tplMetric.content.cloneNode(true);
+        const btn = acc.querySelector(".accordion-button");
+        btn.textContent = `${p.name} (${p.total_students} students)`;
+        btn.setAttribute("data-bs-toggle", "collapse");
+        btn.setAttribute("data-bs-target", `#collapse-${row.college_code}-${groupIndex}-${i}`);
 
-        // set title and color
-        const titleEl = clone.querySelector(".metric-title");
-        titleEl.textContent = title;
-        titleEl.classList.add(...meta.color.split(" "));
+        const collapse = acc.querySelector(".accordion-collapse");
+        collapse.id = `collapse-${row.college_code}-${groupIndex}-${i}`;
+        collapse.setAttribute("data-bs-parent", `#acc-${row.college_code}`);
 
-        // fill table body rows
-        const tbody = clone.querySelector(".metric-body");
-        Object.entries(meta.data).forEach(([label, value]) => {
-          const tr = document.createElement("tr");
-          const td1 = document.createElement("td");
-          const td2 = document.createElement("td");
-          // capitalize first letter of label for display
-          td1.textContent = label.charAt(0).toUpperCase() + label.slice(1);
-          td2.textContent = value;
-          tr.appendChild(td1);
-          tr.appendChild(td2);
-          tbody.appendChild(tr);
+        const rowContainer = acc.querySelector(".program-content-row");
+
+        // ---- TOTAL CARD ----
+        const tplTotal = document.querySelector("#totalCardTemplate");
+        const totalClone = tplTotal.content.cloneNode(true);
+        totalClone.querySelector(".total-value").textContent = p.total_students;
+        rowContainer.appendChild(totalClone);
+
+        // ---- METRICS ----
+        const metricGroups = {
+          "Gender": { color: "bg-primary", data: p.gender },
+          "Category": { color: "bg-success", data: p.category },
+          "Religion": { color: "bg-warning text-dark", data: p.religion },
+          "Disability": { color: "bg-danger", data: p.disability }
+        };
+
+        Object.entries(metricGroups).forEach(([title, meta]) => {
+          const tplMetric = document.querySelector("#metricCardTemplate");
+          const clone = tplMetric.content.cloneNode(true);
+
+          const titleEl = clone.querySelector(".metric-title");
+          titleEl.textContent = title;
+          titleEl.classList.add(...meta.color.split(" "));
+
+          const tbody = clone.querySelector(".metric-body");
+
+          Object.entries(meta.data).forEach(([label, value]) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                        <td>${LABEL_MAP[label] || label}</td>
+                        <td>${value}</td>
+                    `;
+            tbody.appendChild(tr);
+          });
+
+          rowContainer.appendChild(clone);
         });
 
-        // ensure metric col uses flexible class so layout flows
-        const metricCol = clone.querySelector(".metric-col");
-        metricCol.classList.add("d-flex", "flex-column");
-
-        rowContainer.appendChild(clone);
+        accordion.appendChild(acc);
       });
-
-      // append the built accordion-item clone
-      accordion.appendChild(acc);
     });
 
     inner.appendChild(accordion);
@@ -1027,10 +1322,7 @@
     return wrapper.outerHTML;
   }
 
-
-
   //  EXPAND / COLLAPSE CHILD ROWS
-
   $("#records_table tbody").on("click", ".toggle-programs", function () {
 
     const tr = $(this).closest("tr");
