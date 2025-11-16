@@ -99,6 +99,10 @@
       background: #0d6efd;
       color: white;
     }
+    table.dataTable thead th {
+      text-align: center;
+      vertical-align: middle;
+    }
 
     /* Notification styles */
     .notification {
@@ -694,6 +698,7 @@
         success: function (response) {
           if (response.status === 200 && response.mode === "add") {
             populateAddModal(response);
+            $("#collegeModal").data("mode", "add");
             $("#collegeModal").modal("show");
           }
           else if (response.status === 409) {
@@ -713,6 +718,7 @@
     $("#submitRecordForm").on("click", function () {
       const collegeCode = $("#collegeModal").data("college-code");
       const academicYear = $("#academicYear").val();
+      const mode = $("#collegeModal").data("mode");
 
       if (!academicYear) {
         showNotification("Please select academic year", "danger");
@@ -789,24 +795,47 @@
         records: records
       };
 
-      $.ajax({
-        url: "/submit-student-records/",
-        type: "POST",
-        data: JSON.stringify(payload),
-        contentType: "application/json",
-        success: function (response) {
-          if (response.status === 200) {
-            showNotification("Student records saved successfully!", "success");
-            $("#collegeModal").modal("hide");
-            table.ajax.reload(null, false);
-          } else {
-            showNotification(response.message || "Something went wrong", "danger");
+      if (mode === "add") {
+        $.ajax({
+          url: "/add_student/",
+          type: "POST",
+          data: JSON.stringify(payload),
+          contentType: "application/json",
+          success: function (response) {
+            if (response.status === 200) {
+              showNotification("Student records saved successfully!", "success");
+              $("#collegeModal").modal("hide");
+              table.ajax.reload(null, false);
+            } else {
+              showNotification(response.message || "Something went wrong", "danger");
+            }
+          },
+          error: function () {
+            showNotification("Server error", "danger");
           }
-        },
-        error: function () {
-          showNotification("Server error", "danger");
-        }
-      });
+        });
+      }
+      else {
+        // EDIT MODE
+        $.ajax({
+          url: "/edit_student/",
+          type: "POST",
+          data: JSON.stringify(payload),
+          contentType: "application/json",
+          success: function (response) {
+            if (response.status === 200) {
+              showNotification("Student records updated successfully!", "success");
+              $("#collegeModal").modal("hide");
+              table.ajax.reload(null, false);
+            } else {
+              showNotification(response.message || "Something went wrong", "danger");
+            }
+          },
+          error: function () {
+            showNotification("Server error", "danger");
+          }
+        });
+      }
     });
 
 
@@ -1035,6 +1064,7 @@
         if (response.status === 200 && response.mode === "edit") {
           populateEditModal(response);
           $("#collegeModal").modal("show");
+          $("#collegeModal").data("mode", "edit");
         } else {
           showNotification(response.message || "Error loading record", "danger");
         }
@@ -1049,7 +1079,9 @@
   // DELETE RECORD HANDLER 
   $(document).on("click", ".btn-delete", function () {
     const college = $(this).data("college");
+    console.log(college);
     const year = $(this).data("year");
+    console.log(year);
 
     if (!college || !year) {
       showNotification("Invalid record selected.", "danger");
@@ -1064,13 +1096,12 @@
     $.ajax({
       url: "/delete-student-record/",
       type: "POST",
-      data: JSON.stringify({
+      data: {
         college_code: college,
         academic_year: year
-      }),
-      contentType: "application/json",
+      },
       success: function (response) {
-        if (response.status === 200) {
+        if (response.status === 204) {
           showNotification("Record deleted successfully.", "success");
           $("#records_table").DataTable().ajax.reload(null, false);
         } else {

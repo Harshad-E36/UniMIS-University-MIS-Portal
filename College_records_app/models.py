@@ -136,7 +136,7 @@ class student_aggregate_master(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ('College', 'Program', 'Academic_Year')
+        unique_together = ('College', 'Program', 'Academic_Year', 'is_deleted')
 
     def __str__(self):
         return f"{self.College.College_Code} - {self.Academic_Year}"

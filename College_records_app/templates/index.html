@@ -958,7 +958,8 @@
         success: function (response) {
           if (response.status === 200) {
             console.log("Filters applied successfully", response);
-            $("#colleges_num").text(response.count_data);
+            $("#colleges_num").text(response.filtered_colleges_count);
+            $("#students_num").text(response.total_students);
           }
         },
         error: function (xhr, status, error) {
@@ -979,6 +980,7 @@
         success: function (data) {
           if (data.status === 200) {
             $("#colleges_num").text(data.total_colleges_count);
+            $("#students_num").text(data.total_students_count);
             showNotification("Filters cleared successfully!", "success");
 
           }
