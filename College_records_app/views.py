@@ -179,13 +179,20 @@ def add_edit_record(request):
                     ).exclude(pk=agg.pk)
 
                     if conflict_qs.exists():
-                        # A deleted row with same key already exists.
-                        # If we also flip this to deleted, DB will raise duplicate key.
-                        # So just remove the active one.
-                        agg.delete()
-                    else:
+                        # There is an OLDER soft-deleted row.
+                        old_soft_deleted = conflict_qs.first()
+
+                        # HARD delete the old stale row (cleanup)
+                        old_soft_deleted.delete()
+
+                        # NOW safely soft-delete the active row
                         agg.is_deleted = True
                         agg.save(update_fields=['is_deleted'])
+                    else:
+                        # No duplicates → normal soft delete
+                        agg.is_deleted = True
+                        agg.save(update_fields=['is_deleted'])
+
             else:
                 # No active programs left: soft-delete all aggregates for this college
                 to_soft_delete = student_aggregate_master.objects.filter(
@@ -478,14 +485,27 @@ def get_college_data(request):
         college = College.objects.get(College_Code=college_code, is_deleted=False)
     except College.DoesNotExist:
         return JsonResponse({'status': 404, 'message': 'College not found'})
-    
-    # Programs list
-    programs = CollegeProgram.objects.filter(
-        College=college, is_deleted=False
-    ).values_list("ProgramName", flat=True)
 
+    # ---------- Build discipline -> sorted(programs) map ----------
+    all_programs = (
+        CollegeProgram.objects
+        .filter(College=college, is_deleted=False)
+        .values("Discipline", "ProgramName")
+        .order_by("Discipline", "ProgramName")             # <-- alphabetical sorting HERE
+    )
 
-    # Full address exactly like before
+    discipline_map = {}
+    for item in all_programs:
+        disc = item.get("Discipline") or "Unspecified"
+        prog = item.get("ProgramName") or "Unnamed Program"
+        discipline_map.setdefault(disc, []).append(prog)
+
+    # Ensure alphabetical discipline ordering
+    discipline_map = {
+        disc: sorted(progs, key=lambda x: x.lower())
+        for disc, progs in sorted(discipline_map.items(), key=lambda x: x[0].lower())
+    }
+
     full_address = f"{college.address}, {college.taluka}, {college.District} - {college.pincode}"
 
     base_college_data = {
@@ -495,25 +515,23 @@ def get_college_data(request):
         "District": college.District,
         "Taluka": college.taluka,
         "pincode": college.pincode,
-        "programs": list(programs)
+        "country": getattr(college, "country", ""),
+        "state": getattr(college, "state", ""),
+        "affiliated": getattr(college, "affiliated", ""),
+        "programs": discipline_map
     }
 
-    # ---------------------------------------------------------
     # ADD MODE
-    # ---------------------------------------------------------
     if mode == "add":
-
         return JsonResponse({
             "status": 200,
             "mode": "add",
-            "academic_year": academic_year,   # <-- IMPORTANT
+            "academic_year": academic_year,
             "college_data": base_college_data,
-            "records": {}                     # empty for add mode
+            "records": {}
         })
 
-    # ---------------------------------------------------------
     # EDIT MODE
-    # ---------------------------------------------------------
     if mode == "edit":
         if not academic_year:
             return JsonResponse({'status': 400, 'message': 'Missing academic_year'})
@@ -533,7 +551,9 @@ def get_college_data(request):
         filled_records = {}
 
         for agg in aggregates:
-            filled_records[agg.Program.ProgramName] = {
+            prog_name = agg.Program.ProgramName if agg.Program else f"program_{agg.pk}"
+
+            filled_records[prog_name] = {
                 "total_students": agg.total_students,
                 "gender": {
                     "male": agg.total_male,
@@ -572,12 +592,13 @@ def get_college_data(request):
         return JsonResponse({
             "status": 200,
             "mode": "edit",
-            "academic_year": academic_year,    
+            "academic_year": academic_year,
             "college_data": base_college_data,
             "records": filled_records
         })
 
     return JsonResponse({"status": 400, "message": "Invalid mode"})
+
 
 
 
@@ -916,11 +937,6 @@ def update_student_aggregate(request):
     
 @ajax_login_required
 def get_student_records(request):
-    """
-    Server-side DataTables endpoint.
-    One row per college (that has student_aggregate_master entries for the selected year).
-    Each row includes `programs` array (per-program census).
-    """
     try:
         draw = int(request.GET.get("draw", 1))
         start = int(request.GET.get("start", 0))
@@ -931,74 +947,76 @@ def get_student_records(request):
     search_value = request.GET.get("search[value]", "").strip()
     order_col_index = request.GET.get("order[0][column]")
     order_dir = request.GET.get("order[0][dir]", "asc")
-    year = request.GET.get("year", None)  # must be provided by frontend
+    year = request.GET.get("year")
 
     if not year:
-        # default to latest if not provided
         latest = academic_year.objects.order_by("-Academic_Year").first()
         year = latest.Academic_Year if latest else ""
 
-    # base: colleges that have aggregates for this year and not deleted
     colleges_qs = College.objects.filter(
-    is_deleted=False,
-    student_aggregates__Academic_Year=year,
-    student_aggregates__is_deleted=False    # 👈 important
+        is_deleted=False,
+        student_aggregates__Academic_Year=year,
+        student_aggregates__is_deleted=False
     ).distinct()
 
-    # Search filter
     if search_value:
         colleges_qs = colleges_qs.filter(
-            Q(College_Code__icontains=search_value) | Q(College_Name__icontains=search_value)
+            Q(College_Code__icontains=search_value) |
+            Q(College_Name__icontains=search_value)
         )
 
     records_total = colleges_qs.count()
-    records_filtered = records_total  # after search (already applied)
+    records_filtered = records_total
 
-    # Simple ordering mapping:
-    # 0 = Action (ignore), 1 = College Code, 2 = College Name, 3 = Academic Year, 4 = Total Students
     order_map = {
         "1": "College_Code",
         "2": "College_Name",
-        # total_students (4) we will order manually by annotating
     }
 
-    # If ordering by total_students (column index 4), we annotate sums and order accordingly
-    order_by_annotation = None
     if order_col_index == "4":
-        # annotate total_students per college for the requested year and order
-        # annotate using related_name student_aggregates
         colleges_qs = colleges_qs.annotate(
-            agg_total=Sum('student_aggregates__total_students', filter=Q(student_aggregates__Academic_Year=year))
+            agg_total=Sum("student_aggregates__total_students",
+                          filter=Q(student_aggregates__Academic_Year=year))
         )
-        order_by_annotation = "agg_total"
+        field = "agg_total"
         if order_dir == "desc":
-            order_by_annotation = "-" + order_by_annotation
-        colleges_qs = colleges_qs.order_by(order_by_annotation, "College_Name")
+            field = "-" + field
+        colleges_qs = colleges_qs.order_by(field, "College_Name")
     else:
-        order_field = order_map.get(order_col_index, "College_Name")
+        field = order_map.get(order_col_index, "College_Name")
         if order_dir == "desc":
-            order_field = "-" + order_field
-        colleges_qs = colleges_qs.order_by(order_field)
+            field = "-" + field
+        colleges_qs = colleges_qs.order_by(field)
 
-    # pagination (slice)
     colleges_page = colleges_qs[start:start + length]
 
     data = []
-    # Build row per college (with programs for the year)
+
     for col in colleges_page:
-        # fetch program aggregates for this college and year
-        pc_qs = student_aggregate_master.objects.filter(College=col, Academic_Year=year, is_deleted=False).select_related("Program")
-        programs = []
+        pc_qs = (
+            student_aggregate_master.objects
+            .filter(College=col, Academic_Year=year, is_deleted=False)
+            .select_related("Program")
+            .order_by("Program__Discipline", "Program__ProgramName")   # <--- global alphabetical sort
+        )
+
+        discipline_map = {}
         total_students_for_college = 0
+
         for pc in pc_qs:
-            # map DB fields into structures
-            prog = {
-                "name": pc.Program.ProgramName if pc.Program else str(pc.Program_id),
+            prog_obj = pc.Program
+            discipline = prog_obj.Discipline if prog_obj else "Unspecified"
+            program_name = prog_obj.ProgramName if prog_obj else str(pc.Program_id)
+
+            total_students_for_college += (pc.total_students or 0)
+
+            entry = {
+                "name": program_name,
                 "total_students": pc.total_students or 0,
                 "gender": {
                     "male": pc.total_male or 0,
                     "female": pc.total_female or 0,
-                    "others": pc.total_others or 0
+                    "others": pc.total_others or 0,
                 },
                 "category": {
                     "open": pc.total_open or 0,
@@ -1007,7 +1025,7 @@ def get_student_records(request):
                     "st": pc.total_st or 0,
                     "nt": pc.total_nt or 0,
                     "vjnt": pc.total_vjnt or 0,
-                    "ews": pc.total_ews or 0
+                    "ews": pc.total_ews or 0,
                 },
                 "religion": {
                     "hindu": pc.total_hindu or 0,
@@ -1016,7 +1034,7 @@ def get_student_records(request):
                     "christian": pc.total_christian or 0,
                     "jain": pc.total_jain or 0,
                     "buddhist": pc.total_buddhist or 0,
-                    "other": pc.total_other_religion or 0
+                    "other": pc.total_other_religion or 0,
                 },
                 "disability": {
                     "none": pc.total_no_disability or 0,
@@ -1025,27 +1043,35 @@ def get_student_records(request):
                     "hearing": pc.total_hearing or 0,
                     "locomotor": pc.total_locomotor or 0,
                     "autism": pc.total_autism or 0,
-                    "other": pc.total_other_disability or 0
+                    "other": pc.total_other_disability or 0,
                 }
             }
-            programs.append(prog)
-            total_students_for_college += (pc.total_students or 0)
+
+            discipline_map.setdefault(discipline, []).append(entry)
+
+        grouped_list = []
+        for disc in sorted(discipline_map.keys(), key=str.lower):
+            grouped_list.append({
+                "discipline": disc,
+                "programs": sorted(discipline_map[disc], key=lambda x: x["name"].lower())
+            })
 
         data.append({
             "college_code": col.College_Code,
             "college_name": col.College_Name,
             "academic_year": year,
             "total_students": total_students_for_college,
-            "programs": programs
+            "programs": grouped_list
         })
 
-    resp = {
+    return JsonResponse({
         "draw": draw,
         "recordsTotal": records_total,
         "recordsFiltered": records_filtered,
         "data": data
-    }
-    return JsonResponse(resp)
+    })
+
+
 
 @ajax_login_required
 def delete_student_record(request):
