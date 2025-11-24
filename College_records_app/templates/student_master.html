@@ -350,26 +350,28 @@
     #modalCollegeAddress {
       color: rgba(255, 255, 255, 0.9) !important;
     }
+
     /* Fix white tips on modal header corners */
-#collegeModal .modal-content {
-  background: #ffffff;
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
-  overflow: visible !important;   /* allow header to round properly */
-}
+    #collegeModal .modal-content {
+      background: #ffffff;
+      border-top-left-radius: 0 !important;
+      border-top-right-radius: 0 !important;
+      overflow: visible !important;
+      /* allow header to round properly */
+    }
 
-/* Ensure FULL modal box has smooth corner radius except header */
-#collegeModal .modal-dialog {
-  border-radius: 1rem !important;
-  overflow: hidden; /* clips corners cleanly */
-}
+    /* Ensure FULL modal box has smooth corner radius except header */
+    #collegeModal .modal-dialog {
+      border-radius: 1rem !important;
+      overflow: hidden;
+      /* clips corners cleanly */
+    }
 
-/* Reapply bottom corners to modal-content */
-#collegeModal .modal-content {
-  border-bottom-left-radius: 1rem !important;
-  border-bottom-right-radius: 1rem !important;
-}
-
+    /* Reapply bottom corners to modal-content */
+    #collegeModal .modal-content {
+      border-bottom-left-radius: 1rem !important;
+      border-bottom-right-radius: 1rem !important;
+    }
   </style>
 </head>
 
@@ -525,79 +527,317 @@
         <h6 class="fw-bold text-secondary border-bottom pb-1">Total Students</h6>
         <div class="row mt-2">
           <div class="col-md-4">
-            <input type="number" class="form-control total-students" placeholder="Enter total students">
+            <input type="number" class="form-control total-students" placeholder="Enter total students" min="0">
           </div>
         </div>
 
         <!-- GENDER COUNT -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Gender Count</h6>
         <div class="row mt-2">
-          <div class="col-md-3">
-            <label>Male</label>
-            <input type="number" class="form-control gender-male" min="0">
+          <div class="col-md-3"> <label>Male</label> <input type="number" class="form-control gender-male" min="0">
           </div>
-          <div class="col-md-3">
-            <label>Female</label>
-            <input type="number" class="form-control gender-female" min="0">
+          <div class="col-md-3"> <label>Female</label> <input type="number" class="form-control gender-female" min="0">
           </div>
-          <div class="col-md-3">
-            <label>Others</label>
-            <input type="number" class="form-control gender-others" min="0">
+          <div class="col-md-3"> <label>Others</label> <input type="number" class="form-control gender-others" min="0">
           </div>
         </div>
 
-        <!-- CATEGORY COUNT (4 per row) -->
+        <!-- Immediately after total: quick per-subcategory gender breakdown header -->
+        <div class="row mt-3">
+          <div class="col-12">
+            <small class="text-muted">For each subcategory below enter Male / Female / Others counts</small>
+          </div>
+        </div>
+
+        <!-- ---------------------------
+         CATEGORY COUNT (each subcategory now has 3 inputs: M / F / O)
+         --------------------------- -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Category Count</h6>
 
-        <div class="row mt-2">
-          <div class="col-md-3"><label>Open (OPEN)</label><input type="number" class="form-control cat-open"></div>
-          <div class="col-md-3"><label>Other Backward Class (OBC)</label><input type="number"
-              class="form-control cat-obc"></div>
-          <div class="col-md-3"><label>Scheduled Caste (SC)</label><input type="number" class="form-control cat-sc">
+        <!-- OPEN -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label mb-1">Open (OPEN)</label>
           </div>
-          <div class="col-md-3"><label>Scheduled Tribe (ST)</label><input type="number" class="form-control cat-st">
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control cat-open-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control cat-open-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control cat-open-others" min="0" placeholder="O">
           </div>
         </div>
 
-        <div class="row mt-2">
-          <div class="col-md-3"><label>Nomadic Tribe (NT)</label><input type="number" class="form-control cat-nt"></div>
-          <div class="col-md-3"><label>VJNT (Vimukta Jati Nomadic Tribe)</label><input type="number"
-              class="form-control cat-vjnt"></div>
-          <div class="col-md-3"><label>Economically Weaker Section (EWS)</label><input type="number"
-              class="form-control cat-ews"></div>
+        <!-- OBC -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label mb-1">Other Backward Class (OBC)</label>
+          </div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control cat-obc-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control cat-obc-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control cat-obc-others" min="0" placeholder="O">
+          </div>
         </div>
 
-        <!-- RELIGION COUNT -->
+        <!-- SC -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label mb-1">Scheduled Caste (SC)</label>
+          </div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control cat-sc-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control cat-sc-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control cat-sc-others" min="0" placeholder="O">
+          </div>
+        </div>
+
+        <!-- ST -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label mb-1">Scheduled Tribe (ST)</label>
+          </div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control cat-st-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control cat-st-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control cat-st-others" min="0" placeholder="O">
+          </div>
+        </div>
+
+        <!-- NT / VJNT / EWS -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label mb-1">Nomadic Tribe (NT)</label>
+          </div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control cat-nt-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control cat-nt-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control cat-nt-others" min="0" placeholder="O">
+          </div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label mb-1">VJNT (Vimukta Jati Nomadic Tribe)</label>
+          </div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control cat-vjnt-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control cat-vjnt-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control cat-vjnt-others" min="0" placeholder="O">
+          </div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label mb-1">Economically Weaker Section (EWS)</label>
+          </div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control cat-ews-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control cat-ews-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control cat-ews-others" min="0" placeholder="O">
+          </div>
+        </div>
+
+        <!-- ---------------------------
+         RELIGION COUNT (same pattern)
+         --------------------------- -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Religion Count</h6>
-        <div class="row mt-2">
-          <div class="col-md-3"><label>Hindu</label><input type="number" class="form-control rel-hindu"></div>
-          <div class="col-md-3"><label>Muslim</label><input type="number" class="form-control rel-muslim"></div>
-          <div class="col-md-3"><label>Sikh</label><input type="number" class="form-control rel-sikh"></div>
-          <div class="col-md-3"><label>Christian</label><input type="number" class="form-control rel-christian"></div>
+
+        <!-- Hindu -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Hindu</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control rel-hindu-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control rel-hindu-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control rel-hindu-others" min="0"></div>
         </div>
 
-        <div class="row mt-2">
-          <div class="col-md-3"><label>Jain</label><input type="number" class="form-control rel-jain"></div>
-          <div class="col-md-3"><label>Buddhist</label><input type="number" class="form-control rel-buddhist"></div>
-          <div class="col-md-3"><label>Other Religions</label><input type="number" class="form-control rel-other"></div>
+        <!-- Muslim -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Muslim</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control rel-muslim-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control rel-muslim-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control rel-muslim-others" min="0"></div>
         </div>
 
-        <!-- DISABILITY COUNT -->
+        <!-- Sikh -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Sikh</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number" class="form-control rel-sikh-male"
+              min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control rel-sikh-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control rel-sikh-others" min="0"></div>
+        </div>
+
+        <!-- Christian -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Christian</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control rel-christian-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control rel-christian-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control rel-christian-others" min="0"></div>
+        </div>
+
+        <!-- Jain / Buddhist / Other -->
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Jain</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number" class="form-control rel-jain-male"
+              min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control rel-jain-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control rel-jain-others" min="0"></div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Buddhist</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control rel-buddhist-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control rel-buddhist-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control rel-buddhist-others" min="0"></div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Other Religions</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control rel-other-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control rel-other-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control rel-other-others" min="0"></div>
+        </div>
+
+        <!-- ---------------------------
+         DISABILITY COUNT (same pattern)
+         --------------------------- -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Disability Count</h6>
-        <div class="row mt-2">
-          <div class="col-md-3"><label>No Disability</label><input type="number" class="form-control dis-none"></div>
-          <div class="col-md-3"><label>Low Vision</label><input type="number" class="form-control dis-lowvision"></div>
-          <div class="col-md-3"><label>Blindness</label><input type="number" class="form-control dis-blindness"></div>
-          <div class="col-md-3"><label>Hearing Impaired</label><input type="number" class="form-control dis-hearing">
-          </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">No Disability</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number" class="form-control dis-none-male"
+              min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control dis-none-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control dis-none-others" min="0"></div>
         </div>
 
-        <div class="row mt-2">
-          <div class="col-md-3"><label>Locomotor Disability</label><input type="number"
-              class="form-control dis-locomotor"></div>
-          <div class="col-md-3"><label>Autism</label><input type="number" class="form-control dis-autism"></div>
-          <div class="col-md-3"><label>Other Disabilities</label><input type="number" class="form-control dis-other">
-          </div>
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Low Vision</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control dis-lowvision-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control dis-lowvision-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control dis-lowvision-others" min="0"></div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Blindness</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control dis-blindness-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control dis-blindness-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control dis-blindness-others" min="0"></div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Hearing Impaired</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control dis-hearing-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control dis-hearing-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control dis-hearing-others" min="0"></div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Locomotor Disability</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control dis-locomotor-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control dis-locomotor-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control dis-locomotor-others" min="0"></div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Autism</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control dis-autism-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control dis-autism-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control dis-autism-others" min="0"></div>
+        </div>
+
+        <div class="row mt-2 align-items-end">
+          <div class="col-md-3"><label class="form-label mb-1">Other Disabilities</label></div>
+          <div class="col-md-3"><label class="small">Male</label><input type="number"
+              class="form-control dis-other-male" min="0"></div>
+          <div class="col-md-3"><label class="small">Female</label><input type="number"
+              class="form-control dis-other-female" min="0"></div>
+          <div class="col-md-3"><label class="small">Others</label><input type="number"
+              class="form-control dis-other-others" min="0"></div>
         </div>
 
       </div>
@@ -742,9 +982,14 @@
 
 
   function validateProgramSection(section) {
+    // section is expected to be a jQuery object for the .program-section
+    const programName = section.data("program") || "Program";
+    const parseVal = (el) => {
+      const v = parseInt(el.val && el.val() || el || 0, 10);
+      return Number.isFinite(v) ? v : 0;
+    };
 
-    let programName = section.data("program");
-    let total = parseInt(section.find(".total-students").val()) || 0;
+    const total = parseVal(section.find(".total-students"));
 
     if (!total || total <= 0) {
       return {
@@ -753,40 +998,88 @@
       };
     }
 
-    function sumFields(selector) {
+    // Helper: sum a list of selectors within this section
+    function sumSelectors(selectors) {
       let sum = 0;
-      section.find(selector).each(function () {
-        let val = parseInt($(this).val()) || 0;
-        sum += val;
+      selectors.forEach(sel => {
+        section.find(sel).each(function () {
+          const v = parseInt($(this).val() || 0, 10);
+          sum += (Number.isFinite(v) ? v : 0);
+        });
       });
       return sum;
     }
 
-    // Calculate aggregates
-    let genderSum = sumFields(".gender-male, .gender-female, .gender-others");
-    let categorySum = sumFields(".cat-open, .cat-obc, .cat-sc, .cat-st, .cat-nt, .cat-vjnt, .cat-ews");
-    let religionSum = sumFields(".rel-hindu, .rel-muslim, .rel-sikh, .rel-christian, .rel-jain, .rel-buddhist, .rel-other");
-    let disabilitySum = sumFields(".dis-none, .dis-lowvision, .dis-blindness, .dis-hearing, .dis-locomotor, .dis-autism, .dis-other");
+    // --- TOP-LEVEL GENDER CHECK (existing) ---
+    const topMale = parseVal(section.find(".gender-male"));
+    const topFemale = parseVal(section.find(".gender-female"));
+    const topOthers = parseVal(section.find(".gender-others"));
+    const genderSum = topMale + topFemale + topOthers;
 
-    // Validate each
     if (genderSum !== total) {
       return {
         valid: false,
         message: `${programName}: Gender total (${genderSum}) does not match Total Students (${total}).`
       };
     }
+
+    // --- CATEGORY: compute per-category male/female/other sums and overall category total ---
+    const catKeys = ["open", "obc", "sc", "st", "nt", "vjnt", "ews"];
+    let categorySum = 0;
+    let categoryMaleSum = 0, categoryFemaleSum = 0, categoryOtherSum = 0;
+
+    catKeys.forEach(key => {
+      const m = parseInt(section.find(`.cat-${key}-male`).val() || 0, 10) || 0;
+      const f = parseInt(section.find(`.cat-${key}-female`).val() || 0, 10) || 0;
+      const o = parseInt(section.find(`.cat-${key}-others`).val() || 0, 10) || 0;
+      categoryMaleSum += m;
+      categoryFemaleSum += f;
+      categoryOtherSum += o;
+      categorySum += (m + f + o);
+    });
+
     if (categorySum !== total) {
       return {
         valid: false,
         message: `${programName}: Category total (${categorySum}) does not match Total Students (${total}).`
       };
     }
+
+    // ensure top-level gender equals breakdown across categories
+    if (topMale !== categoryMaleSum || topFemale !== categoryFemaleSum || topOthers !== categoryOtherSum) {
+      return {
+        valid: false,
+        message: `${programName}: Top-level gender counts (M:${topMale}, F:${topFemale}, O:${topOthers}) do not match category breakdown (M:${categoryMaleSum}, F:${categoryFemaleSum}, O:${categoryOtherSum}).`
+      };
+    }
+
+    // --- RELIGION: keys and sums ---
+    const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other"];
+    let religionSum = 0;
+    relKeys.forEach(key => {
+      const m = parseInt(section.find(`.rel-${key}-male`).val() || 0, 10) || 0;
+      const f = parseInt(section.find(`.rel-${key}-female`).val() || 0, 10) || 0;
+      const o = parseInt(section.find(`.rel-${key}-others`).val() || 0, 10) || 0;
+      religionSum += (m + f + o);
+    });
+
     if (religionSum !== total) {
       return {
         valid: false,
         message: `${programName}: Religion total (${religionSum}) does not match Total Students (${total}).`
       };
     }
+
+    // --- DISABILITY: keys and sums ---
+    const disKeys = ["none", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
+    let disabilitySum = 0;
+    disKeys.forEach(key => {
+      const m = parseInt(section.find(`.dis-${key}-male`).val() || 0, 10) || 0;
+      const f = parseInt(section.find(`.dis-${key}-female`).val() || 0, 10) || 0;
+      const o = parseInt(section.find(`.dis-${key}-others`).val() || 0, 10) || 0;
+      disabilitySum += (m + f + o);
+    });
+
     if (disabilitySum !== total) {
       return {
         valid: false,
@@ -794,6 +1087,7 @@
       };
     }
 
+    // All checks passed
     return { valid: true };
   }
 
@@ -922,7 +1216,6 @@
       e.stopPropagation();
     });
 
-
     // toggle collapsible discipline
     $(document).on("click", ".toggle-discipline", function () {
       const container = $(this).closest(".discipline-wrapper").find(".discipline-programs-container");
@@ -978,11 +1271,16 @@
         return;
       }
 
+      // safe integer parser: returns 0 for empty/invalid
+      function toInt(v) {
+        const n = parseInt(v, 10);
+        return Number.isFinite(n) ? n : 0;
+      }
+
       let records = {};
       let failedValidation = null;
 
       $(".program-section").each(function () {
-
         let section = $(this);
 
         // VALIDATE THIS PROGRAM FIRST
@@ -992,47 +1290,56 @@
           return false; // stop loop
         }
 
-        let program = section.data("program");
+        let program = section.data("program") || section.find(".program-title").text().trim() || "program";
 
+        // top-level totals/gender
+        const total_students = toInt(section.find(".total-students").val());
+        const gender = {
+          male: toInt(section.find(".gender-male").val()),
+          female: toInt(section.find(".gender-female").val()),
+          others: toInt(section.find(".gender-others").val())
+        };
+
+        // categories (each with male/female/others)
+        const catKeys = ["open", "obc", "sc", "st", "nt", "vjnt", "ews"];
+        const category = {};
+        catKeys.forEach(key => {
+          category[key] = {
+            male: toInt(section.find(`.cat-${key}-male`).val()),
+            female: toInt(section.find(`.cat-${key}-female`).val()),
+            others: toInt(section.find(`.cat-${key}-others`).val())
+          };
+        });
+
+        // religion
+        const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other"];
+        const religion = {};
+        relKeys.forEach(key => {
+          religion[key] = {
+            male: toInt(section.find(`.rel-${key}-male`).val()),
+            female: toInt(section.find(`.rel-${key}-female`).val()),
+            others: toInt(section.find(`.rel-${key}-others`).val())
+          };
+        });
+
+        // disability
+        const disKeys = ["none", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
+        const disability = {};
+        disKeys.forEach(key => {
+          disability[key] = {
+            male: toInt(section.find(`.dis-${key}-male`).val()),
+            female: toInt(section.find(`.dis-${key}-female`).val()),
+            others: toInt(section.find(`.dis-${key}-others`).val())
+          };
+        });
+
+        // assign
         records[program] = {
-
-          total_students: section.find(".total-students").val(),
-
-          gender: {
-            male: section.find(".gender-male").val(),
-            female: section.find(".gender-female").val(),
-            others: section.find(".gender-others").val(),
-          },
-
-          category: {
-            open: section.find(".cat-open").val(),
-            obc: section.find(".cat-obc").val(),
-            sc: section.find(".cat-sc").val(),
-            st: section.find(".cat-st").val(),
-            nt: section.find(".cat-nt").val(),
-            vjnt: section.find(".cat-vjnt").val(),
-            ews: section.find(".cat-ews").val(),
-          },
-
-          religion: {
-            hindu: section.find(".rel-hindu").val(),
-            muslim: section.find(".rel-muslim").val(),
-            sikh: section.find(".rel-sikh").val(),
-            christian: section.find(".rel-christian").val(),
-            jain: section.find(".rel-jain").val(),
-            buddhist: section.find(".rel-buddhist").val(),
-            other: section.find(".rel-other").val(),
-          },
-
-          disability: {
-            none: section.find(".dis-none").val(),
-            lowvision: section.find(".dis-lowvision").val(),
-            blindness: section.find(".dis-blindness").val(),
-            hearing: section.find(".dis-hearing").val(),
-            locomotor: section.find(".dis-locomotor").val(),
-            autism: section.find(".dis-autism").val(),
-            other: section.find(".dis-other").val(),
-          }
+          total_students: total_students,
+          gender: gender,
+          category: category,
+          religion: religion,
+          disability: disability
         };
       });
 
@@ -1048,6 +1355,7 @@
         records: records
       };
 
+      // send (URLs unchanged as requested)
       if (mode === "add") {
         $.ajax({
           url: "/add_student/",
@@ -1090,6 +1398,7 @@
         });
       }
     });
+
 
 
     $("#logout_btn").on("click", function (e) {
