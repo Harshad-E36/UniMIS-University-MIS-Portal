@@ -321,6 +321,28 @@
       text-align: left !important;
     }
 
+    /* minimal: let program cards fill the available width, flex-based and responsive */
+    .program-content-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      /* small spacing between cards */
+      padding-left: 0;
+      /* safe, scoped */
+      padding-right: 0;
+    }
+
+    .metric-col {
+      flex: 1 1 16%;
+      /* allow cards to grow; target ~6 per row */
+      min-width: 140px;
+      /* prevents cards from collapsing too small */
+      max-width: 22%;
+      /* prevents each card from becoming too wide on large screens */
+      box-sizing: border-box;
+    }
+
+
     /* =========================================================
    MODAL HEADER - MATCH PAGE GRADIENT
    ========================================================= */
@@ -772,12 +794,12 @@
 
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">No Disability</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number" class="form-control dis-none-male"
+          <div class="col-md-3"><label class="small">Male</label><input type="number" class="form-control dis-no_disability-male"
               min="0"></div>
           <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-none-female" min="0"></div>
+              class="form-control dis-no_disability-female" min="0"></div>
           <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-none-others" min="0"></div>
+              class="form-control dis-no_disability-others" min="0"></div>
         </div>
 
         <div class="row mt-2 align-items-end">
@@ -1071,7 +1093,7 @@
     }
 
     // --- DISABILITY: keys and sums ---
-    const disKeys = ["none", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
+    const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
     let disabilitySum = 0;
     disKeys.forEach(key => {
       const m = parseInt(section.find(`.dis-${key}-male`).val() || 0, 10) || 0;
@@ -1093,76 +1115,119 @@
 
 
   function populateEditModal(response) {
-    const data = response.college_data;
+    const data = response.college_data || {};
     const savedRecords = response.records || {};
 
-    $("#modalCollegeName").text(data.College_Name);
-    $("#modalCollegeAddress").text(data.address);
-    $("#academicYear").val(response.academic_year);
+    // header & meta
+    document.getElementById("modalCollegeName").textContent = data.College_Name || "";
+    document.getElementById("modalCollegeAddress").textContent = data.address || "";
+    document.getElementById("academicYear").value = response.academic_year || "";
 
-    $("#programSectionsContainer").empty();
+    // set modal meta for submit handler
+    $("#collegeModal").data("college-code", data.College_Code || "");
+    $("#collegeModal").data("mode", response.mode || "add");
+
+    // clear previous content
+    const container = document.getElementById("programSectionsContainer");
+    container.innerHTML = "";
 
     const programsByDiscipline = data.programs || {};
 
+    // keys (used in template classnames: cat-<key>-male, rel-<key>-female, dis-<key>-others)
+    const catKeys = ["open", "obc", "sc", "st", "nt", "vjnt", "ews"];
+    const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other"];
+    const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
+
+    // small helper to coerce to integer default 0
+    const n = v => {
+      const x = Number(v);
+      return Number.isFinite(x) ? x : 0;
+    };
+
+    // iterate disciplines
     Object.entries(programsByDiscipline).forEach(([discipline, programList]) => {
-
       const discTpl = document.querySelector("#disciplineTemplate");
-      const discClone = discTpl.content.cloneNode(true);
+      const discFrag = discTpl.content.cloneNode(true);
 
-      discClone.querySelector(".discipline-title").innerText = discipline;
+      // set discipline title once
+      const discTitleEl = discFrag.querySelector(".discipline-title");
+      if (discTitleEl) discTitleEl.textContent = discipline;
 
-      const programContainer = discClone.querySelector(".discipline-programs-container");
+      const programContainer = discFrag.querySelector(".discipline-programs-container");
+
+      // build programs fragment to minimize reflows
+      const progBatch = document.createDocumentFragment();
 
       programList.forEach(programName => {
         const progTpl = document.querySelector("#programTemplate");
-        const progClone = progTpl.content.cloneNode(true);
+        const progFrag = progTpl.content.cloneNode(true);
 
-        const section = $(progClone).find(".program-section");
-        section.attr("data-program", programName);
+        // find the program section root inside the cloned fragment
+        const sectionEl = progFrag.querySelector(".program-section");
+        if (sectionEl) sectionEl.setAttribute("data-program", programName);
 
-        progClone.querySelector(".program-title").innerText = programName;
+        const titleEl = progFrag.querySelector(".program-title");
+        if (titleEl) titleEl.textContent = programName;
 
-        const saved = savedRecords[programName];
+        // quickly set total & triplet fields using native selectors (fewer lookups)
+        const saved = savedRecords[programName] || {};
 
-        if (saved) {
-          $(progClone).find(".total-students").val(saved.total_students);
+        // total students
+        const totalEl = progFrag.querySelector(".total-students");
+        if (totalEl) totalEl.value = saved.total_students !== undefined ? saved.total_students : "";
 
-          $(progClone).find(".gender-male").val(saved.gender.male);
-          $(progClone).find(".gender-female").val(saved.gender.female);
-          $(progClone).find(".gender-others").val(saved.gender.others);
+        // gender
+        const g = saved.gender || { male: 0, female: 0, others: 0 };
+        const gm = progFrag.querySelector(".gender-male");
+        const gf = progFrag.querySelector(".gender-female");
+        const go = progFrag.querySelector(".gender-others");
+        if (gm) gm.value = n(g.male);
+        if (gf) gf.value = n(g.female);
+        if (go) go.value = n(g.others);
 
-          $(progClone).find(".cat-open").val(saved.category.open);
-          $(progClone).find(".cat-obc").val(saved.category.obc);
-          $(progClone).find(".cat-sc").val(saved.category.sc);
-          $(progClone).find(".cat-st").val(saved.category.st);
-          $(progClone).find(".cat-nt").val(saved.category.nt);
-          $(progClone).find(".cat-vjnt").val(saved.category.vjnt);
-          $(progClone).find(".cat-ews").val(saved.category.ews);
+        // categories
+        const cat = saved.category || {};
+        catKeys.forEach(key => {
+          const grp = cat[key] || { male: 0, female: 0, others: 0 };
+          const maleEl = progFrag.querySelector(`.cat-${key}-male`);
+          const femaleEl = progFrag.querySelector(`.cat-${key}-female`);
+          const othersEl = progFrag.querySelector(`.cat-${key}-others`);
+          if (maleEl) maleEl.value = n(grp.male);
+          if (femaleEl) femaleEl.value = n(grp.female);
+          if (othersEl) othersEl.value = n(grp.others);
+        });
 
-          $(progClone).find(".rel-hindu").val(saved.religion.hindu);
-          $(progClone).find(".rel-muslim").val(saved.religion.muslim);
-          $(progClone).find(".rel-sikh").val(saved.religion.sikh);
-          $(progClone).find(".rel-christian").val(saved.religion.christian);
-          $(progClone).find(".rel-jain").val(saved.religion.jain);
-          $(progClone).find(".rel-buddhist").val(saved.religion.buddhist);
-          $(progClone).find(".rel-other").val(saved.religion.other);
+        // religion
+        const rel = saved.religion || {};
+        relKeys.forEach(key => {
+          const grp = rel[key] || { male: 0, female: 0, others: 0 };
+          const maleEl = progFrag.querySelector(`.rel-${key}-male`);
+          const femaleEl = progFrag.querySelector(`.rel-${key}-female`);
+          const othersEl = progFrag.querySelector(`.rel-${key}-others`);
+          if (maleEl) maleEl.value = n(grp.male);
+          if (femaleEl) femaleEl.value = n(grp.female);
+          if (othersEl) othersEl.value = n(grp.others);
+        });
 
-          $(progClone).find(".dis-none").val(saved.disability.none);
-          $(progClone).find(".dis-lowvision").val(saved.disability.lowvision);
-          $(progClone).find(".dis-blindness").val(saved.disability.blindness);
-          $(progClone).find(".dis-hearing").val(saved.disability.hearing);
-          $(progClone).find(".dis-locomotor").val(saved.disability.locomotor);
-          $(progClone).find(".dis-autism").val(saved.disability.autism);
-          $(progClone).find(".dis-other").val(saved.disability.other);
-        }
+        // disability
+        const dis = saved.disability || {};
+        disKeys.forEach(key => {
+          const grp = dis[key] || { male: 0, female: 0, others: 0 };
+          const maleEl = progFrag.querySelector(`.dis-${key}-male`);
+          const femaleEl = progFrag.querySelector(`.dis-${key}-female`);
+          const othersEl = progFrag.querySelector(`.dis-${key}-others`);
+          if (maleEl) maleEl.value = n(grp.male);
+          if (femaleEl) femaleEl.value = n(grp.female);
+          if (othersEl) othersEl.value = n(grp.others);
+        });
 
-        programContainer.appendChild(progClone);
+        progBatch.appendChild(progFrag);
       });
 
-      $("#programSectionsContainer").append(discClone);
+      // append all programs for this discipline and then the discipline block
+      programContainer.appendChild(progBatch);
+      container.appendChild(discFrag);
     });
-
-    $("#collegeModal").data("college-code", data.College_Code);
   }
 
 
@@ -1323,7 +1388,7 @@
         });
 
         // disability
-        const disKeys = ["none", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
+        const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
         const disability = {};
         disKeys.forEach(key => {
           disability[key] = {
@@ -1354,6 +1419,7 @@
         academic_year: academicYear,
         records: records
       };
+      console.log(records)
 
       // send (URLs unchanged as requested)
       if (mode === "add") {
@@ -1519,7 +1585,7 @@
     other: "Other Religions",
 
     // Disability
-    none: "No Disability",
+    no_disability: "No Disability",
     lowvision: "Low Vision",
     blindness: "Blindness",
     hearing: "Hearing Impaired",
@@ -1528,7 +1594,7 @@
     other_disability: "Other Disabilities"
   };
 
-  //  BUILD FULL PROGRAM ACCORDION USING TEMPLATES
+  // BUILD FULL PROGRAM ACCORDION USING TEMPLATES
   function formatPrograms(row) {
     const wrapper = document.createElement("div");
     wrapper.className = "dt-child-scroll";
@@ -1537,7 +1603,7 @@
     container.className = "container-fluid p-0";
 
     const inner = document.createElement("div");
-    inner.className = "px-3 py-3";
+    inner.className = "py-3";
 
     // Main accordion container
     const accordion = document.createElement("div");
@@ -1593,9 +1659,9 @@
         // ---- METRICS ----
         const metricGroups = {
           "Gender": { color: "bg-primary", data: p.gender },
-          "Category": { color: "bg-success", data: p.category },
-          "Religion": { color: "bg-warning text-dark", data: p.religion },
-          "Disability": { color: "bg-danger", data: p.disability }
+          "Category (M/F/O)": { color: "bg-success", data: p.category },
+          "Religion (M/F/O)": { color: "bg-warning text-dark", data: p.religion },
+          "Disability (M/F/O)": { color: "bg-danger", data: p.disability }
         };
 
         Object.entries(metricGroups).forEach(([title, meta]) => {
@@ -1608,12 +1674,27 @@
 
           const tbody = clone.querySelector(".metric-body");
 
+          // NEW: handle nested {male,female,others} objects
           Object.entries(meta.data).forEach(([label, value]) => {
             const tr = document.createElement("tr");
+
+            let displayValue;
+
+            // if it's an object with male/female/others, format as "M/F/O"
+            if (value && typeof value === "object" && ("male" in value || "female" in value || "others" in value)) {
+              const m = Number.isFinite(Number(value.male)) ? Number(value.male) : 0;
+              const f = Number.isFinite(Number(value.female)) ? Number(value.female) : 0;
+              const o = Number.isFinite(Number(value.others)) ? Number(value.others) : 0;
+              displayValue = `${m}/${f}/${o}`;
+            } else {
+              // fallback: plain number or string (backwards compatibility)
+              displayValue = (value === null || value === undefined || value === "") ? "-" : value;
+            }
+
             tr.innerHTML = `
-                        <td>${LABEL_MAP[label] || label}</td>
-                        <td>${value}</td>
-                    `;
+                    <td>${LABEL_MAP[label] || label}</td>
+                    <td>${displayValue}</td>
+                `;
             tbody.appendChild(tr);
           });
 
@@ -1630,6 +1711,7 @@
 
     return wrapper.outerHTML;
   }
+
 
   //  EXPAND / COLLAPSE CHILD ROWS
   $("#records_table tbody").on("click", ".toggle-programs", function () {
@@ -1649,32 +1731,55 @@
 
 
   // EDIT MODE - When user clicks on "Edit"
-  $(document).on("click", ".btn-edit", function () {
-    const collegeCode = $(this).data("college");
-    const academicYear = $(this).data("year");
+  $(document).on("click", ".btn-edit", function (e) {
+    e.preventDefault();
+
+    const college = $(this).data("college");
+    const year = $(this).data("year") || $("#globalAcademicYear").val();
+
+    if (!college) {
+      showNotification("Missing college code", "danger");
+      return;
+    }
+
+    const $btn = $(this);
+    $btn.prop("disabled", true).addClass("disabled");
 
     $.ajax({
+      // 👇 revert to the original endpoint with hyphens
       url: "/get-college-data/",
       type: "GET",
       data: {
-        college_code: collegeCode,
-        academic_year: academicYear,
+        college_code: college,
+        academic_year: year,
         mode: "edit"
       },
       success: function (response) {
-        if (response.status === 200 && response.mode === "edit") {
+        $btn.prop("disabled", false).removeClass("disabled");
+
+        if (response && response.status === 200) {
           populateEditModal(response);
-          $("#collegeModal").modal("show");
+
           $("#collegeModal").data("mode", "edit");
+          $("#collegeModal").data("college-code", response.college_data?.College_Code || college);
+
+          $("#collegeModal").modal("show");
         } else {
-          showNotification(response.message || "Error loading record", "danger");
+          showNotification(response?.message || "Unable to load records", "danger");
         }
       },
-      error: function () {
-        showNotification("Server error", "danger");
+      error: function (xhr) {
+        $btn.prop("disabled", false).removeClass("disabled");
+        let msg = "Server error";
+        try {
+          const json = JSON.parse(xhr.responseText);
+          if (json && json.message) msg = json.message;
+        } catch (e) { }
+        showNotification(msg, "danger");
       }
     });
   });
+
 
 
   // DELETE RECORD HANDLER 
