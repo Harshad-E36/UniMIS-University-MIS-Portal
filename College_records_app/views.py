@@ -652,31 +652,116 @@ def add_student_aggregate(request):
                 others = _to_int(gender.get("others") or gender.get("other"), 0)
 
                 category = data.get("category", {}) or {}
-                total_open = _to_int(category.get("open") or category.get("general"), 0)
-                total_obc = _to_int(category.get("obc"), 0)
-                total_sc = _to_int(category.get("sc"), 0)
-                total_st = _to_int(category.get("st"), 0)
-                total_nt = _to_int(category.get("nt"), 0)
-                total_vjnt = _to_int(category.get("vjnt"), 0)
-                total_ews = _to_int(category.get("ews"), 0)
+                open = category.get("open", {}) or {}
+                open_male = _to_int(open.get("male"), 0)
+                open_female = _to_int(open.get("female"), 0)
+                open_others = _to_int(open.get("others") or open.get("other"), 0)
+
+                obc = category.get("obc", {}) or {}
+                obc_male = _to_int(obc.get("male"), 0)
+                obc_female = _to_int(obc.get("female"), 0)
+                obc_others = _to_int(obc.get("others") or obc.get("other"), 0)
+                
+                sc = category.get("sc", {}) or {}
+                sc_male = _to_int(sc.get("male"), 0)
+                sc_female = _to_int(sc.get("female"), 0)
+                sc_others = _to_int(sc.get("others") or sc.get("other"), 0)
+
+                st = category.get("st", {}) or {}
+                st_male = _to_int(st.get("male"), 0)
+                st_female = _to_int(st.get("female"), 0)
+                st_others = _to_int(st.get("others") or st.get("other"), 0) 
+
+                nt = category.get("nt", {}) or {}
+                nt_male = _to_int(nt.get("male"), 0)
+                nt_female = _to_int(nt.get("female"), 0)
+                nt_others = _to_int(nt.get("others") or nt.get("other"), 0)
+
+                vjnt = category.get("vjnt", {}) or {}
+                vjnt_male = _to_int(vjnt.get("male"), 0)
+                vjnt_female = _to_int(vjnt.get("female"), 0)
+                vjnt_others = _to_int(vjnt.get("others") or vjnt.get("other"), 0)
+
+                ews = category.get("ews", {}) or {}
+                ews_male = _to_int(ews.get("male"), 0)
+                ews_female = _to_int(ews.get("female"), 0)
+                ews_others = _to_int(ews.get("others") or ews.get("other"), 0)
+
 
                 religion = data.get("religion", {}) or {}
-                total_hindu = _to_int(religion.get("hindu"), 0)
-                total_muslim = _to_int(religion.get("muslim"), 0)
-                total_sikh = _to_int(religion.get("sikh"), 0)
-                total_christian = _to_int(religion.get("christian"), 0)
-                total_jain = _to_int(religion.get("jain"), 0)
-                total_buddhist = _to_int(religion.get("buddhist"), 0)
-                total_other_religion = _to_int(religion.get("other"), 0)
+
+                hindu = religion.get("hindu", {}) or {}
+                hindu_male = _to_int(hindu.get("male"), 0)
+                hindu_female = _to_int(hindu.get("female"), 0)
+                hindu_others = _to_int(hindu.get("others") or hindu.get("other"), 0)
+
+                muslim = religion.get("muslim", {}) or {}
+                muslim_male = _to_int(muslim.get("male"), 0)
+                muslim_female = _to_int(muslim.get("female"), 0)
+                muslim_others = _to_int(muslim.get("others") or muslim.get("other"), 0)
+
+                sikh = religion.get("sikh", {}) or {}
+                sikh_male = _to_int(sikh.get("male"), 0)
+                sikh_female = _to_int(sikh.get("female"), 0)
+                sikh_others = _to_int(sikh.get("others") or sikh.get("other"), 0)
+
+                christian = religion.get("christian", {}) or {}
+                christian_male = _to_int(christian.get("male"), 0)
+                christian_female = _to_int(christian.get("female"), 0)
+                christian_others = _to_int(christian.get("others") or christian.get("other"), 0)
+
+                jain = religion.get("jain", {}) or {}
+                jain_male = _to_int(jain.get("male"), 0)
+                jain_female = _to_int(jain.get("female"), 0)
+                jain_others = _to_int(jain.get("others") or jain.get("other"), 0)
+
+                buddhist = religion.get("buddhist", {}) or {}
+                buddhist_male = _to_int(buddhist.get("male"), 0)
+                buddhist_female = _to_int(buddhist.get("female"), 0)
+                buddhist_others = _to_int(buddhist.get("others") or buddhist.get("other"), 0)
+
+                other_religion = religion.get("other_religion", {}) or {}
+                other_religion_male = _to_int(other_religion.get("male"), 0)
+                other_religion_female = _to_int(other_religion.get("female"), 0)
+                other_religion_others = _to_int(other_religion.get("others") or other_religion.get("other"), 0)
+
 
                 dis = data.get("disability", {}) or {}
-                total_no_disability = _to_int(dis.get("none") or dis.get("no_disability"), 0)
-                total_low_vision = _to_int(dis.get("lowvision"), 0)
-                total_blindness = _to_int(dis.get("blindness"), 0)
-                total_hearing = _to_int(dis.get("hearing"), 0)
-                total_locomotor = _to_int(dis.get("locomotor"), 0)
-                total_autism = _to_int(dis.get("autism"), 0)
-                total_other_disability = _to_int(dis.get("other"), 0)
+                no_disability = dis.get("no_disability", {}) or {}
+                no_disability_male = _to_int(no_disability.get("male"), 0)
+                no_disability_female = _to_int(no_disability.get("female"), 0)
+                no_disability_others = _to_int(no_disability.get("others") or no_disability.get("other"), 0)
+
+                low_vision = dis.get("lowvision", {}) or {}
+                low_vision_male = _to_int(low_vision.get("male"), 0)
+                low_vision_female = _to_int(low_vision.get("female"), 0)
+                low_vision_others = _to_int(low_vision.get("others") or low_vision.get("other"), 0)
+
+                blindness = dis.get("blindness", {}) or {}
+                blindness_male = _to_int(blindness.get("male"), 0)
+                blindness_female = _to_int(blindness.get("female"), 0)
+                blindness_others = _to_int(blindness.get("others") or blindness.get("other"), 0)
+
+                hearing = dis.get("hearing", {}) or {}
+                hearing_male = _to_int(hearing.get("male"), 0)
+                hearing_female = _to_int(hearing.get("female"), 0)
+                hearing_others = _to_int(hearing.get("others") or hearing.get("other"), 0)
+
+                locomotor = dis.get("locomotor", {}) or {}
+                locomotor_male = _to_int(locomotor.get("male"), 0)
+                locomotor_female = _to_int(locomotor.get("female"),0)
+                locomotor_other = _to_int(locomotor.get("others") or locomotor.get("other"), 0)
+
+                autism = dis.get("autism", {}) or {}
+                autism_male = _to_int(autism.get("male"), 0)
+                autism_female = _to_int(autism.get("female"),0)
+                autism_other = _to_int(autism.get("others") or autism.get("other"), 0)
+
+                other_disability = dis.get("other_disability", {}) or {}
+                other_disability_male = _to_int(other_disability.get("male"), 0)
+                other_disability_female = _to_int(other_disability.get("female"), 0)
+                other_disability_other = _to_int(other_disability.get("others") or other_disability.get("other"), 0)
+
 
                 defaults = {
                     "total_students": total_students,
@@ -684,29 +769,89 @@ def add_student_aggregate(request):
                     "total_female": female,
                     "total_others": others,
 
-                    "total_open": total_open,
-                    "total_obc": total_obc,
-                    "total_sc": total_sc,
-                    "total_st": total_st,
-                    "total_nt": total_nt,
-                    "total_vjnt": total_vjnt,
-                    "total_ews": total_ews,
+                    "open_male": open_male,
+                    "open_female": open_female,
+                    "open_others": open_others,
 
-                    "total_hindu": total_hindu,
-                    "total_muslim": total_muslim,
-                    "total_sikh": total_sikh,
-                    "total_christian": total_christian,
-                    "total_jain": total_jain,
-                    "total_buddhist": total_buddhist,
-                    "total_other_religion": total_other_religion,
+                    "obc_male": obc_male,
+                    "obc_female": obc_female,
+                    "obc_others": obc_others,
 
-                    "total_no_disability": total_no_disability,
-                    "total_low_vision": total_low_vision,
-                    "total_blindness": total_blindness,
-                    "total_hearing": total_hearing,
-                    "total_locomotor": total_locomotor,
-                    "total_autism": total_autism,
-                    "total_other_disability": total_other_disability,
+                    "sc_male": sc_male,
+                    "sc_female": sc_female,
+                    "sc_others": sc_others,
+
+                    "st_male": st_male,
+                    "st_female": st_female,
+                    "st_others": st_others,
+
+                    "nt_male": nt_male,
+                    "nt_female":nt_female,
+                    "nt_others": nt_others,
+
+                    "vjnt_male": vjnt_male,
+                    "vjnt_female": vjnt_female,
+                    "vjnt_others": vjnt_others,
+
+                    "ews_male": ews_male,
+                    "ews_female": ews_female,
+                    "ews_others": ews_others,
+
+                    "hindu_male": hindu_male,
+                    "hindu_female": hindu_female,
+                    "hindu_others": hindu_others,
+
+                    "muslim_male": muslim_male,
+                    "muslim_female": muslim_female,
+                    "muslim_others": muslim_others,
+                    
+                    "sikh_male": sikh_male,
+                    "sikh_female": sikh_female,
+                    "sikh_others": sikh_others,
+
+                    "christian_male": christian_male,
+                    "christian_female": christian_female,
+                    "christian_others": christian_others,
+
+                    "jain_male": jain_male,
+                    "jain_female": jain_female, 
+                    "jain_others": jain_others,
+
+                    "buddhist_male": buddhist_male,
+                    "buddhist_female": buddhist_female,
+                    "buddhist_others": buddhist_others,
+
+                    "other_religion_male": other_religion_male,
+                    "other_religion_female": other_religion_female,
+                    "other_religion_others": other_religion_others,
+
+                    "no_disability_male": no_disability_male,
+                    "no_disability_female": no_disability_female,
+                    "no_disability_others": no_disability_others,
+
+                    "low_vision_male": low_vision_male,
+                    "low_vision_female": low_vision_female,
+                    "low_vision_others": low_vision_others,
+
+                    "blindness_male": blindness_male,
+                    "blindness_female": blindness_female,
+                    "blindness_others": blindness_others,
+
+                    "hearing_male": hearing_male,
+                    "hearing_female": hearing_female,
+                    "hearing_others": hearing_others,
+
+                    "locomotor_male": locomotor_male,
+                    "locomotor_female": locomotor_female,
+                    "locomotor_others": locomotor_other,
+
+                    "autism_male": autism_male,
+                    "autism_female": autism_female,
+                    "autism_others": autism_other,
+
+                    "other_disability_male": other_disability_male,
+                    "other_disability_female": other_disability_female,
+                    "other_disability_others": other_disability_other,
                 }
 
                 try:
@@ -809,31 +954,116 @@ def update_student_aggregate(request):
                 others = _to_int(gender.get("others") or gender.get("other"), 0)
 
                 category = data.get("category", {}) or {}
-                total_open = _to_int(category.get("open") or category.get("general"), 0)
-                total_obc = _to_int(category.get("obc"), 0)
-                total_sc = _to_int(category.get("sc"), 0)
-                total_st = _to_int(category.get("st"), 0)
-                total_nt = _to_int(category.get("nt"), 0)
-                total_vjnt = _to_int(category.get("vjnt"), 0)
-                total_ews = _to_int(category.get("ews"), 0)
+                open = category.get("open", {}) or {}
+                open_male = _to_int(open.get("male"), 0)
+                open_female = _to_int(open.get("female"), 0)
+                open_others = _to_int(open.get("others") or open.get("other"), 0)
+
+                obc = category.get("obc", {}) or {}
+                obc_male = _to_int(obc.get("male"), 0)
+                obc_female = _to_int(obc.get("female"), 0)
+                obc_others = _to_int(obc.get("others") or obc.get("other"), 0)
+                
+                sc = category.get("sc", {}) or {}
+                sc_male = _to_int(sc.get("male"), 0)
+                sc_female = _to_int(sc.get("female"), 0)
+                sc_others = _to_int(sc.get("others") or sc.get("other"), 0)
+
+                st = category.get("st", {}) or {}
+                st_male = _to_int(st.get("male"), 0)
+                st_female = _to_int(st.get("female"), 0)
+                st_others = _to_int(st.get("others") or st.get("other"), 0) 
+
+                nt = category.get("nt", {}) or {}
+                nt_male = _to_int(nt.get("male"), 0)
+                nt_female = _to_int(nt.get("female"), 0)
+                nt_others = _to_int(nt.get("others") or nt.get("other"), 0)
+
+                vjnt = category.get("vjnt", {}) or {}
+                vjnt_male = _to_int(vjnt.get("male"), 0)
+                vjnt_female = _to_int(vjnt.get("female"), 0)
+                vjnt_others = _to_int(vjnt.get("others") or vjnt.get("other"), 0)
+
+                ews = category.get("ews", {}) or {}
+                ews_male = _to_int(ews.get("male"), 0)
+                ews_female = _to_int(ews.get("female"), 0)
+                ews_others = _to_int(ews.get("others") or ews.get("other"), 0)
+
 
                 religion = data.get("religion", {}) or {}
-                total_hindu = _to_int(religion.get("hindu"), 0)
-                total_muslim = _to_int(religion.get("muslim"), 0)
-                total_sikh = _to_int(religion.get("sikh"), 0)
-                total_christian = _to_int(religion.get("christian"), 0)
-                total_jain = _to_int(religion.get("jain"), 0)
-                total_buddhist = _to_int(religion.get("buddhist"), 0)
-                total_other_religion = _to_int(religion.get("other"), 0)
+
+                hindu = religion.get("hindu", {}) or {}
+                hindu_male = _to_int(hindu.get("male"), 0)
+                hindu_female = _to_int(hindu.get("female"), 0)
+                hindu_others = _to_int(hindu.get("others") or hindu.get("other"), 0)
+
+                muslim = religion.get("muslim", {}) or {}
+                muslim_male = _to_int(muslim.get("male"), 0)
+                muslim_female = _to_int(muslim.get("female"), 0)
+                muslim_others = _to_int(muslim.get("others") or muslim.get("other"), 0)
+
+                sikh = religion.get("sikh", {}) or {}
+                sikh_male = _to_int(sikh.get("male"), 0)
+                sikh_female = _to_int(sikh.get("female"), 0)
+                sikh_others = _to_int(sikh.get("others") or sikh.get("other"), 0)
+
+                christian = religion.get("christian", {}) or {}
+                christian_male = _to_int(christian.get("male"), 0)
+                christian_female = _to_int(christian.get("female"), 0)
+                christian_others = _to_int(christian.get("others") or christian.get("other"), 0)
+
+                jain = religion.get("jain", {}) or {}
+                jain_male = _to_int(jain.get("male"), 0)
+                jain_female = _to_int(jain.get("female"), 0)
+                jain_others = _to_int(jain.get("others") or jain.get("other"), 0)
+
+                buddhist = religion.get("buddhist", {}) or {}
+                buddhist_male = _to_int(buddhist.get("male"), 0)
+                buddhist_female = _to_int(buddhist.get("female"), 0)
+                buddhist_others = _to_int(buddhist.get("others") or buddhist.get("other"), 0)
+
+                other_religion = religion.get("other_religion", {}) or {}
+                other_religion_male = _to_int(other_religion.get("male"), 0)
+                other_religion_female = _to_int(other_religion.get("female"), 0)
+                other_religion_others = _to_int(other_religion.get("others") or other_religion.get("other"), 0)
+
 
                 dis = data.get("disability", {}) or {}
-                total_no_disability = _to_int(dis.get("none") or dis.get("no_disability"), 0)
-                total_low_vision = _to_int(dis.get("lowvision"), 0)
-                total_blindness = _to_int(dis.get("blindness"), 0)
-                total_hearing = _to_int(dis.get("hearing"), 0)
-                total_locomotor = _to_int(dis.get("locomotor"), 0)
-                total_autism = _to_int(dis.get("autism"), 0)
-                total_other_disability = _to_int(dis.get("other"), 0)
+                no_disability = dis.get("no_disability", {}) or {}
+                no_disability_male = _to_int(no_disability.get("male"), 0)
+                no_disability_female = _to_int(no_disability.get("female"), 0)
+                no_disability_others = _to_int(no_disability.get("others") or no_disability.get("other"), 0)
+
+                low_vision = dis.get("lowvision", {}) or {}
+                low_vision_male = _to_int(low_vision.get("male"), 0)
+                low_vision_female = _to_int(low_vision.get("female"), 0)
+                low_vision_others = _to_int(low_vision.get("others") or low_vision.get("other"), 0)
+
+                blindness = dis.get("blindness", {}) or {}
+                blindness_male = _to_int(blindness.get("male"), 0)
+                blindness_female = _to_int(blindness.get("female"), 0)
+                blindness_others = _to_int(blindness.get("others") or blindness.get("other"), 0)
+
+                hearing = dis.get("hearing", {}) or {}
+                hearing_male = _to_int(hearing.get("male"), 0)
+                hearing_female = _to_int(hearing.get("female"), 0)
+                hearing_others = _to_int(hearing.get("others") or hearing.get("other"), 0)
+
+                locomotor = dis.get("locomotor", {}) or {}
+                locomotor_male = _to_int(locomotor.get("male"), 0)
+                locomotor_female = _to_int(locomotor.get("female"),0)
+                locomotor_others = _to_int(locomotor.get("others") or locomotor.get("other"), 0)
+
+                autism = dis.get("autism", {}) or {}
+                autism_male = _to_int(autism.get("male"), 0)
+                autism_female = _to_int(autism.get("female"),0)
+                autism_others = _to_int(autism.get("others") or autism.get("other"), 0)
+
+                other_disability = dis.get("other_disability", {}) or {}
+                other_disability_male = _to_int(other_disability.get("male"), 0)
+                other_disability_female = _to_int(other_disability.get("female"), 0)
+                other_disability_others = _to_int(other_disability.get("others") or other_disability.get("other"), 0)
+
 
                 try:
                     client_ip = get_client_ip(request)
@@ -853,29 +1083,92 @@ def update_student_aggregate(request):
                         existing.total_female = female
                         existing.total_others = others
 
-                        existing.total_open = total_open
-                        existing.total_obc = total_obc
-                        existing.total_sc = total_sc
-                        existing.total_st = total_st
-                        existing.total_nt = total_nt
-                        existing.total_vjnt = total_vjnt
-                        existing.total_ews = total_ews
+                        existing.open_male = open_male
+                        existing.open_female = open_female
+                        existing.open_others = open_others
 
-                        existing.total_hindu = total_hindu
-                        existing.total_muslim = total_muslim
-                        existing.total_sikh = total_sikh
-                        existing.total_christian = total_christian
-                        existing.total_jain = total_jain
-                        existing.total_buddhist = total_buddhist
-                        existing.total_other_religion = total_other_religion
+                        existing.obc_male = obc_male
+                        existing.obc_female = obc_female
+                        existing.obc_others = obc_others
 
-                        existing.total_no_disability = total_no_disability
-                        existing.total_low_vision = total_low_vision
-                        existing.total_blindness = total_blindness
-                        existing.total_hearing = total_hearing
-                        existing.total_locomotor = total_locomotor
-                        existing.total_autism = total_autism
-                        existing.total_other_disability = total_other_disability
+                        existing.sc_male = sc_male
+                        existing.sc_female = sc_female
+                        existing.sc_others = sc_others
+
+                        existing.st_male = st_male
+                        existing.st_female = st_female
+                        existing.st_others = st_others
+
+                        existing.nt_male = nt_male
+                        existing.nt_female = nt_female
+                        existing.nt_others = nt_others
+
+                        existing.vjnt_male = vjnt_male
+                        existing.vjnt_female = vjnt_female
+                        existing.vjnt_others = vjnt_others
+
+                        existing.ews_male = ews_male
+                        existing.ews_female = ews_female
+                        existing.ews_others = ews_others
+
+                        
+                        existing.hindu_male = hindu_male
+                        existing.hindu_female = hindu_female
+                        existing.hindu_others = hindu_others
+
+                        existing.muslim_male = muslim_male
+                        existing.muslim_female = muslim_female
+                        existing.muslim_others = muslim_others
+
+                        existing.sikh_male = sikh_male
+                        existing.sikh_female = sikh_female
+                        existing.sikh_others = sikh_others
+
+                        existing.christian_male = christian_male
+                        existing.christian_female = christian_female
+                        existing.christian_others = christian_others
+
+                        existing.jain_male = jain_male
+                        existing.jain_female = jain_female
+                        existing.jain_others = jain_others
+
+                        existing.buddhist_male = buddhist_male
+                        existing.buddhist_female = buddhist_female
+                        existing.buddhist_others = buddhist_others
+
+                        existing.other_religion_male = other_religion_male
+                        existing.other_religion_female = other_religion_female
+                        existing.other_religion_others = other_religion_others
+
+
+                        existing.no_disability_male = no_disability_male
+                        existing.no_disability_female = no_disability_female
+                        existing.no_disability_others = no_disability_others
+
+                        existing.low_vision_male = low_vision_male
+                        existing.low_vision_female = low_vision_female
+                        existing.low_vision_others = low_vision_others
+
+                        existing.blindness_male = blindness_male
+                        existing.blindness_female = blindness_female
+                        existing.blindness_others = blindness_others
+
+                        existing.hearing_male = hearing_male
+                        existing.hearing_female = hearing_female
+                        existing.hearing_others = hearing_others
+
+                        existing.locomotor_male = locomotor_male
+                        existing.locomotor_female = locomotor_female
+                        existing.locomotor_others = locomotor_others
+
+                        existing.autism_male = autism_male
+                        existing.autism_female = autism_female
+                        existing.autism_others = autism_others
+
+                        existing.other_disability_male = other_disability_male
+                        existing.other_disability_female = other_disability_female
+                        existing.other_disability_others = other_disability_others
+
 
                         existing.updated_by = client_ip
                         existing.save()
@@ -893,27 +1186,91 @@ def update_student_aggregate(request):
                             total_male=male,
                             total_female=female,
                             total_others=others,
-                            total_open=total_open,
-                            total_obc=total_obc,
-                            total_sc=total_sc,
-                            total_st=total_st,
-                            total_nt=total_nt,
-                            total_vjnt=total_vjnt,
-                            total_ews=total_ews,
-                            total_hindu=total_hindu,
-                            total_muslim=total_muslim,
-                            total_sikh=total_sikh,
-                            total_christian=total_christian,
-                            total_jain=total_jain,
-                            total_buddhist=total_buddhist,
-                            total_other_religion=total_other_religion,
-                            total_no_disability=total_no_disability,
-                            total_low_vision=total_low_vision,
-                            total_blindness=total_blindness,
-                            total_hearing=total_hearing,
-                            total_locomotor=total_locomotor,
-                            total_autism=total_autism,
-                            total_other_disability=total_other_disability,
+                            open_male = open_male,
+                            open_female = open_female,
+                            open_others = open_others,
+
+                            obc_male = obc_male,
+                            obc_female = obc_female,
+                            obc_others = obc_others,
+
+                            sc_male = sc_male,
+                            sc_female = sc_female,
+                            sc_others = sc_others,
+
+                            st_male = st_male,
+                            st_female = st_female,
+                            st_others = st_others,
+
+                            nt_male = nt_male,
+                            nt_female = nt_female,
+                            nt_others = nt_others,
+
+                            vjnt_male = vjnt_male,
+                            vjnt_female = vjnt_female,
+                            vjnt_others = vjnt_others,
+
+                            ews_male = ews_male,
+                            ews_female = ews_female,
+                            ews_others = ews_others,
+
+                            hindu_male = hindu_male,
+                            hindu_female = hindu_female,
+                            hindu_others = hindu_others,
+
+                            muslim_male = muslim_male,
+                            muslim_female = muslim_female,
+                            muslim_others = muslim_others,
+
+                            sikh_male = sikh_male,
+                            sikh_female = sikh_female,
+                            sikh_others = sikh_others,
+
+                            christian_male = christian_male,
+                            christian_female = christian_female,
+                            christian_others = christian_others,
+
+                            jain_male = jain_male,
+                            jain_female = jain_female,
+                            jain_others = jain_others,
+
+                            buddhist_male = buddhist_male,
+                            buddhist_female = buddhist_female,
+                            buddhist_others = buddhist_others,
+
+                            other_religion_male = other_religion_male,
+                            other_religion_female = other_religion_female,
+                            other_religion_others = other_religion_others,
+
+                            no_disability_male = no_disability_male,
+                            no_disability_female = no_disability_female,
+                            no_disability_others = no_disability_others,
+
+                            low_vision_male = low_vision_male,
+                            low_vision_female = low_vision_female,
+                            low_vision_others = low_vision_others,
+
+                            blindness_male = blindness_male,
+                            blindness_female = blindness_female,
+                            blindness_others = blindness_others,
+
+                            hearing_male = hearing_male,
+                            hearing_female = hearing_female,
+                            hearing_others = hearing_others,
+
+                            locomotor_male = locomotor_male,
+                            locomotor_female = locomotor_female,
+                            locomotor_others = locomotor_others,
+
+                            autism_male = autism_male,
+                            autism_female = autism_female,
+                            autism_others = autism_others,
+
+                            other_disability_male = other_disability_male,
+                            other_disability_female = other_disability_female,
+                            other_disability_others = other_disability_others,
+
+
                         )
                         created.append({"program": program_name, "id": obj.pk, "created": True})
 
@@ -1019,32 +1376,118 @@ def get_student_records(request):
                     "others": pc.total_others or 0,
                 },
                 "category": {
-                    "open": pc.total_open or 0,
-                    "obc": pc.total_obc or 0,
-                    "sc": pc.total_sc or 0,
-                    "st": pc.total_st or 0,
-                    "nt": pc.total_nt or 0,
-                    "vjnt": pc.total_vjnt or 0,
-                    "ews": pc.total_ews or 0,
+                    "open": {
+                        "male": pc.open_male or 0,
+                        "female": pc.open_female or 0,
+                        "others": pc.open_others or 0,
+                    },
+                    "obc": {
+                        "male": pc.obc_male or 0,
+                        "female": pc.obc_female or 0,
+                        "others": pc.obc_others or 0,
+                    },
+                    "sc": {
+                        "male": pc.sc_male or 0,
+                        "female": pc.sc_female or 0,
+                        "others": pc.sc_others or 0,
+                    },
+                    "st": {
+                        "male": pc.st_male or 0,
+                        "female": pc.st_female or 0,
+                        "others": pc.st_others or 0,
+                    },
+                    "nt": {
+                        "male": pc.nt_male or 0,
+                        "female": pc.nt_female or 0,
+                        "others": pc.nt_others or 0,
+                    },
+                    "vjnt": {
+                        "male": pc.vjnt_male or 0,
+                        "female": pc.vjnt_female or 0,
+                        "others": pc.vjnt_others or 0,
+                    },
+                    "ews": {
+                        "male": pc.ews_male or 0,
+                        "female": pc.ews_female or 0,
+                        "others": pc.ews_others or 0,
+                    },
                 },
+
                 "religion": {
-                    "hindu": pc.total_hindu or 0,
-                    "muslim": pc.total_muslim or 0,
-                    "sikh": pc.total_sikh or 0,
-                    "christian": pc.total_christian or 0,
-                    "jain": pc.total_jain or 0,
-                    "buddhist": pc.total_buddhist or 0,
-                    "other": pc.total_other_religion or 0,
+                    "hindu": {
+                        "male": pc.hindu_male or 0,
+                        "female": pc.hindu_female or 0,
+                        "others": pc.hindu_others or 0,
+                    },
+                    "muslim": {
+                        "male": pc.muslim_male or 0,
+                        "female": pc.muslim_female or 0,
+                        "others": pc.muslim_others or 0,
+                    },
+                    "sikh": {
+                        "male": pc.sikh_male or 0,
+                        "female": pc.sikh_female or 0,
+                        "others": pc.sikh_others or 0,
+                    },
+                    "christian": {
+                        "male": pc.christian_male or 0,
+                        "female": pc.christian_female or 0,
+                        "others": pc.christian_others or 0,
+                    },
+                    "jain": {
+                        "male": pc.jain_male or 0,
+                        "female": pc.jain_female or 0,
+                        "others": pc.jain_others or 0,
+                    },
+                    "buddhist": {
+                        "male": pc.buddhist_male or 0,
+                        "female": pc.buddhist_female or 0,
+                        "others": pc.buddhist_others or 0,
+                    },
+                    "other": {
+                        "male": pc.other_religion_male or 0,
+                        "female": pc.other_religion_female or 0,
+                        "others": pc.other_religion_others or 0,
+                    },
                 },
                 "disability": {
-                    "none": pc.total_no_disability or 0,
-                    "lowvision": pc.total_low_vision or 0,
-                    "blindness": pc.total_blindness or 0,
-                    "hearing": pc.total_hearing or 0,
-                    "locomotor": pc.total_locomotor or 0,
-                    "autism": pc.total_autism or 0,
-                    "other": pc.total_other_disability or 0,
+                    "none": {
+                        "male": pc.no_disability_male or 0,
+                        "female": pc.no_disability_female or 0,
+                        "others": pc.no_disability_others or 0,
+                    },
+                    "lowvision": {
+                        "male": pc.low_vision_male or 0,
+                        "female": pc.low_vision_female or 0,
+                        "others": pc.low_vision_others or 0,
+                    },
+                    "blindness": {
+                        "male": pc.blindness_male or 0,
+                        "female": pc.blindness_female or 0,
+                        "others": pc.blindness_others or 0,
+                    },
+                    "hearing": {
+                        "male": pc.hearing_male or 0,
+                        "female": pc.hearing_female or 0,
+                        "others": pc.hearing_others or 0,
+                    },
+                    "locomotor": {
+                        "male": pc.locomotor_male or 0,
+                        "female": pc.locomotor_female or 0,
+                        "others": pc.locomotor_others or 0,
+                    },
+                    "autism": {
+                        "male": pc.autism_male or 0,
+                        "female": pc.autism_female or 0,
+                        "others": pc.autism_others or 0,
+                    },
+                    "other": {
+                        "male": pc.other_disability_male or 0,
+                        "female": pc.other_disability_female or 0,
+                        "others": pc.other_disability_others or 0,
+                    },
                 }
+
             }
 
             discipline_map.setdefault(discipline, []).append(entry)
