@@ -102,29 +102,124 @@
 
     /* Stat cards */
     .stat-card {
-      border-radius: var(--radius-lg);
-      box-shadow: var(--card-shadow);
-      transition: transform .2s ease, box-shadow .2s ease;
-      height: 100%;
-      padding: 1rem;
+      border-radius: 12px !important;
+      padding: 1.75rem 1.2rem !important;
+      /* increased padding */
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      height: 160px !important;
+      /* ⬆ increased height (was ~120-130px) */
+      box-shadow: 0 6px 14px rgba(22, 28, 36, 0.06);
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        background .25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
+    /* Hover — gentle and clean */
     .stat-card:hover {
       transform: translateY(-4px);
-      box-shadow: var(--card-shadow-hover);
+      box-shadow: 0 10px 22px rgba(22, 28, 36, 0.09);
+      background: #ffffff;
     }
 
+    /* Center content vertically */
+    .stat-card .card-body {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      /* stays centered */
+      gap: 0.35rem;
+      padding: 0;
+      background: transparent;
+    }
+
+    /* Title */
     .stat-card .card-title {
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--muted);
-      margin-bottom: 0.5rem;
+      font-size: 1.2rem !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.5px;
+      color: #3a4756 !important;
+      text-transform: uppercase;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+      opacity: 0.95;
     }
 
+    .stat-card:hover .card-title {
+      color: var(--brand-blue-dark) !important;
+    }
+
+    /* Hero number */
     .stat-card .stat-number {
-      font-size: 2rem;
-      font-weight: 700;
+      font-size: 2.4rem;
+      /* slightly increased */
+      font-weight: 800;
       color: var(--brand-blue);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+      transition: transform .18s ease, color .18s ease;
+    }
+
+    /* Hover effect */
+    .stat-card:hover .stat-number {
+      transform: translateY(-2px);
+      color: var(--brand-blue-dark);
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 991px) {
+      .stat-card {
+        height: 140px !important;
+        /* still taller for tablets */
+        padding: 1.3rem 1rem !important;
+      }
+
+      .stat-card .stat-number {
+        font-size: 2rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .stat-card {
+        height: 120px !important;
+        /* compact but not short */
+        padding: 1rem 0.8rem !important;
+      }
+
+      .stat-card .stat-number {
+        font-size: 1.6rem;
+      }
+    }
+
+    /* Accessibility focus */
+    .stat-card:focus-within,
+    .stat-card:focus {
+      outline: 2px solid rgba(13, 110, 253, 0.08);
+      outline-offset: 2px;
+    }
+
+    .stat-hint {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6b7280;
+      /* gray-500 */
+      opacity: 0.85;
+      transition: opacity .2s ease, transform .2s ease;
+      pointer-events: none;
+    }
+
+    .stat-card:hover .stat-hint {
+      opacity: 1;
+      transform: translateY(-2px);
     }
 
     /* Filter Navbar (cleaned) */
@@ -205,10 +300,9 @@
       transform: translateY(-1px);
     }
 
-    /* Create / Logout (kept concise) */
-    .create-user-btn,
-    .logout-btn {
-      border-radius: 20px;
+    /* Create button */
+    .create-user-btn {
+      border-radius: 6px;
       padding: 5px 14px;
       font-size: .85rem;
       transition: all .18s ease-in-out;
@@ -226,18 +320,26 @@
       color: #0959c6;
     }
 
+    /* Logout Button */
+    .logout-btn {
+      border-radius: 6px !important;
+      padding: 4px 10px !important;
+      font-size: 0.85rem !important;
+      transition: 0.15s ease-in-out;
+    }
+
     .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.25);
     }
 
     /* Modal (modern modal styles consolidated) */
-    .modern-modal .modal-content {
+    .UserModal .modal-content {
       border-radius: 14px;
       border: none;
       box-shadow: var(--modal-shadow);
     }
 
-    .modern-modal .modal-header {
+    .UserModal .modal-header {
       background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
       color: #fff;
       border-top-left-radius: 14px;
@@ -246,19 +348,19 @@
       border-bottom: none;
     }
 
-    .modern-modal .modal-title {
+    .UserModal .modal-title {
       font-size: 1.15rem;
       font-weight: 600;
       color: #fff !important;
     }
 
     /* Close button style */
-    .modern-modal .btn-close {
+    .UserModal .btn-close {
       filter: invert(1) brightness(200%);
       opacity: .85;
     }
 
-    .modern-modal .btn-close:hover {
+    .UserModal .btn-close:hover {
       opacity: 1;
     }
 
@@ -269,7 +371,7 @@
       caret-color: auto;
     }
 
-    .modern-modal .modal-body {
+    .UserModal .modal-body {
       padding: 1.4rem;
     }
 
@@ -293,7 +395,7 @@
     }
 
     /* Create button in modal */
-    .modern-modal .create-btn {
+    .UserModal .create-btn {
       background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
       color: #fff;
       border: none;
@@ -307,11 +409,11 @@
       gap: 6px;
     }
 
-    .modern-modal .create-btn i {
+    .UserModal .create-btn i {
       color: #fff;
     }
 
-    .modern-modal .create-btn:hover {
+    .UserModal .create-btn:hover {
       opacity: .92;
       transform: translateY(-2px);
     }
@@ -358,6 +460,167 @@
       opacity: 1;
       transform: translateX(-50%) translateY(20px);
     }
+
+    /* Base card */
+    .sr-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: var(--card-shadow);
+      transition: transform .22s cubic-bezier(.2, .9, .2, 1), box-shadow .22s ease, opacity .25s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sr-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .sr-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sr-card-title {
+      font-weight: 700;
+      color: #2d3748;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sr-card .muted {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+
+    .sr-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Gender rows (simple, larger numbers) */
+    .sr-gender-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 6px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(13, 110, 253, 0.03), transparent);
+    }
+
+    .sr-key {
+      color: #495057;
+      font-weight: 700;
+    }
+
+    .sr-values {
+      text-align: right;
+      min-width: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .sr-num {
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--brand-blue);
+      display: inline-block;
+      line-height: 1;
+    }
+
+    /* List style for category/religion/disability */
+    .sr-list-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 220px;
+      overflow: auto;
+      padding-right: 6px;
+    }
+
+    .sr-list-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 6px;
+      border-radius: 6px;
+      transition: background .18s ease;
+    }
+
+    .sr-list-row:hover {
+      background: rgba(13, 110, 253, 0.03);
+    }
+
+    .sr-key {
+      color: #2b3a4a;
+      font-weight: 600;
+    }
+
+    .sr-values {
+      font-weight: 800;
+      color: #1f2937;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 130px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sr-sep {
+      color: #6c757d;
+      font-weight: 700;
+    }
+
+    /* small number pulse animation when updated (JS can toggle .pulse) */
+    @keyframes sr-pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.98;
+      }
+
+      50% {
+        transform: scale(1.08);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0.98;
+      }
+    }
+
+    .sr-num.pulse {
+      animation: sr-pulse .6s ease-in-out;
+    }
+
+    /* responsive tweaks */
+    @media (max-width: 991px) {
+      .sr-values {
+        min-width: 90px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      #sr-cards-row {
+        gap: 10px;
+      }
+
+      .sr-values {
+        min-width: 80px;
+      }
+    }
   </style>
 
 </head>
@@ -383,61 +646,17 @@
         <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
           <i class="bi bi-box-arrow-right"></i> Logout
         </button>
+
+        <button id="export_excel" class="btn btn-warning btn-sm me-2">
+          <i class="bi bi-file-earmark-excel"></i> Export to Excel
+        </button>
       </div>
 
     </div>
-
 
   </header>
 
   <div id="protected_content">
-
-    <!-- Create User Modal -->
-    <div class="modal fade modern-modal" id="createUserModal" data-bs-backdrop="static" data-bs-keyboard="false">
-      <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content">
-
-          <div class="modal-header">
-            <h5 class="modal-title fw-semibold">Create New User</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-
-          <div class="modal-body">
-            <form id="createUserForm">
-              <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-
-              <div class="mb-3">
-                <label class="modern-label">Username</label>
-                <input type="text" class="form-control modern-input" name="username" id="cu_username">
-              </div>
-
-              <div class="mb-3">
-                <label class="modern-label">Email</label>
-                <input type="email" class="form-control modern-input" name="email" id="cu_email">
-              </div>
-
-              <div class="mb-3">
-                <label class="modern-label">Password</label>
-                <input type="password" class="form-control modern-input" name="password" id="cu_password">
-              </div>
-
-              <div class="mb-3">
-                <label class="modern-label">Confirm Password</label>
-                <input type="password" class="form-control modern-input" name="confirm_password"
-                  id="cu_confirm_password">
-              </div>
-
-              <button type="submit" class="btn create-btn w-100">
-                <i class="bi bi-check-circle"></i> Create User
-              </button>
-
-            </form>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
 
     <!-- Filter Navbar -->
     <div class="container-fluid mb-3">
@@ -633,7 +852,8 @@
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
               <h6 class="card-title">Colleges</h6>
-              <p class="stat-number mb-0" id="colleges_num" name="colleges_num"></p>
+              <p class="stat-number mb-0" id="colleges_num" name="colleges_num">0</p>
+              <small class="stat-hint">Click to view College Records →</small>
             </div>
           </div>
         </div>
@@ -643,7 +863,8 @@
           <div class="card stat-card text-center" data-url="{% url 'student_master' %}">
             <div class="card-body">
               <h6 class="card-title">Students</h6>
-              <p class="stat-number mb-0" id="students_num" name="students_num"></p>
+              <p class="stat-number mb-0" id="students_num" name="students_num">0</p>
+              <small class="stat-hint">Click to view Student Records →</small>
             </div>
           </div>
         </div>
@@ -653,14 +874,620 @@
           <div class="card stat-card text-center" data-url="#">
             <div class="card-body">
               <h6 class="card-title">Staff</h6>
-              <p class="stat-number mb-0" id="staff_num" name="staff_num"></p>
+              <p class="stat-number mb-0" id="staff_num" name="staff_num">0</p>
+              <small class="stat-hint">Click to view Staff Records →</small>
             </div>
           </div>
         </div>
 
       </div>
+
+      <!-- ---------- Student Records ---------- -->
+      <div class="content-section" aria-labelledby="sr-heading">
+        <div class="container-fluid">
+          <div class="row mb-3">
+            <div class="col-12">
+              <h3 id="sr-heading" class="mb-0" style="color:var(--brand-blue); font-weight:700;">
+                Student Records
+              </h3>
+              <small class="text-muted">Census breakdowns: Gender • Category • Religion • Disability</small>
+            </div>
+          </div>
+
+          <div class="row g-3" id="sr-cards-row">
+            <!-- Gender card (only genders) -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="sr-card sr-card-gender" role="region" aria-label="Gender counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Gender <small class="muted">(M / F / O)</small></span>
+                </div>
+
+                <div class="sr-card-body">
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Male</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="gender-male">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Female</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="gender-female">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Others</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="gender-others">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category card -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="sr-card sr-card-category" role="region" aria-label="Category counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Category <small class="muted">(M / F / O)</small></span>
+                </div>
+                <div class="sr-card-body sr-list-body" aria-hidden="false">
+                  <!-- order preserved: open, obc, sc, st, nt, vjnt, ews -->
+                  <div class="sr-list-row">
+                    <div class="sr-key">Open</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="category-open-male">0</span>
+                      <span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-open-female">0</span>
+                      <span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-open-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">OBC</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="category-obc-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-obc-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-obc-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">SC</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="category-sc-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-sc-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-sc-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">ST</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="category-st-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-st-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-st-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">NT</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="category-nt-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-nt-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-nt-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">VJNT</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="category-vjnt-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-vjnt-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-vjnt-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">EWS</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="category-ews-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-ews-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="category-ews-others">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Religion card -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="sr-card sr-card-religion" role="region" aria-label="Religion counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Religion <small class="muted">(M / F / O)</small></span>
+                </div>
+                <div class="sr-card-body sr-list-body">
+                  <!-- hindu, muslim, sikh, christian, jain, buddhist, other -->
+                  <div class="sr-list-row">
+                    <div class="sr-key">Hindu</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="religion-hindu-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-hindu-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-hindu-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Muslim</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="religion-muslim-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-muslim-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-muslim-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Sikh</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="religion-sikh-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-sikh-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-sikh-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Christian</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="religion-christian-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-christian-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-christian-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Jain</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="religion-jain-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-jain-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-jain-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Buddhist</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="religion-buddhist-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-buddhist-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-buddhist-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Other Religions</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="religion-other-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-other-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="religion-other-others">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Disability card -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="sr-card sr-card-disability" role="region" aria-label="Disability counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Disability <small class="muted">(M / F / O)</small></span>
+                </div>
+                <div class="sr-card-body sr-list-body">
+                  <!-- keys: no_disability, lowvision, blindness, hearing, locomotor, autism, other_disability -->
+                  <div class="sr-list-row">
+                    <div class="sr-key">No Disability</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="disability-none-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-none-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-none-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Low Vision</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="disability-lowvision-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-lowvision-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-lowvision-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Blindness</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="disability-blindness-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-blindness-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-blindness-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Hearing Impaired</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="disability-hearing-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-hearing-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-hearing-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Locomotor Disability</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="disability-locomotor-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-locomotor-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-locomotor-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Autism</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="disability-autism-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-autism-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-autism-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Other Disabilities</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="disability-other-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-other-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="disability-other-others">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- end disability -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Staff Records ---------- -->
+      <div class="content-section" aria-labelledby="staff-heading">
+        <div class="container-fluid">
+          <div class="row mb-3">
+            <div class="col-12">
+              <h3 id="staff-heading" class="mb-0" style="color:var(--brand-blue); font-weight:700;">
+                Staff Records
+              </h3>
+              <small class="text-muted">Census breakdowns: Gender • Category • Religion • Disability</small>
+            </div>
+          </div>
+
+          <div class="row g-3" id="staff-cards-row">
+            <!-- Gender card (only genders) -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="sr-card sr-card-gender" role="region" aria-label="Staff gender counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Gender <small class="muted">(M / F / O)</small></span>
+                </div>
+
+                <div class="sr-card-body">
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Male</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-gender-male">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Female</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-gender-female">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Others</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-gender-others">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category card -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="sr-card sr-card-category" role="region" aria-label="Staff category counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Category <small class="muted">(M / F / O)</small></span>
+                </div>
+                <div class="sr-card-body sr-list-body" aria-hidden="false">
+                  <!-- order: open, obc, sc, st, nt, vjnt, ews -->
+                  <div class="sr-list-row">
+                    <div class="sr-key">Open</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-category-open-male">0</span>
+                      <span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-open-female">0</span>
+                      <span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-open-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">OBC</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-category-obc-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-obc-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-obc-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">SC</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-category-sc-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-sc-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-sc-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">ST</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-category-st-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-st-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-st-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">NT</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-category-nt-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-nt-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-nt-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">VJNT</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-category-vjnt-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-vjnt-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-vjnt-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">EWS</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-category-ews-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-ews-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-category-ews-others">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Religion card -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="sr-card sr-card-religion" role="region" aria-label="Staff religion counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Religion <small class="muted">(M / F / O)</small></span>
+                </div>
+                <div class="sr-card-body sr-list-body">
+                  <!-- hindu, muslim, sikh, christian, jain, buddhist, other -->
+                  <div class="sr-list-row">
+                    <div class="sr-key">Hindu</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-religion-hindu-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-hindu-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-hindu-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Muslim</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-religion-muslim-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-muslim-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-muslim-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Sikh</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-religion-sikh-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-sikh-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-sikh-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Christian</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-religion-christian-male">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-christian-female">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-christian-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Jain</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-religion-jain-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-jain-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-jain-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Buddhist</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-religion-buddhist-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-buddhist-female">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-buddhist-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Other Religions</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-religion-other-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-other-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-religion-other-others">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Disability card -->
+            <div class="col-lg-3 col-md-6 col-sm-12">
+              <div class="sr-card sr-card-disability" role="region" aria-label="Staff disability counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Disability <small class="muted">(M / F / O)</small></span>
+                </div>
+                <div class="sr-card-body sr-list-body">
+                  <!-- keys: no_disability, lowvision, blindness, hearing, locomotor, autism, other_disability -->
+                  <div class="sr-list-row">
+                    <div class="sr-key">No Disability</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-disability-none-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-none-female">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-none-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Low Vision</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-disability-lowvision-male">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-lowvision-female">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-lowvision-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Blindness</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-disability-blindness-male">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-blindness-female">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-blindness-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Hearing Impaired</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-disability-hearing-male">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-hearing-female">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-hearing-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Locomotor Disability</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-disability-locomotor-male">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-locomotor-female">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-locomotor-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Autism</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-disability-autism-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-autism-female">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-autism-others">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-list-row">
+                    <div class="sr-key">Other Disabilities</div>
+                    <div class="sr-values">
+                      <span class="sr-num" data-key="staff-disability-other-male">0</span><span class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-other-female">0</span><span
+                        class="sr-sep">/</span>
+                      <span class="sr-num" data-key="staff-disability-other-others">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- end disability -->
+          </div>
+        </div>
+      </div>
+
     </main>
 
+  </div>
+
+  <!-- Create User Modal -->
+  <div class="modal fade UserModal" id="createUserModal" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title fw-semibold">Create New User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <form id="createUserForm">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+            <div class="mb-3">
+              <label class="modern-label">Username</label>
+              <input type="text" class="form-control modern-input" name="username" id="cu_username">
+            </div>
+
+            <div class="mb-3">
+              <label class="modern-label">Email</label>
+              <input type="email" class="form-control modern-input" name="email" id="cu_email">
+            </div>
+
+            <div class="mb-3">
+              <label class="modern-label">Password</label>
+              <input type="password" class="form-control modern-input" name="password" id="cu_password">
+            </div>
+
+            <div class="mb-3">
+              <label class="modern-label">Confirm Password</label>
+              <input type="password" class="form-control modern-input" name="confirm_password" id="cu_confirm_password">
+            </div>
+
+            <button type="submit" class="btn create-btn w-100">
+              <i class="bi bi-check-circle"></i> Create User
+            </button>
+
+          </form>
+        </div>
+
+      </div>
+    </div>
   </div>
 
 </body>

@@ -92,6 +92,41 @@
       background: rgba(255, 255, 255, 0.25);
     }
 
+    .header-banner {
+      position: relative;
+    }
+
+    .header-banner .header-actions {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+      z-index: 5;
+    }
+
+    .header-banner .header-actions .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    /* Responsive fallback: on narrow viewports actions flow below center content */
+    @media (max-width: 720px) {
+      .header-banner .header-actions {
+        position: static;
+        transform: none;
+        margin-top: 0.75rem;
+        align-items: center;
+        right: auto;
+        top: auto;
+        flex-direction: row;
+      }
+    }
+
 
     /* =======================================================================
    3. TABLE CONTAINER / DATATABLES
@@ -310,6 +345,15 @@
       border-bottom-left-radius: 1rem;
       border-bottom-right-radius: 1rem;
     }
+
+    #RecordsModal .modal-dialog {
+      max-width: 75% !important;
+      width: 75% !important;
+    }
+
+    #RecordsModal .modal-content {
+      border-radius: 1rem !important;
+    }
   </style>
 
 </head>
@@ -321,33 +365,39 @@
       <div class="col-lg-12 mx-auto">
         <div class="header-container text-center">
           <div class="header-banner position-relative">
-            <div class="position-absolute top-0 end-0 p-3 text-end">
+
+            <!-- RIGHT SIDE — replaced absolute block (vertically centered via CSS) -->
+            <div class="header-actions">
 
               <!-- Welcome Text -->
               <span id="welcome_msg" class="text-light fw-semibold d-block mb-1">
                 Welcome, {{ request.user.username }}
               </span>
 
-              <!-- Logout Button -->
-              <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
-                <i class="bi bi-box-arrow-right"></i> Logout
-              </button>
+              <div class="btn-row">
+                <!-- Logout Button (kept order and IDs unchanged) -->
+                <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
+                  <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
 
-              <button id="export_excel" class="btn btn-warning btn-sm me-2">
-                <i class="bi bi-file-earmark-excel"></i> Export to Excel
-              </button>
+                <!-- Export Button -->
+                <button id="export_excel" class="btn btn-warning btn-sm me-2">
+                  <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                </button>
+              </div>
 
             </div>
+            <!-- /RIGHT SIDE -->
 
-
+            <!-- CENTER / MAIN (UNCHANGED) -->
             <h1 class="fw-bold">College Records</h1>
             <p>Add your college record here</p>
             <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton" data-bs-toggle="modal"
               data-bs-target="#RecordsModal">
               <i class="bi bi-plus-lg"></i> Add Record
             </button>
-          </div>
 
+          </div>
         </div>
 
         <div class="table-container" id="datatable_wrapper">
@@ -468,7 +518,7 @@
                 placeholder="Enter full address"></textarea>
             </div>
 
-            <!-- Country -->
+            <!-- ROW 1: Country | State | District -->
             <div class="col-md-4">
               <label for="country" class="form-label">Country</label>
               <select class="form-select" id="country" name="country" required>
@@ -476,7 +526,6 @@
               </select>
             </div>
 
-            <!-- State -->
             <div class="col-md-4">
               <label for="state" class="form-label">State</label>
               <select class="form-select" id="state" name="state" required>
@@ -484,7 +533,6 @@
               </select>
             </div>
 
-            <!-- District -->
             <div class="col-md-4">
               <label for="district" class="form-label">District</label>
               <select class="form-select" id="district" name="district" required>
@@ -495,7 +543,7 @@
               </select>
             </div>
 
-            <!-- Taluka -->
+            <!-- ROW 2: Taluka | City | Pincode -->
             <div class="col-md-4">
               <label for="taluka" class="form-label">Taluka</label>
               <select class="form-select" id="taluka" name="taluka" required>
@@ -503,7 +551,6 @@
               </select>
             </div>
 
-            <!-- City -->
             <div class="col-md-4">
               <label for="city" class="form-label">City</label>
               <select class="form-select" id="city" name="city" required>
@@ -511,15 +558,14 @@
               </select>
             </div>
 
-            <!-- Pincode -->
             <div class="col-md-4">
               <label for="pincode" class="form-label">Pincode</label>
               <input type="text" class="form-control" id="pincode" name="pincode" pattern="\d{6}"
                 title="Please enter a valid 6-digit pincode" required>
             </div>
 
-            <!-- College Type -->
-            <div class="col-md-6">
+            <!-- ROW 3: College Type | Affiliated To | Belongs To -->
+            <div class="col-md-4">
               <label for="college_type" class="form-label">College Type</label>
               <select class="form-select" id="college_type" name="college_type" required>
                 <option value="" disabled selected>Select Type</option>
@@ -529,8 +575,16 @@
               </select>
             </div>
 
-            <!-- Belongs To -->
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <label for="affiliated_to" class="form-label">Affiliated To</label>
+              <select class="form-select" id="affiliated_to" name="affiliated_to">
+                <option value="Rashtrasant Tukadoji Maharaj Nagpur University(RTMNU)">
+                  Rashtrasant Tukadoji Maharaj Nagpur University(RTMNU)
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
               <label for="belongs_to" class="form-label">Belongs To</label>
               <select class="form-select" id="belongs_to" name="belongs_to" required>
                 <option value="" disabled selected>Select Option</option>
@@ -540,17 +594,18 @@
               </select>
             </div>
 
-            <!-- Affiliated To -->
-            <div class="col-md-6">
-              <label for="affiliated_to" class="form-label">Affiliated To</label>
-              <select class="form-select" id="affiliated_to" name="affiliated_to">
-                <option value="Rashtrasant Tukadoji Maharaj Nagpur University(RTMNU)">Rashtrasant Tukadoji Maharaj
-                  Nagpur University(RTMNU)</option>
-              </select>
+            <!-- ROW 4: Total washrooms | Girls washrooms | Discipline -->
+            <div class="col-md-4">
+              <label for="total_washrooms" class="form-label">Total washrooms</label>
+              <input type="number" min="0" class="form-control" id="total_washrooms" name="total_washrooms" value="0">
             </div>
 
-            <!-- Discipline -->
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <label for="girls_washrooms" class="form-label">Girls washrooms</label>
+              <input type="number" min="0" class="form-control" id="girls_washrooms" name="girls_washrooms" value="0">
+            </div>
+
+            <div class="col-md-4">
               <label for="discipline" class="form-label">Discipline</label>
 
               <div class="dropdown">
@@ -586,6 +641,7 @@
       </div>
     </div>
   </div>
+
 
 </body>
 
@@ -915,7 +971,7 @@
 
 
 
-    // ========================= FIXED EDIT BUTTON =========================
+    //EDIT BUTTON
     $(document).on("click", ".btn-edit", function () {
       $("#RecordsModal").modal("show");
 
