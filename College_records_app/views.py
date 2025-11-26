@@ -1990,3 +1990,7 @@ def export_student_excel(request):
     wb.save(response)
     return response
 
+def export_filtered_excel(request):
+    return JsonResponse({
+        "status" : 200
+    })

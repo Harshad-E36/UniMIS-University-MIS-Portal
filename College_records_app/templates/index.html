@@ -647,7 +647,7 @@
           <i class="bi bi-box-arrow-right"></i> Logout
         </button>
 
-        <button id="export_excel" class="btn btn-warning btn-sm me-2">
+        <button id="export_filtered_excel" class="btn btn-warning btn-sm me-2">
           <i class="bi bi-file-earmark-excel"></i> Export to Excel
         </button>
       </div>
@@ -899,7 +899,7 @@
             <div class="col-lg-3 col-md-6 col-sm-12">
               <div class="sr-card sr-card-gender" role="region" aria-label="Gender counts">
                 <div class="sr-card-header">
-                  <span class="sr-card-title">Gender <small class="muted">(M / F / O)</small></span>
+                  <span class="sr-card-title">Gender</span>
                 </div>
 
                 <div class="sr-card-body">
@@ -1172,7 +1172,7 @@
             <div class="col-lg-3 col-md-6 col-sm-12">
               <div class="sr-card sr-card-gender" role="region" aria-label="Staff gender counts">
                 <div class="sr-card-header">
-                  <span class="sr-card-title">Gender <small class="muted">(M / F / O)</small></span>
+                  <span class="sr-card-title">Gender</span>
                 </div>
 
                 <div class="sr-card-body">
@@ -1831,6 +1831,52 @@
     });
 
   });
+
+  $("#export_filtered_excel").click(function () {
+      // Initialize an object to hold all selected filters
+      let selectedFilters = {
+        collegeCode: $("#filterCollegeCode + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        collegeName: $("#filterCollegeName + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        district: $("#filterDistrict + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        taluka: $("#filterTaluka + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        collegeType: $("#filterCollegeType + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        belongsTo: $("#filterBelongsTo + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        discipline: $("#filterDiscipline + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+        programs: $("#filterProgram + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get()
+      };
+      console.log("Selected Filters:", selectedFilters);
+
+      // Check if at least one filter is selected
+      let hasSelection = Object.values(selectedFilters).some(arr => arr.length > 0);
+      if (!hasSelection) {
+        showNotification("Please select at least one filter", "danger");
+        return;
+      }
+
+      // Send AJAX request
+      $.ajax({
+        type: "POST",
+        url: "{% url 'export_filtered_excel' %}",
+        data: {
+          "ColegeCode[]": selectedFilters.collegeCode,
+          "CollegeName[]": selectedFilters.collegeName,
+          "District[]": selectedFilters.district,
+          "Taluka[]": selectedFilters.taluka,
+          "CollegeType[]": selectedFilters.collegeType,
+          "BelongsTo[]": selectedFilters.belongsTo,
+          "Discipline[]": selectedFilters.discipline,
+          "Programs[]": selectedFilters.programs
+        },
+        success: function (response) {
+          if (response.status === 200) {
+            console.log("excel exported successfuly", response);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("Error applying filters:", error);
+        }
+      });
+    });
 </script>
 
 </html>
