@@ -518,7 +518,7 @@
                 placeholder="Enter full address"></textarea>
             </div>
 
-            <!-- ROW 1: Country | State | District -->
+            <!-- ROW 1 -->
             <div class="col-md-4">
               <label for="country" class="form-label">Country</label>
               <select class="form-select" id="country" name="country" required>
@@ -543,7 +543,7 @@
               </select>
             </div>
 
-            <!-- ROW 2: Taluka | City | Pincode -->
+            <!-- ROW 2 -->
             <div class="col-md-4">
               <label for="taluka" class="form-label">Taluka</label>
               <select class="form-select" id="taluka" name="taluka" required>
@@ -564,37 +564,7 @@
                 title="Please enter a valid 6-digit pincode" required>
             </div>
 
-            <!-- ROW 3: College Type | Affiliated To | Belongs To -->
-            <div class="col-md-4">
-              <label for="college_type" class="form-label">College Type</label>
-              <select class="form-select" id="college_type" name="college_type" required>
-                <option value="" disabled selected>Select Type</option>
-                {% for type in Collegetype %}
-                <option value="{{type.CollegeTypeName}}">{{ type.CollegeTypeName }}</option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="col-md-4">
-              <label for="affiliated_to" class="form-label">Affiliated To</label>
-              <select class="form-select" id="affiliated_to" name="affiliated_to">
-                <option value="Rashtrasant Tukadoji Maharaj Nagpur University(RTMNU)">
-                  Rashtrasant Tukadoji Maharaj Nagpur University(RTMNU)
-                </option>
-              </select>
-            </div>
-
-            <div class="col-md-4">
-              <label for="belongs_to" class="form-label">Belongs To</label>
-              <select class="form-select" id="belongs_to" name="belongs_to" required>
-                <option value="" disabled selected>Select Option</option>
-                {% for belong in BelongsTo %}
-                <option value="{{belong.BelongsToName}}">{{ belong.BelongsToName }}</option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <!-- ROW 4: Total washrooms | Girls washrooms | Discipline -->
+            <!-- ROW 3: -->
             <div class="col-md-4">
               <label for="total_washrooms" class="form-label">Total washrooms</label>
               <input type="number" min="0" class="form-control" id="total_washrooms" name="total_washrooms" value="0">
@@ -606,10 +576,45 @@
             </div>
 
             <div class="col-md-4">
+              <label for="boys_washrooms" class="form-label">Boys washrooms</label>
+              <input type="number" min="0" class="form-control" id="boys_washrooms" name="boys_washrooms" value="0">
+            </div>
+
+            <!-- ROW 4: -->
+             <div class="col-md-6">
+              <label for="college_type" class="form-label">College Type</label>
+              <select class="form-select" id="college_type" name="college_type" required>
+                <option value="" disabled selected>Select Type</option>
+                {% for type in Collegetype %}
+                <option value="{{type.CollegeTypeName}}">{{ type.CollegeTypeName }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="affiliated_to" class="form-label">Affiliated To</label>
+              <select class="form-select" id="affiliated_to" name="affiliated_to">
+                <option value="Rashtrasant Tukadoji Maharaj Nagpur University(RTMNU)">
+                  Rashtrasant Tukadoji Maharaj Nagpur University(RTMNU)
+                </option>
+              </select>
+            </div>
+            
+            <!-- ROW 5: -->
+             <div class="col-md-6">
+              <label for="belongs_to" class="form-label">Belongs To</label>
+              <select class="form-select" id="belongs_to" name="belongs_to" required>
+                <option value="" disabled selected>Select Option</option>
+                {% for belong in BelongsTo %}
+                <option value="{{belong.BelongsToName}}">{{ belong.BelongsToName }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6">
               <label for="discipline" class="form-label">Discipline</label>
 
               <div class="dropdown">
-                <!-- button styled like form-select, uses bootstrap dropdown for the menu -->
                 <button class="form-select dropdown-toggle text-start" type="button" id="disciplineDropdown"
                   data-bs-toggle="dropdown" aria-expanded="false">
                   Select Discipline(s)
@@ -627,6 +632,7 @@
                 </div>
               </div>
             </div>
+
 
             <!-- Dynamic Course Dropdowns -->
             <div id="courseDropdownsContainer" class="col-12 mt-3"></div>
