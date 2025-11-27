@@ -747,7 +747,7 @@ def apply_filters(request):
         return JsonResponse({
             "status": 200,
             "message": "Filters applied successfully",
-            "filtered_colleges_count": filtered_colleges.count(),
+            "total_colleges": filtered_colleges.count(),
             "total_washrooms": total_washrooms,
             "male_washrooms": male_washrooms,
             "female_washrooms": female_washrooms,
@@ -841,20 +841,6 @@ def apply_filters(request):
             "other_disability_stu_female": other_disability_stu_female_sum,
             "other_disability_stu_others": other_disability_stu_others_sum
         })
-
-
-    
-
-def clear_filters(request):
-    if request.method == "GET":
-        response_data = {
-            'status' : 200,
-            'total_colleges_count' : College.objects.filter(is_deleted = False).count(),
-            'total_students_count' : student_aggregate_master.objects.filter(is_deleted = False).aggregate(total=Sum('total_students'))['total'] or 0
-        }
-        return JsonResponse(response_data)
-
-    return JsonResponse({"status": "error"}, status=400)
 
 
 def get_talukas(request):
@@ -1045,7 +1031,7 @@ def get_college_data(request):
                         "female": agg.buddhist_female,
                         "others": agg.buddhist_others,
                     },
-                    "other": {
+                    "other_religion": {
                         "male": agg.other_religion_male,
                         "female": agg.other_religion_female,
                         "others": agg.other_religion_others,
@@ -1082,7 +1068,7 @@ def get_college_data(request):
                         "female": agg.autism_female,
                         "others": agg.autism_others,
                     },
-                    "other": {
+                    "other_disability": {
                         "male": agg.other_disability_male,
                         "female": agg.other_disability_female,
                         "others": agg.other_disability_others,

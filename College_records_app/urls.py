@@ -14,7 +14,6 @@ urlpatterns = [
     path('college_master/', views.college_master, name='college_master'),
     path('student_master/', views.student_master, name='student_master'),
     path('apply_filters/', views.apply_filters, name="apply_filters"),
-    path("clear_filters/", views.clear_filters, name="clear_filters"),
     path('get_talukas/', views.get_talukas, name='get_talukas'),
     path('get_programs/', views.get_programs_for_discipline, name='get_programs'),
     path("get-college-data/", views.get_college_data, name="get_college_data"),

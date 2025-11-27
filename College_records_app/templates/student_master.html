@@ -835,12 +835,13 @@
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Other Religions</label></div>
           <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control rel-other-male" min="0"></div>
+              class="form-control rel-other_religion-male" min="0"></div>
           <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control rel-other-female" min="0"></div>
+              class="form-control rel-other_religion-female" min="0"></div>
           <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control rel-other-others" min="0"></div>
+              class="form-control rel-other_religion-others" min="0"></div>
         </div>
+
 
         <!-- ---------------------------
          DISABILITY COUNT (same pattern)
@@ -910,11 +911,11 @@
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Other Disabilities</label></div>
           <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control dis-other-male" min="0"></div>
+              class="form-control dis-other_disability-male" min="0"></div>
           <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-other-female" min="0"></div>
+              class="form-control dis-other_disability-female" min="0"></div>
           <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-other-others" min="0"></div>
+              class="form-control dis-other_disability-others" min="0"></div>
         </div>
 
       </div>
@@ -1131,7 +1132,7 @@
     }
 
     // --- RELIGION: keys and sums ---
-    const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other"];
+    const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other_religion"];
     let religionSum = 0;
     relKeys.forEach(key => {
       const m = parseInt(section.find(`.rel-${key}-male`).val() || 0, 10) || 0;
@@ -1148,7 +1149,7 @@
     }
 
     // --- DISABILITY: keys and sums ---
-    const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
+    const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other_disability"];
     let disabilitySum = 0;
     disKeys.forEach(key => {
       const m = parseInt(section.find(`.dis-${key}-male`).val() || 0, 10) || 0;
@@ -1190,8 +1191,8 @@
 
     // keys (used in template classnames: cat-<key>-male, rel-<key>-female, dis-<key>-others)
     const catKeys = ["open", "obc", "sc", "st", "nt", "vjnt", "ews"];
-    const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other"];
-    const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
+    const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other_religion"];
+    const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other_disability"];
 
     // small helper to coerce to integer default 0
     const n = v => {
@@ -1432,7 +1433,7 @@
         });
 
         // religion
-        const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other"];
+        const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other_religion"];
         const religion = {};
         relKeys.forEach(key => {
           religion[key] = {
@@ -1443,7 +1444,7 @@
         });
 
         // disability
-        const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other"];
+        const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other_disability"];
         const disability = {};
         disKeys.forEach(key => {
           disability[key] = {
