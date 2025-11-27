@@ -858,7 +858,7 @@
               {% for discipline in disciplines %}
               <li>
                 <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox"
-                    id="discipline{{ forloop.counter }}" name="discipline" value="Engineering / Technology"><label
+                    id="discipline{{ forloop.counter }}" name="discipline" value="{{ discipline.DisciplineName }}"><label
                     class="form-check-label" for="discipline1">{{ discipline.DisciplineName }}</label></div>
               </li>
               {% endfor %}
