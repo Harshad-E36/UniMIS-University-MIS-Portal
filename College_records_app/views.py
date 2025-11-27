@@ -94,6 +94,9 @@ def add_edit_record(request):
     college_type = request.POST.get('college_type')
     belongs_to = request.POST.get('belongs_to')
     affiliated = request.POST.get('affiliated_to')
+    total_washrooms = request.POST.get('total_washrooms', 0)
+    male_washrooms = request.POST.get('male_washrooms', 0)
+    female_washrooms = request.POST.get('female_washrooms', 0)
 
     # Parse JSON safely
     programs_json = request.POST.get('disciplines_programs', '[]')
@@ -124,6 +127,9 @@ def add_edit_record(request):
             college.college_type = college_type
             college.belongs_to = belongs_to
             college.affiliated = affiliated
+            college.total_washrooms = total_washrooms
+            college.male_washrooms = male_washrooms
+            college.female_washrooms = female_washrooms
             college.updated_by = get_client_ip(request)
             college.save()
 
@@ -230,6 +236,9 @@ def add_edit_record(request):
             college_type=college_type,
             belongs_to=belongs_to,
             affiliated=affiliated,
+            total_washrooms=total_washrooms,
+            male_washrooms=male_washrooms,
+            female_washrooms=female_washrooms,
             created_by=get_client_ip(request)
         )
 
@@ -1639,7 +1648,10 @@ def get_college_records(request):
             Q(belongs_to__icontains=search_value) |
             Q(affiliated__icontains=search_value) |
             Q(college_programs__Discipline__icontains=search_value) |
-            Q(college_programs__ProgramName__icontains=search_value)
+            Q(college_programs__ProgramName__icontains=search_value)|
+            Q(total_washrooms__icontains=search_value)|
+            Q(Male_Washrooms__icontains=search_value)|
+            Q(Female_Washrooms__icontains=search_value)
         ).distinct()
 
     qs = qs.prefetch_related(program_prefetch)
@@ -1684,6 +1696,9 @@ def get_college_records(request):
             "college_type": college.college_type,
             "belongs_to": college.belongs_to,
             "affiliated": college.affiliated if hasattr(college, "affiliated") else "",
+            "total_washrooms": college.total_washrooms,
+            "male_washrooms": college.male_washrooms,
+            "female_washrooms": college.female_washrooms,
             "programs": programs_map,
             "id": college.id
         }
