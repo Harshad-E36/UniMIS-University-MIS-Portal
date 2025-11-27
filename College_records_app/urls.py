@@ -24,5 +24,6 @@ urlpatterns = [
     path('get-college-records/', views.get_college_records, name='get_college_records'),
     path("export-colleges-excel/", views.export_colleges_excel, name="export_colleges_excel"),
     path("export-student-excel/", views.export_student_excel, name="export_student_excel"),
+    path('export_filtered_excel/', views.export_filtered_excel, name="export_filtered_excel"),
 
 ]

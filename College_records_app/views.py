@@ -50,7 +50,6 @@ def home(request):
     if not request.user.is_authenticated:
         return redirect('login')
 
-    print(Discipline.objects.all())
     return render(request, 'index.html', {
         "Colleges": College.objects.filter(is_deleted=False),
         "disciplines": Discipline.objects.all(),
@@ -278,7 +277,6 @@ def user_status(request):
             # aggreagate function also returns dictionary if no records found so we have to handle that case by using 'or 0' at the end
             'total_students_count' : student_aggregate_master.objects.filter(is_deleted = False).aggregate(total=Sum('total_students'))['total'] or 0
         }
-        print(response_data)
     else:
         response_data = {
             'is_authenticated' : False,
@@ -301,7 +299,6 @@ def signup(request):
             return JsonResponse(response_data)
         
         if User.objects.filter(email = email).exists():
-            print("inside")
             response_data = {
                 'message' : 'Email already exists',
                 'status' : 400
@@ -328,7 +325,6 @@ def user_login(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         remember_me = request.POST.get('remember_me',0)  # '1' if checked, 0 if not
-        print(remember_me)
 
         try:
             username = User.objects.get(email=email).username
@@ -372,7 +368,6 @@ def apply_filters(request):
         disciplines = request.POST.getlist('Discipline[]')
         programs = request.POST.getlist('Programs[]')
 
-        print(college_codes, college_names, districts, talukas, college_types, belongs_tos, disciplines, programs)
 
         filter_criteria = Q(is_deleted = False)
 
@@ -405,7 +400,6 @@ def apply_filters(request):
 
          # ==== GET FILTERED COLLEGE IDs ====
         filtered_colleges = College.objects.filter(filter_criteria).distinct()
-        print(filtered_colleges.count())
         filtered_college_ids = list(filtered_colleges.values_list("id", flat=True))
 
         # ==== AGGREGATE ONLY total_students ====
@@ -415,7 +409,6 @@ def apply_filters(request):
         )
 
         total_students_sum = agg_qs.aggregate(total=Sum("total_students"))["total"] or 0
-        print(total_students_sum)
 
         return JsonResponse({
             "status": 200,
@@ -445,14 +438,12 @@ def get_talukas(request):
             return JsonResponse({'talukas': []})
         
         talukas = Taluka.objects.filter(District__DistrictName=district_name).values_list('TalukaName', flat=True)
-        print(talukas)
         return JsonResponse({'talukas': list(talukas)})
     return JsonResponse({'talukas': []})
 
 
 def get_programs_for_discipline(request):
     disciplines = request.GET.getlist('discipline')
-    print(disciplines)  # Get from AJAX call
     response_data = {}
 
     for discipline_name in disciplines:
@@ -561,31 +552,115 @@ def get_college_data(request):
                     "others": agg.total_others,
                 },
                 "category": {
-                    "open": agg.total_open,
-                    "obc": agg.total_obc,
-                    "sc": agg.total_sc,
-                    "st": agg.total_st,
-                    "nt": agg.total_nt,
-                    "vjnt": agg.total_vjnt,
-                    "ews": agg.total_ews,
+                    "open": {
+                        "male": agg.open_male,
+                        "female": agg.open_female,
+                        "others": agg.open_others,
+                    },
+                    "obc": {
+                        "male": agg.obc_male,
+                        "female": agg.obc_female,
+                        "others": agg.obc_others,
+                    },
+                    "sc": {
+                        "male": agg.sc_male,
+                        "female": agg.sc_female,
+                        "others": agg.sc_others,
+                    },
+                    "st": {
+                        "male": agg.st_male,
+                        "female": agg.st_female,
+                        "others": agg.st_others,
+                    },
+                    "nt": {
+                        "male": agg.nt_male,
+                        "female": agg.nt_female,
+                        "others": agg.nt_others,
+                    },
+                    "vjnt": {
+                        "male": agg.vjnt_male,
+                        "female": agg.vjnt_female,
+                        "others": agg.vjnt_others,
+                    },
+                    "ews": {
+                        "male": agg.ews_male,
+                        "female": agg.ews_female,
+                        "others": agg.ews_others,
+                    },
                 },
                 "religion": {
-                    "hindu": agg.total_hindu,
-                    "muslim": agg.total_muslim,
-                    "sikh": agg.total_sikh,
-                    "christian": agg.total_christian,
-                    "jain": agg.total_jain,
-                    "buddhist": agg.total_buddhist,
-                    "other": agg.total_other_religion,
+                    "hindu": {
+                        "male": agg.hindu_male,
+                        "female": agg.hindu_female,
+                        "others": agg.hindu_others,
+                    },
+                    "muslim": {
+                        "male": agg.muslim_male,
+                        "female": agg.muslim_female,
+                        "others": agg.muslim_others,
+                    },
+                    "sikh": {
+                        "male": agg.sikh_male,
+                        "female": agg.sikh_female,
+                        "others": agg.sikh_others,
+                    },
+                    "christian": {
+                        "male": agg.christian_male,
+                        "female": agg.christian_female,
+                        "others": agg.christian_others,
+                    },
+                    "jain": {
+                        "male": agg.jain_male,
+                        "female": agg.jain_female,
+                        "others": agg.jain_others,
+                    },
+                    "buddhist": {
+                        "male": agg.buddhist_male,
+                        "female": agg.buddhist_female,
+                        "others": agg.buddhist_others,
+                    },
+                    "other": {
+                        "male": agg.other_religion_male,
+                        "female": agg.other_religion_female,
+                        "others": agg.other_religion_others,
+                    },
                 },
                 "disability": {
-                    "none": agg.total_no_disability,
-                    "lowvision": agg.total_low_vision,
-                    "blindness": agg.total_blindness,
-                    "hearing": agg.total_hearing,
-                    "locomotor": agg.total_locomotor,
-                    "autism": agg.total_autism,
-                    "other": agg.total_other_disability,
+                    "no_disability": {
+                        "male": agg.no_disability_male,
+                        "female": agg.no_disability_female,
+                        "others": agg.no_disability_others,
+                    },
+                    "lowvision": {
+                        "male": agg.low_vision_male,
+                        "female": agg.low_vision_female,
+                        "others": agg.low_vision_others,
+                    },
+                    "blindness": {
+                        "male": agg.blindness_male,
+                        "female": agg.blindness_female,
+                        "others": agg.blindness_others,
+                    },
+                    "hearing": {
+                        "male": agg.hearing_male,
+                        "female": agg.hearing_female,
+                        "others": agg.hearing_others,
+                    },
+                    "locomotor": {
+                        "male": agg.locomotor_male,
+                        "female": agg.locomotor_female,
+                        "others": agg.locomotor_others,
+                    },
+                    "autism": {
+                        "male": agg.autism_male,
+                        "female": agg.autism_female,
+                        "others": agg.autism_others,
+                    },
+                    "other": {
+                        "male": agg.other_disability_male,
+                        "female": agg.other_disability_female,
+                        "others": agg.other_disability_others,
+                    },
                 }
             }
 
@@ -1140,7 +1215,6 @@ def update_student_aggregate(request):
                         existing.other_religion_female = other_religion_female
                         existing.other_religion_others = other_religion_others
 
-
                         existing.no_disability_male = no_disability_male
                         existing.no_disability_female = no_disability_female
                         existing.no_disability_others = no_disability_others
@@ -1451,7 +1525,7 @@ def get_student_records(request):
                     },
                 },
                 "disability": {
-                    "none": {
+                    "no_disability": {
                         "male": pc.no_disability_male or 0,
                         "female": pc.no_disability_female or 0,
                         "others": pc.no_disability_others or 0,
@@ -1520,9 +1594,7 @@ def get_student_records(request):
 def delete_student_record(request):
     if request.method == 'POST':
         college_code = request.POST.get('college_code')
-        print(college_code)
         academic_year = request.POST.get('academic_year')
-        print(academic_year)
 
         try:
             college = College.objects.get(College_Code=college_code, is_deleted=False)
@@ -1918,3 +1990,7 @@ def export_student_excel(request):
     wb.save(response)
     return response
 
+def export_filtered_excel(request):
+    return JsonResponse({
+        "status" : 200
+    })
