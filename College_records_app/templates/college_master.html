@@ -971,6 +971,7 @@
       url: "{% url 'user_status' %}", // backend endpoint for checking auth
       type: "GET",
       success: function (response) {
+        console.log(response)
         if (response.status === 200) {
           initCollegeTable();
         } else {
