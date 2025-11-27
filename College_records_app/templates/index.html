@@ -944,11 +944,11 @@
 
               <!-- Single row: labels + counts -->
               <div class="d-flex justify-content-center align-items-center gap-3 washroom-row">
-                <span>Total <span class="washroom-count" id="washrooms_total">0</span></span>
+                <span>Total <span class="washroom-count" id="total_washrooms">0</span></span>
                 <span class="wr-sep">|</span>
-                <span>Female <span class="washroom-count" id="washrooms_female">0</span></span>
+                <span>Female <span class="washroom-count" id="female_washrooms">0</span></span>
                 <span class="wr-sep">|</span>
-                <span>Male <span class="washroom-count" id="washrooms_male">0</span></span>
+                <span>Male <span class="washroom-count" id="male_washrooms">0</span></span>
               </div>
 
             </div>
@@ -1720,23 +1720,23 @@
     });
   }
 
-function animateCount($el, to, duration = 500) {
-  const start = 0;
-  const change = to - start;
-  const startTime = performance.now();
+  function animateCount($el, to, duration = 500) {
+    const start = 0;
+    const change = to - start;
+    const startTime = performance.now();
 
-  function update(currentTime) {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const value = Math.floor(start + change * progress);
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const value = Math.floor(start + change * progress);
 
-    $el.text(value.toLocaleString("en-IN"));
+      $el.text(value.toLocaleString("en-IN"));
 
-    if (progress < 1) requestAnimationFrame(update);
+      if (progress < 1) requestAnimationFrame(update);
+    }
+
+    requestAnimationFrame(update);
   }
-
-  requestAnimationFrame(update);
-}
 
 
   $(document).ready(function () {
@@ -1754,8 +1754,139 @@ function animateCount($el, to, duration = 500) {
       success: function (data) {
         if (data.status === 200) {
           // Authenticated
-          animateCount($("#colleges_num"), data.total_colleges_count);
-          animateCount($("#students_num"), data.total_students_count);
+          $.ajax({
+            url: "{% url 'get_dashboard_data' %}",
+            type: "GET",
+            success: function (data) {
+              if (data.status === 200) {
+                // keep original counters
+                animateCount($("#colleges_num"), data.total_colleges);
+                animateCount($("#students_num"), data.total_students);
+
+                // washrooms
+                animateCount($("#total_washrooms"), data.total_washrooms);
+                animateCount($("#male_washrooms"), data.male_washrooms);
+                animateCount($("#female_washrooms"), data.female_washrooms);
+
+                // gender
+                animateCount($("#gender_stu_male"), data.total_stu_male);
+                animateCount($("#gender_stu_female"), data.total_stu_female);
+                animateCount($("#gender_stu_others"), data.total_stu_others);
+
+                // category — Open
+                animateCount($("#open_stu_male"), data.open_stu_male);
+                animateCount($("#open_stu_female"), data.open_stu_female);
+                animateCount($("#open_stu_others"), data.open_stu_others);
+
+                // category — OBC
+                animateCount($("#obc_stu_male"), data.obc_stu_male);
+                animateCount($("#obc_stu_female"), data.obc_stu_female);
+                animateCount($("#obc_stu_others"), data.obc_stu_others);
+
+                // category — SC
+                animateCount($("#sc_stu_male"), data.sc_stu_male);
+                animateCount($("#sc_stu_female"), data.sc_stu_female);
+                animateCount($("#sc_stu_others"), data.sc_stu_others);
+
+                // category — ST
+                animateCount($("#st_stu_male"), data.st_stu_male);
+                animateCount($("#st_stu_female"), data.st_stu_female);
+                animateCount($("#st_stu_others"), data.st_stu_others);
+
+                // category — NT
+                animateCount($("#nt_stu_male"), data.nt_stu_male);
+                animateCount($("#nt_stu_female"), data.nt_stu_female);
+                animateCount($("#nt_stu_others"), data.nt_stu_others);
+
+                // category — VJNT
+                animateCount($("#vjnt_stu_male"), data.vjnt_stu_male);
+                animateCount($("#vjnt_stu_female"), data.vjnt_stu_female);
+                animateCount($("#vjnt_stu_others"), data.vjnt_stu_others);
+
+                // category — EWS
+                animateCount($("#ews_stu_male"), data.ews_stu_male);
+                animateCount($("#ews_stu_female"), data.ews_stu_female);
+                animateCount($("#ews_stu_others"), data.ews_stu_others);
+
+                // religion — Hindu
+                animateCount($("#hindu_stu_male"), data.hindu_stu_male);
+                animateCount($("#hindu_stu_female"), data.hindu_stu_female);
+                animateCount($("#hindu_stu_others"), data.hindu_stu_others);
+
+                // religion — Muslim
+                animateCount($("#muslim_stu_male"), data.muslim_stu_male);
+                animateCount($("#muslim_stu_female"), data.muslim_stu_female);
+                animateCount($("#muslim_stu_others"), data.muslim_stu_others);
+
+                // religion — Sikh
+                animateCount($("#sikh_stu_male"), data.sikh_stu_male);
+                animateCount($("#sikh_stu_female"), data.sikh_stu_female);
+                animateCount($("#sikh_stu_others"), data.sikh_stu_others);
+
+                // religion — Christian
+                animateCount($("#christian_stu_male"), data.christian_stu_male);
+                animateCount($("#christian_stu_female"), data.christian_stu_female);
+                animateCount($("#christian_stu_others"), data.christian_stu_others);
+
+                // religion — Jain
+                animateCount($("#jain_stu_male"), data.jain_stu_male);
+                animateCount($("#jain_stu_female"), data.jain_stu_female);
+                animateCount($("#jain_stu_others"), data.jain_stu_others);
+
+                // religion — Buddhist
+                animateCount($("#buddhist_stu_male"), data.buddhist_stu_male);
+                animateCount($("#buddhist_stu_female"), data.buddhist_stu_female);
+                animateCount($("#buddhist_stu_others"), data.buddhist_stu_others);
+
+                // religion — Other
+                animateCount($("#other_religion_stu_male"), data.other_religion_stu_male);
+                animateCount($("#other_religion_stu_female"), data.other_religion_stu_female);
+                animateCount($("#other_religion_stu_others"), data.other_religion_stu_others);
+
+                // disability — No Disability
+                animateCount($("#no_disability_stu_male"), data.no_disability_stu_male);
+                animateCount($("#no_disability_stu_female"), data.no_disability_stu_female);
+                animateCount($("#no_disability_stu_others"), data.no_disability_stu_others);
+
+                // disability — Low Vision
+                animateCount($("#lowvision_stu_male"), data.low_vision_stu_male);
+                animateCount($("#lowvision_stu_female"), data.low_vision_stu_female);
+                animateCount($("#lowvision_stu_others"), data.low_vision_stu_others);
+
+                // disability — Blindness
+                animateCount($("#blindness_stu_male"), data.blindness_stu_male);
+                animateCount($("#blindness_stu_female"), data.blindness_stu_female);
+                animateCount($("#blindness_stu_others"), data.blindness_stu_others);
+
+                // disability — Hearing Impaired
+                animateCount($("#hearing_stu_male"), data.hearing_stu_male);
+                animateCount($("#hearing_stu_female"), data.hearing_stu_female);
+                animateCount($("#hearing_stu_others"), data.hearing_stu_others);
+
+                // disability — Locomotor
+                animateCount($("#locomotor_stu_male"), data.locomotor_stu_male);
+                animateCount($("#locomotor_stu_female"), data.locomotor_stu_female);
+                animateCount($("#locomotor_stu_others"), data.locomotor_stu_others);
+
+                // disability — Autism
+                animateCount($("#autism_stu_male"), data.autism_stu_male);
+                animateCount($("#autism_stu_female"), data.autism_stu_female);
+                animateCount($("#autism_stu_others"), data.autism_stu_others);
+
+                // disability — Other
+                animateCount($("#other_disability_stu_male"), data.other_disability_stu_male);
+                animateCount($("#other_disability_stu_female"), data.other_disability_stu_female);
+                animateCount($("#other_disability_stu_others"), data.other_disability_stu_others);
+
+
+              } else {
+                showNotification("Failed to load dashboard data.", "error");
+              }
+            },
+            error: function () {
+              showNotification("Error fetching dashboard data.", "error");
+            }
+          });
 
         } else {
           window.location.href = "/home/";
