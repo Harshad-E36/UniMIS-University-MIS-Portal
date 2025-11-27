@@ -159,19 +159,21 @@
 
     /* Hero number */
     .stat-card .stat-number {
-      font-size: 2.4rem;
-      /* slightly increased */
-      font-weight: 800;
+      font-size: 2.3rem;
+      font-weight: 650;
       color: var(--brand-blue);
-      line-height: 1.1;
-      letter-spacing: -0.5px;
+      line-height: 1.15;
+      letter-spacing: -0.35px;
       transition: transform .18s ease, color .18s ease;
+      opacity: 0.96;
+      font-variant-numeric: tabular-nums;
     }
 
     /* Hover effect */
     .stat-card:hover .stat-number {
       transform: translateY(-2px);
       color: var(--brand-blue-dark);
+      opacity: 1;
     }
 
     /* Responsive tweaks */
@@ -220,6 +222,58 @@
     .stat-card:hover .stat-hint {
       opacity: 1;
       transform: translateY(-2px);
+    }
+
+    /* Washrooms stat card (4th card) */
+    .stat-card-washrooms .card-body {
+      /* still use flex column, just a bit more breathing room */
+      gap: 0.5rem;
+    }
+
+    /* Slightly tighter title so it doesn't fight the row */
+    .stat-card-washrooms .card-title {
+      font-size: 1.1rem !important;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Single row: Total (count) | Female (count) | Male (count) */
+    .stat-card-washrooms .washroom-row {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4b5563;
+      /* similar tone to other labels */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      /* safe for smaller widths */
+      column-gap: 0.75rem;
+      row-gap: 0.1rem;
+      text-align: center;
+    }
+
+    /* The numbers inside the row */
+    .stat-card-washrooms .washroom-count {
+      margin-left: 4px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--brand-blue);
+      /* ties into existing hero color */
+      font-variant-numeric: tabular-nums;
+      /* keeps digits aligned */
+    }
+
+    /* Separators | between parts */
+    .stat-card-washrooms .wr-sep {
+      color: #d1d5db;
+      font-weight: 600;
+    }
+
+    /* Echo the hover "lift" on numbers a tiny bit */
+    .stat-card-washrooms:hover .washroom-count {
+      transform: translateY(-1px);
+      transition: transform .18s ease, color .18s ease;
+      color: var(--brand-blue-dark);
     }
 
     /* Filter Navbar (cleaned) */
@@ -532,11 +586,13 @@
     }
 
     .sr-num {
-      font-weight: 800;
-      font-size: 1.25rem;
-      color: var(--brand-blue);
+      font-weight: 500;
+      font-size: 1.15rem;
+      color: #6b7280;
       display: inline-block;
       line-height: 1;
+      opacity: 0.85;
+      letter-spacing: 0.2px;
     }
 
     /* List style for category/religion/disability */
@@ -601,8 +657,8 @@
       }
     }
 
-    .sr-num.pulse {
-      animation: sr-pulse .6s ease-in-out;
+    .sr-num.pulse .sr-num.pulse {
+      animation: sr-pulse .5s ease-in-out;
     }
 
     /* responsive tweaks */
@@ -848,39 +904,59 @@
       <div class="row g-3 m-0">
 
         <!-- Colleges -->
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
               <h6 class="card-title">Colleges</h6>
-              <p class="stat-number mb-0" id="colleges_num" name="colleges_num">0</p>
+              <p class="stat-number mb-0" id="colleges_num">0</p>
               <small class="stat-hint">Click to view College Records →</small>
             </div>
           </div>
         </div>
 
         <!-- Students -->
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <div class="card stat-card text-center" data-url="{% url 'student_master' %}">
             <div class="card-body">
               <h6 class="card-title">Students</h6>
-              <p class="stat-number mb-0" id="students_num" name="students_num">0</p>
+              <p class="stat-number mb-0" id="students_num">0</p>
               <small class="stat-hint">Click to view Student Records →</small>
             </div>
           </div>
         </div>
 
         <!-- Staff -->
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <div class="card stat-card text-center" data-url="#">
             <div class="card-body">
               <h6 class="card-title">Staff</h6>
-              <p class="stat-number mb-0" id="staff_num" name="staff_num">0</p>
+              <p class="stat-number mb-0" id="staff_num">0</p>
               <small class="stat-hint">Click to view Staff Records →</small>
             </div>
           </div>
         </div>
 
+        <!-- Washrooms -->
+        <div class="col-12 col-md-3">
+          <div class="card stat-card stat-card-washrooms text-center" data-url="#">
+            <div class="card-body">
+              <h6 class="card-title mb-3">Washrooms</h6>
+
+              <!-- Single row: labels + counts -->
+              <div class="d-flex justify-content-center align-items-center gap-3 washroom-row">
+                <span>Total <span class="washroom-count" id="washrooms_total">0</span></span>
+                <span class="wr-sep">|</span>
+                <span>Female <span class="washroom-count" id="washrooms_female">0</span></span>
+                <span class="wr-sep">|</span>
+                <span>Male <span class="washroom-count" id="washrooms_male">0</span></span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
       </div>
+
 
       <!-- ---------- Student Records ---------- -->
       <div class="content-section" aria-labelledby="sr-heading">
@@ -1644,6 +1720,24 @@
     });
   }
 
+function animateCount($el, to, duration = 500) {
+  const start = 0;
+  const change = to - start;
+  const startTime = performance.now();
+
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const value = Math.floor(start + change * progress);
+
+    $el.text(value.toLocaleString("en-IN"));
+
+    if (progress < 1) requestAnimationFrame(update);
+  }
+
+  requestAnimationFrame(update);
+}
+
 
   $(document).ready(function () {
 
@@ -1660,8 +1754,8 @@
       success: function (data) {
         if (data.status === 200) {
           // Authenticated
-          $("#colleges_num").text(data.total_colleges_count);
-          $("#students_num").text(data.total_students_count);
+          animateCount($("#colleges_num"), data.total_colleges_count);
+          animateCount($("#students_num"), data.total_students_count);
 
         } else {
           window.location.href = "/home/";
