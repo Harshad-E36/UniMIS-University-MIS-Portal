@@ -571,13 +571,13 @@
             </div>
 
             <div class="col-md-4">
-              <label for="girls_washrooms" class="form-label">Girls washrooms</label>
-              <input type="number" min="0" class="form-control" id="girls_washrooms" name="girls_washrooms" value="0">
+              <label for="female_washrooms" class="form-label">Female washrooms</label>
+              <input type="number" min="0" class="form-control" id="female_washrooms" name="female_washrooms" value="0">
             </div>
 
             <div class="col-md-4">
-              <label for="boys_washrooms" class="form-label">Boys washrooms</label>
-              <input type="number" min="0" class="form-control" id="boys_washrooms" name="boys_washrooms" value="0">
+              <label for="male_washrooms" class="form-label">Male washrooms</label>
+              <input type="number" min="0" class="form-control" id="male_washrooms" name="male_washrooms" value="0">
             </div>
 
             <!-- ROW 4: -->
@@ -714,6 +714,9 @@
         // Hidden columns to carry full data used by modal autofill:
         { data: "country", visible: false, searchable: false },
         { data: "affiliated", visible: false, searchable: false },
+        { data: "total_washrooms", visible: false, searchable: false },
+        { data: "male_washrooms", visible: false, searchable: false },
+        { data: "female_washrooms", visible: false, searchable: false },
 
         // Action buttons (template-based)
         {
