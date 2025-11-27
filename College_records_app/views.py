@@ -285,6 +285,7 @@ def user_status(request):
             'total_colleges_count' : College.objects.filter(is_deleted = False).count(),
             # aggreagate function also returns dictionary if no records found so we have to handle that case by using 'or 0' at the end
             'total_students_count' : student_aggregate_master.objects.filter(is_deleted = False).aggregate(total=Sum('total_students'))['total'] or 0
+
         }
     else:
         response_data = {
@@ -293,6 +294,206 @@ def user_status(request):
         }
     return JsonResponse(response_data)  
 
+def get_dashboard_data(request):
+    if request.method == 'GET':
+        # colleges aggregates
+        total_colleges = College.objects.filter(is_deleted=False).count()
+        total_students = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('total_students'))['total'] or 0
+
+        # washrooms aggregates
+        total_washrooms = College.objects.filter(is_deleted=False).aggregate(total=Sum('total_washrooms'))['total'] or 0
+        male_washrooms = College.objects.filter(is_deleted=False).aggregate(total=Sum('male_washrooms'))['total'] or 0
+        female_washrooms = College.objects.filter(is_deleted=False).aggregate(total=Sum('female_washrooms'))['total'] or 0
+
+        # students aggregates (renamed variables include 'stu' in the middle)
+        total_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('total_male'))['total'] or 0
+        total_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('total_female'))['total'] or 0
+        total_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('total_others'))['total'] or 0
+
+        open_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('open_male'))['total'] or 0
+        open_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('open_female'))['total'] or 0
+        open_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('open_others'))['total'] or 0
+
+        obc_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('obc_male'))['total'] or 0
+        obc_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('obc_female'))['total'] or 0
+        obc_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('obc_others'))['total'] or 0
+
+        sc_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('sc_male'))['total'] or 0
+        sc_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('sc_female'))['total'] or 0
+        sc_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('sc_others'))['total'] or 0
+
+        st_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('st_male'))['total'] or 0
+        st_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('st_female'))['total'] or 0
+        st_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('st_others'))['total'] or 0
+
+        nt_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('nt_male'))['total'] or 0
+        nt_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('nt_female'))['total'] or 0
+        nt_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('nt_others'))['total'] or 0
+
+        vjnt_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('vjnt_male'))['total'] or 0
+        vjnt_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('vjnt_female'))['total'] or 0
+        vjnt_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('vjnt_others'))['total'] or 0
+
+        ews_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('ews_male'))['total'] or 0
+        ews_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('ews_female'))['total'] or 0
+        ews_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('ews_others'))['total'] or 0
+
+        hindu_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('hindu_male'))['total'] or 0
+        hindu_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('hindu_female'))['total'] or 0
+        hindu_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('hindu_others'))['total'] or 0
+
+        muslim_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('muslim_male'))['total'] or 0
+        muslim_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('muslim_female'))['total'] or 0
+        muslim_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('muslim_others'))['total'] or 0
+
+        sikh_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('sikh_male'))['total'] or 0
+        sikh_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('sikh_female'))['total'] or 0
+        sikh_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('sikh_others'))['total'] or 0
+
+        christian_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('christian_male'))['total'] or 0
+        christian_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('christian_female'))['total'] or 0
+        christian_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('christian_others'))['total'] or 0
+
+        jain_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('jain_male'))['total'] or 0
+        jain_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('jain_female'))['total'] or 0
+        jain_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('jain_others'))['total'] or 0
+
+        buddhist_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('buddhist_male'))['total'] or 0
+        buddhist_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('buddhist_female'))['total'] or 0
+        buddhist_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('buddhist_others'))['total'] or 0
+
+        other_religion_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('other_religion_male'))['total'] or 0
+        other_religion_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('other_religion_female'))['total'] or 0
+        other_religion_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('other_religion_others'))['total'] or 0
+
+        no_disability_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('no_disability_male'))['total'] or 0
+        no_disability_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('no_disability_female'))['total'] or 0
+        no_disability_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('no_disability_others'))['total'] or 0
+
+        low_vision_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('low_vision_male'))['total'] or 0
+        low_vision_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('low_vision_female'))['total'] or 0
+        low_vision_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('low_vision_others'))['total'] or 0
+
+        blindness_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('blindness_male'))['total'] or 0
+        blindness_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('blindness_female'))['total'] or 0
+        blindness_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('blindness_others'))['total'] or 0
+
+        hearing_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('hearing_male'))['total'] or 0
+        hearing_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('hearing_female'))['total'] or 0
+        hearing_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('hearing_others'))['total'] or 0
+
+        locomotor_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('locomotor_male'))['total'] or 0
+        locomotor_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('locomotor_female'))['total'] or 0
+        locomotor_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('locomotor_others'))['total'] or 0
+
+        autism_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('autism_male'))['total'] or 0
+        autism_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('autism_female'))['total'] or 0
+        autism_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('autism_others'))['total'] or 0
+
+        other_disability_stu_male = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('other_disability_male'))['total'] or 0
+        other_disability_stu_female = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('other_disability_female'))['total'] or 0
+        other_disability_stu_others = student_aggregate_master.objects.filter(is_deleted=False).aggregate(total=Sum('other_disability_others'))['total'] or 0
+
+        # response payload (include renamed variables)
+        response_data = {
+            'total_colleges': total_colleges,
+            'total_students': total_students,
+            'total_washrooms': total_washrooms,
+            'male_washrooms': male_washrooms,
+            'female_washrooms': female_washrooms,
+
+            'total_stu_male': total_stu_male,
+            'total_stu_female': total_stu_female,
+            'total_stu_others': total_stu_others,
+
+            'open_stu_male': open_stu_male,
+            'open_stu_female': open_stu_female,
+            'open_stu_others': open_stu_others,
+
+            'obc_stu_male': obc_stu_male,
+            'obc_stu_female': obc_stu_female,
+            'obc_stu_others': obc_stu_others,
+
+            'sc_stu_male': sc_stu_male,
+            'sc_stu_female': sc_stu_female,
+            'sc_stu_others': sc_stu_others,
+
+            'st_stu_male': st_stu_male,
+            'st_stu_female': st_stu_female,
+            'st_stu_others': st_stu_others,
+
+            'nt_stu_male': nt_stu_male,
+            'nt_stu_female': nt_stu_female,
+            'nt_stu_others': nt_stu_others,
+
+            'vjnt_stu_male': vjnt_stu_male,
+            'vjnt_stu_female': vjnt_stu_female,
+            'vjnt_stu_others': vjnt_stu_others,
+
+            'ews_stu_male': ews_stu_male,
+            'ews_stu_female': ews_stu_female,
+            'ews_stu_others': ews_stu_others,
+
+            'hindu_stu_male': hindu_stu_male,
+            'hindu_stu_female': hindu_stu_female,
+            'hindu_stu_others': hindu_stu_others,
+
+            'muslim_stu_male': muslim_stu_male,
+            'muslim_stu_female': muslim_stu_female,
+            'muslim_stu_others': muslim_stu_others,
+
+            'sikh_stu_male': sikh_stu_male,
+            'sikh_stu_female': sikh_stu_female,
+            'sikh_stu_others': sikh_stu_others,
+
+            'christian_stu_male': christian_stu_male,
+            'christian_stu_female': christian_stu_female,
+            'christian_stu_others': christian_stu_others,
+
+            'jain_stu_male': jain_stu_male,
+            'jain_stu_female': jain_stu_female,
+            'jain_stu_others': jain_stu_others,
+
+            'buddhist_stu_male': buddhist_stu_male,
+            'buddhist_stu_female': buddhist_stu_female,
+            'buddhist_stu_others': buddhist_stu_others,
+
+            'other_religion_stu_male': other_religion_stu_male,
+            'other_religion_stu_female': other_religion_stu_female,
+            'other_religion_stu_others': other_religion_stu_others,
+
+            'no_disability_stu_male': no_disability_stu_male,
+            'no_disability_stu_female': no_disability_stu_female,
+            'no_disability_stu_others': no_disability_stu_others,
+
+            'low_vision_stu_male': low_vision_stu_male,
+            'low_vision_stu_female': low_vision_stu_female,
+            'low_vision_stu_others': low_vision_stu_others,
+
+            'blindness_stu_male': blindness_stu_male,
+            'blindness_stu_female': blindness_stu_female,
+            'blindness_stu_others': blindness_stu_others,
+
+            'hearing_stu_male': hearing_stu_male,
+            'hearing_stu_female': hearing_stu_female,
+            'hearing_stu_others': hearing_stu_others,
+
+            'locomotor_stu_male': locomotor_stu_male,
+            'locomotor_stu_female': locomotor_stu_female,
+            'locomotor_stu_others': locomotor_stu_others,
+
+            'autism_stu_male': autism_stu_male,
+            'autism_stu_female': autism_stu_female,
+            'autism_stu_others': autism_stu_others,
+
+            'other_disability_stu_male': other_disability_stu_male,
+            'other_disability_stu_female': other_disability_stu_female,
+            'other_disability_stu_others': other_disability_stu_others,
+
+            'status': 200
+        }
+
+        return JsonResponse(response_data)
 
 def signup(request):
     if request.method == 'POST':
@@ -406,25 +607,241 @@ def apply_filters(request):
             filter_criteria &= Q(college_programs__ProgramName__in=programs)
         
 
+        # washrooms filters
+        total_washrooms = College.objects.filter(filter_criteria).aggregate(total=Sum("total_washrooms"))["total"] or 0
+        male_washrooms = College.objects.filter(filter_criteria).aggregate(total=Sum("male_washrooms"))["total"] or 0
+        female_washrooms = College.objects.filter(filter_criteria).aggregate(total=Sum("female_washrooms"))["total"] or 0
+
 
          # ==== GET FILTERED COLLEGE IDs ====
         filtered_colleges = College.objects.filter(filter_criteria).distinct()
         filtered_college_ids = list(filtered_colleges.values_list("id", flat=True))
 
         # ==== AGGREGATE ONLY total_students ====
-        agg_qs = student_aggregate_master.objects.filter(
+        students = student_aggregate_master.objects.filter(
             College_id__in=filtered_college_ids,
             is_deleted=False
         )
 
-        total_students_sum = agg_qs.aggregate(total=Sum("total_students"))["total"] or 0
+        total_students_sum = students.aggregate(total=Sum("total_students"))["total"] or 0
+        print("students", total_students_sum)
+
+
+                # gender-wise totals
+        total_stu_male_sum = students.aggregate(total=Sum("total_male"))["total"] or 0
+        print("students", total_stu_male_sum)
+        total_stu_female_sum = students.aggregate(total=Sum("total_female"))["total"] or 0
+        total_stu_others_sum = students.aggregate(total=Sum("total_others"))["total"] or 0
+
+        # category-wise totals
+
+        # open category
+        open_stu_male_sum = students.aggregate(total=Sum("open_male"))["total"] or 0
+        print(open_stu_male_sum)
+        open_stu_female_sum = students.aggregate(total=Sum("open_female"))["total"] or 0
+        open_stu_others_sum = students.aggregate(total=Sum("open_others"))["total"] or 0
+
+        # obc category
+        obc_stu_male_sum = students.aggregate(total=Sum("obc_male"))["total"] or 0
+        obc_stu_female_sum = students.aggregate(total=Sum("obc_female"))["total"] or 0
+        obc_stu_others_sum = students.aggregate(total=Sum("obc_others"))["total"] or 0
+
+        # sc category
+        sc_stu_male_sum = students.aggregate(total=Sum("sc_male"))["total"] or 0
+        sc_stu_female_sum = students.aggregate(total=Sum("sc_female"))["total"] or 0
+        sc_stu_others_sum = students.aggregate(total=Sum("sc_others"))["total"] or 0
+
+        # st category
+        st_stu_male_sum = students.aggregate(total=Sum("st_male"))["total"] or 0
+        st_stu_female_sum = students.aggregate(total=Sum("st_female"))["total"] or 0
+        st_stu_others_sum = students.aggregate(total=Sum("st_others"))["total"] or 0
+
+        # nt category
+        nt_stu_male_sum = students.aggregate(total=Sum("nt_male"))["total"] or 0
+        nt_stu_female_sum = students.aggregate(total=Sum("nt_female"))["total"] or 0
+        nt_stu_others_sum = students.aggregate(total=Sum("nt_others"))["total"] or 0
+
+        # vjnt category
+        vjnt_stu_male_sum = students.aggregate(total=Sum("vjnt_male"))["total"] or 0
+        vjnt_stu_female_sum = students.aggregate(total=Sum("vjnt_female"))["total"] or 0
+        vjnt_stu_others_sum = students.aggregate(total=Sum("vjnt_others"))["total"] or 0
+
+        # ews category
+        ews_stu_male_sum = students.aggregate(total=Sum("ews_male"))["total"] or 0
+        ews_stu_female_sum = students.aggregate(total=Sum("ews_female"))["total"] or 0
+        ews_stu_others_sum = students.aggregate(total=Sum("ews_others"))["total"] or 0
+
+        # religion-wise totals
+
+        # hindu
+        hindu_stu_male_sum = students.aggregate(total=Sum("hindu_male"))["total"] or 0
+        hindu_stu_female_sum = students.aggregate(total=Sum("hindu_female"))["total"] or 0
+        hindu_stu_others_sum = students.aggregate(total=Sum("hindu_others"))["total"] or 0
+
+        # muslim
+        muslim_stu_male_sum = students.aggregate(total=Sum("muslim_male"))["total"] or 0
+        muslim_stu_female_sum = students.aggregate(total=Sum("muslim_female"))["total"] or 0
+        muslim_stu_others_sum = students.aggregate(total=Sum("muslim_others"))["total"] or 0
+
+        # sikh
+        sikh_stu_male_sum = students.aggregate(total=Sum("sikh_male"))["total"] or 0
+        sikh_stu_female_sum = students.aggregate(total=Sum("sikh_female"))["total"] or 0
+        sikh_stu_others_sum = students.aggregate(total=Sum("sikh_others"))["total"] or 0
+
+        # christian
+        christian_stu_male_sum = students.aggregate(total=Sum("christian_male"))["total"] or 0
+        christian_stu_female_sum = students.aggregate(total=Sum("christian_female"))["total"] or 0
+        christian_stu_others_sum = students.aggregate(total=Sum("christian_others"))["total"] or 0
+
+        # jain
+        jain_stu_male_sum = students.aggregate(total=Sum("jain_male"))["total"] or 0
+        jain_stu_female_sum = students.aggregate(total=Sum("jain_female"))["total"] or 0
+        jain_stu_others_sum = students.aggregate(total=Sum("jain_others"))["total"] or 0
+
+        # buddhist
+        buddhist_stu_male_sum = students.aggregate(total=Sum("buddhist_male"))["total"] or 0
+        buddhist_stu_female_sum = students.aggregate(total=Sum("buddhist_female"))["total"] or 0
+        buddhist_stu_others_sum = students.aggregate(total=Sum("buddhist_others"))["total"] or 0
+
+        # other_religion
+        other_religion_stu_male_sum = students.aggregate(total=Sum("other_religion_male"))["total"] or 0
+        other_religion_stu_female_sum = students.aggregate(total=Sum("other_religion_female"))["total"] or 0
+        other_religion_stu_others_sum = students.aggregate(total=Sum("other_religion_others"))["total"] or 0
+
+        # disability-wise totals
+        # no_disability
+        no_disability_stu_male_sum = students.aggregate(total=Sum("no_disability_male"))["total"] or 0
+        no_disability_stu_female_sum = students.aggregate(total=Sum("no_disability_female"))["total"] or 0
+        no_disability_stu_others_sum = students.aggregate(total=Sum("no_disability_others"))["total"] or 0
+
+        # low_vision
+        low_vision_stu_male_sum = students.aggregate(total=Sum("low_vision_male"))["total"] or 0
+        low_vision_stu_female_sum = students.aggregate(total=Sum("low_vision_female"))["total"] or 0
+        low_vision_stu_others_sum = students.aggregate(total=Sum("low_vision_others"))["total"] or 0
+
+        # blindness disability
+        blindness_stu_male_sum = students.aggregate(total=Sum("blindness_male"))["total"] or 0
+        blindness_stu_female_sum = students.aggregate(total=Sum("blindness_female"))["total"] or 0
+        blindness_stu_others_sum = students.aggregate(total=Sum("blindness_others"))["total"] or 0
+
+        # hearing_impairment
+        hearing_stu_male_sum = students.aggregate(total=Sum("hearing_male"))["total"] or 0
+        hearing_stu_female_sum = students.aggregate(total=Sum("hearing_female"))["total"] or 0
+        hearing_stu_others_sum = students.aggregate(total=Sum("hearing_others"))["total"] or 0
+
+        # locomotor_disability
+        locomotor_stu_male_sum = students.aggregate(total=Sum("locomotor_male"))["total"] or 0
+        locomotor_stu_female_sum = students.aggregate(total=Sum("locomotor_female"))["total"] or 0
+        locomotor_stu_others_sum = students.aggregate(total=Sum("locomotor_others"))["total"] or 0
+
+        # autism
+        autism_stu_male_sum = students.aggregate(total=Sum("autism_male"))["total"] or 0
+        autism_stu_female_sum = students.aggregate(total=Sum("autism_female"))["total"] or 0
+        autism_stu_others_sum = students.aggregate(total=Sum("autism_others"))["total"] or 0
+
+        # other disability
+        other_disability_stu_male_sum = students.aggregate(total=Sum("other_disability_male"))["total"] or 0
+        other_disability_stu_female_sum = students.aggregate(total=Sum("other_disability_female"))["total"] or 0
+        other_disability_stu_others_sum = students.aggregate(total=Sum("other_disability_others"))["total"] or 0
 
         return JsonResponse({
             "status": 200,
             "message": "Filters applied successfully",
             "filtered_colleges_count": filtered_colleges.count(),
-            "total_students": total_students_sum
+            "total_washrooms": total_washrooms,
+            "male_washrooms": male_washrooms,
+            "female_washrooms": female_washrooms,
+            "total_students": total_students_sum,
+
+            "total_stu_male": total_stu_male_sum,
+            "total_stu_female": total_stu_female_sum,
+            "total_stu_others": total_stu_others_sum,
+
+            "open_stu_male": open_stu_male_sum,
+            "open_stu_female": open_stu_female_sum,
+            "open_stu_others": open_stu_others_sum,
+
+            "obc_stu_male": obc_stu_male_sum,
+            "obc_stu_female": obc_stu_female_sum,
+            "obc_stu_others": obc_stu_others_sum,
+
+            "sc_stu_male": sc_stu_male_sum,
+            "sc_stu_female": sc_stu_female_sum,
+            "sc_stu_others": sc_stu_others_sum,
+
+            "st_stu_male": st_stu_male_sum,
+            "st_stu_female": st_stu_female_sum,
+            "st_stu_others": st_stu_others_sum,
+
+            "nt_stu_male": nt_stu_male_sum,
+            "nt_stu_female": nt_stu_female_sum,
+            "nt_stu_others": nt_stu_others_sum,
+
+            "vjnt_stu_male": vjnt_stu_male_sum,
+            "vjnt_stu_female": vjnt_stu_female_sum,
+            "vjnt_stu_others": vjnt_stu_others_sum,
+
+            "ews_stu_male": ews_stu_male_sum,
+            "ews_stu_female": ews_stu_female_sum,
+            "ews_stu_others": ews_stu_others_sum,
+
+            "hindu_stu_male": hindu_stu_male_sum,
+            "hindu_stu_female": hindu_stu_female_sum,
+            "hindu_stu_others": hindu_stu_others_sum,
+
+            "muslim_stu_male": muslim_stu_male_sum,
+            "muslim_stu_female": muslim_stu_female_sum,
+            "muslim_stu_others": muslim_stu_others_sum,
+
+            "sikh_stu_male": sikh_stu_male_sum,
+            "sikh_stu_female": sikh_stu_female_sum,
+            "sikh_stu_others": sikh_stu_others_sum,
+
+            "christian_stu_male": christian_stu_male_sum,
+            "christian_stu_female": christian_stu_female_sum,
+            "christian_stu_others": christian_stu_others_sum,
+
+            "jain_stu_male": jain_stu_male_sum,
+            "jain_stu_female": jain_stu_female_sum,
+            "jain_stu_others": jain_stu_others_sum,
+
+            "buddhist_stu_male": buddhist_stu_male_sum,
+            "buddhist_stu_female": buddhist_stu_female_sum,
+            "buddhist_stu_others": buddhist_stu_others_sum,
+
+            "other_religion_stu_male": other_religion_stu_male_sum,
+            "other_religion_stu_female": other_religion_stu_female_sum,
+            "other_religion_stu_others": other_religion_stu_others_sum,
+
+            "no_disability_stu_male": no_disability_stu_male_sum,
+            "no_disability_stu_female": no_disability_stu_female_sum,
+            "no_disability_stu_others": no_disability_stu_others_sum,
+
+            "low_vision_stu_male": low_vision_stu_male_sum,
+            "low_vision_stu_female": low_vision_stu_female_sum,
+            "low_vision_stu_others": low_vision_stu_others_sum,
+
+            "blindness_stu_male": blindness_stu_male_sum,
+            "blindness_stu_female": blindness_stu_female_sum,
+            "blindness_stu_others": blindness_stu_others_sum,
+
+            "hearing_stu_male": hearing_stu_male_sum,
+            "hearing_stu_female": hearing_stu_female_sum,
+            "hearing_stu_others": hearing_stu_others_sum,
+
+            "locomotor_stu_male": locomotor_stu_male_sum,
+            "locomotor_stu_female": locomotor_stu_female_sum,
+            "locomotor_stu_others": locomotor_stu_others_sum,
+
+            "autism_stu_male": autism_stu_male_sum,
+            "autism_stu_female": autism_stu_female_sum,
+            "autism_stu_others": autism_stu_others_sum,
+
+            "other_disability_stu_male": other_disability_stu_male_sum,
+            "other_disability_stu_female": other_disability_stu_female_sum,
+            "other_disability_stu_others": other_disability_stu_others_sum
         })
+
 
     
 
