@@ -1646,21 +1646,23 @@
     });
   }
 
-  function animateCount($el, to, duration = 500) {
-    const start = 0;
-    const change = to - start;
-    const startTime = performance.now();
+function animateCount($el, to, duration = 500) {
+  const start = 0;
+  const change = to - start;
+  const startTime = performance.now();
 
-    function update(currentTime) {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const value = Math.floor(start + change * progress);
-      $el.text(value.toLocaleString()); // keeps commas like 500 → 500
-      if (progress < 1) requestAnimationFrame(update);
-    }
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const value = Math.floor(start + change * progress);
 
-    requestAnimationFrame(update);
+    $el.text(value.toLocaleString("en-IN"));
+
+    if (progress < 1) requestAnimationFrame(update);
   }
+
+  requestAnimationFrame(update);
+}
 
 
   $(document).ready(function () {
