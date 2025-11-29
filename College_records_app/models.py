@@ -81,8 +81,8 @@ class College(models.Model):
     def __str__(self):
         return self.College_Code
     
+    
 # This Discipline and Programs table is for mapping the many to many relationship between College and Discipline and Programs
-
 class CollegeProgram(models.Model):
     College = models.ForeignKey(College, on_delete=models.CASCADE, related_name='college_programs') # by adding College in parathesis of discipline_programs model to the primary key of the College model — which by default is an auto-generated integer field named id
     Discipline = models.CharField(max_length=50)
