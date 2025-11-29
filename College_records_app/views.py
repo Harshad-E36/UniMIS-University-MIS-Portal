@@ -1900,30 +1900,54 @@ def get_student_records(request):
         latest = academic_year.objects.order_by("-Academic_Year").first()
         year = latest.Academic_Year if latest else ""
 
-    colleges_qs = College.objects.filter(
+    # 1) Base queryset: colleges that have student aggregates in this year
+    base_qs = College.objects.filter(
         is_deleted=False,
         student_aggregates__Academic_Year=year,
-        student_aggregates__is_deleted=False
+        student_aggregates__is_deleted=False,
     ).distinct()
 
+    # 2) Total before search
+    records_total = base_qs.count()
+
+    # 3) Apply global search across College + CollegeProgram
     if search_value:
-        colleges_qs = colleges_qs.filter(
+        colleges_qs = base_qs.filter(
             Q(College_Code__icontains=search_value) |
-            Q(College_Name__icontains=search_value)
-        )
+            Q(College_Name__icontains=search_value) |
+            Q(address__icontains=search_value) |
+            Q(country__icontains=search_value) |
+            Q(state__icontains=search_value) |
+            Q(District__icontains=search_value) |
+            Q(taluka__icontains=search_value) |
+            Q(city__icontains=search_value) |
+            Q(pincode__icontains=search_value) |
+            Q(college_type__icontains=search_value) |
+            Q(belongs_to__icontains=search_value) |
+            Q(affiliated__icontains=search_value) |
+            # from related CollegeProgram
+            Q(college_programs__Discipline__icontains=search_value) |
+            Q(college_programs__ProgramName__icontains=search_value)
+        ).distinct()
+    else:
+        colleges_qs = base_qs
 
-    records_total = colleges_qs.count()
-    records_filtered = records_total
+    # 4) Filtered count after search
+    records_filtered = colleges_qs.count()
 
+    # 5) Ordering
     order_map = {
         "1": "College_Code",
         "2": "College_Name",
     }
 
     if order_col_index == "4":
+        # order by total students (aggregated per college)
         colleges_qs = colleges_qs.annotate(
-            agg_total=Sum("student_aggregates__total_students",
-                          filter=Q(student_aggregates__Academic_Year=year))
+            agg_total=Sum(
+                "student_aggregates__total_students",
+                filter=Q(student_aggregates__Academic_Year=year),
+            )
         )
         field = "agg_total"
         if order_dir == "desc":
@@ -1935,7 +1959,8 @@ def get_student_records(request):
             field = "-" + field
         colleges_qs = colleges_qs.order_by(field)
 
-    colleges_page = colleges_qs[start:start + length]
+    # 6) Pagination
+    colleges_page = colleges_qs[start : start + length]
 
     data = []
 
@@ -1944,7 +1969,7 @@ def get_student_records(request):
             student_aggregate_master.objects
             .filter(College=col, Academic_Year=year, is_deleted=False)
             .select_related("Program")
-            .order_by("Program__Discipline", "Program__ProgramName")   # <--- global alphabetical sort
+            .order_by("Program__Discipline", "Program__ProgramName")
         )
 
         discipline_map = {}
@@ -2002,7 +2027,6 @@ def get_student_records(request):
                         "others": pc.ews_others or 0,
                     },
                 },
-
                 "religion": {
                     "hindu": {
                         "male": pc.hindu_male or 0,
@@ -2076,8 +2100,7 @@ def get_student_records(request):
                         "female": pc.other_disability_female or 0,
                         "others": pc.other_disability_others or 0,
                     },
-                }
-
+                },
             }
 
             discipline_map.setdefault(discipline, []).append(entry)
@@ -2086,7 +2109,7 @@ def get_student_records(request):
         for disc in sorted(discipline_map.keys(), key=str.lower):
             grouped_list.append({
                 "discipline": disc,
-                "programs": sorted(discipline_map[disc], key=lambda x: x["name"].lower())
+                "programs": sorted(discipline_map[disc], key=lambda x: x["name"].lower()),
             })
 
         data.append({
@@ -2094,15 +2117,16 @@ def get_student_records(request):
             "college_name": col.College_Name,
             "academic_year": year,
             "total_students": total_students_for_college,
-            "programs": grouped_list
+            "programs": grouped_list,
         })
 
     return JsonResponse({
         "draw": draw,
         "recordsTotal": records_total,
         "recordsFiltered": records_filtered,
-        "data": data
+        "data": data,
     })
+
 
 
 @ajax_login_required
