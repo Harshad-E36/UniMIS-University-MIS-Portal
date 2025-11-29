@@ -354,6 +354,7 @@
     #RecordsModal .modal-content {
       border-radius: 1rem !important;
     }
+
   </style>
 
 </head>
@@ -712,6 +713,87 @@
         type: "GET"
       },
       pageLength: 10,
+      dom: 'Bfrtip', // required for Buttons placement
+      buttons: [
+        {
+          text: 'Export Excel (Server)',
+          className: 'dt-excel-btn btn-warning',
+          action: function (e, dt, node, config) {
+            // Build params that the server can use to replicate server-side query
+            const params = {
+              // global search text
+              search: dt.search(),
+              // ordering array: [[colIndex, 'asc'|'desc'], ...]
+              order: dt.order(),
+              // columns metadata (index, data key, visible)
+              columns: dt.settings().init().columns.map((c, idx) => ({
+                index: idx,
+                data: c.data,
+                visible: c.visible !== false
+              })),
+              // You can add any custom filters on the page here (example:)
+              // from an input with id #extraFilter:
+              extra_filters: {
+                // example: $('#someSelect').val()
+              }
+            };
+
+            // Option A: AJAX POST expecting binary blob (XLSX) in response
+            $.ajax({
+              url: '/export-colleges-excel/',
+              method: 'POST',
+              data: JSON.stringify(params),
+              contentType: 'application/json',
+              dataType: 'binary', // jQuery doesn't recognize 'binary' but we use xhrFields below
+              xhr: function () {
+                const xhr = new window.XMLHttpRequest();
+                // response should be a blob (binary)
+                xhr.responseType = 'blob';
+                return xhr;
+              },
+              success: function (blob, status, xhr) {
+                // Try to extract filename from Content-Disposition header if server sent it
+                let filename = 'colleges.xlsx';
+                const disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                  const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/);
+                  if (match && match[1]) filename = decodeURIComponent(match[1]);
+                }
+
+                // Create object URL and trigger download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                // cleanup
+                setTimeout(function () {
+                  window.URL.revokeObjectURL(url);
+                  a.remove();
+                }, 100);
+              },
+              error: function (jqXHR, textStatus, errorThrown) {
+                // Try to read any JSON error returned by server
+                if (jqXHR.response && jqXHR.response.type === "application/json") {
+                  const reader = new FileReader();
+                  reader.onload = function () {
+                    try {
+                      const err = JSON.parse(reader.result);
+                      alert('Export failed: ' + (err.detail || JSON.stringify(err)));
+                    } catch (e) {
+                      alert('Export failed (unable to parse error).');
+                    }
+                  };
+                  reader.readAsText(jqXHR.response);
+                } else {
+                  alert('Export failed: ' + textStatus);
+                }
+              }
+            });
+          }
+        }
+      ],
       columns: [
         {
           data: null,
