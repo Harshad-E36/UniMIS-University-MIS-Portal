@@ -1567,6 +1567,72 @@
       }
     },
     pageLength: 10,
+    dom: 'Bfrtip',
+    buttons: [
+      {
+        text: '<span class="excel-icon"></span> Export to Excel',
+        className: 'dt-excel-btn',
+        action: function (e, dt, node, config) {
+          const year = selectedYear || $("#globalAcademicYear").val();
+          if (!year) {
+            alert("Please select an academic year first.");
+            return;
+          }
+
+          const payload = {
+            year: year,
+            search: dt.search() || '',
+            order: dt.order() || []
+          };
+
+          $.ajax({
+            url: '/export-student-excel/',
+            method: 'POST',
+            data: JSON.stringify(payload),
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '' },
+            xhr: function () {
+              const xhr = new window.XMLHttpRequest();
+              xhr.responseType = 'blob';
+              return xhr;
+            },
+            success: function (blob, status, xhr) {
+              let filename = `Student_Report_${year}.xlsx`;
+              const disp = xhr.getResponseHeader('Content-Disposition');
+              if (disp && disp.indexOf('filename=') !== -1) {
+                const match = disp.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/);
+                if (match && match[1]) filename = decodeURIComponent(match[1]);
+              }
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              setTimeout(() => { window.URL.revokeObjectURL(url); a.remove(); }, 200);
+            },
+            error: function (xhr, status, err) {
+              // try parse JSON
+              if (xhr.response && xhr.response.type === 'application/json') {
+                const reader = new FileReader();
+                reader.onload = function () {
+                  try {
+                    const json = JSON.parse(reader.result);
+                    alert('Export failed: ' + (json.message || json.detail || JSON.stringify(json)));
+                  } catch (e) {
+                    alert('Export failed');
+                  }
+                };
+                reader.readAsText(xhr.response);
+              } else {
+                alert('Export failed: ' + status);
+              }
+            }
+          });
+        }
+      }
+    ],
+
     columns: [
       {
         data: null,
