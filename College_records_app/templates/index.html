@@ -858,8 +858,9 @@
               {% for discipline in disciplines %}
               <li>
                 <div style="min-width: 330px;" class="form-check"><input class="form-check-input" type="checkbox"
-                    id="discipline{{ forloop.counter }}" name="discipline" value="{{ discipline.DisciplineName }}"><label
-                    class="form-check-label" for="discipline1">{{ discipline.DisciplineName }}</label></div>
+                    id="discipline{{ forloop.counter }}" name="discipline" value="{{ discipline.DisciplineName }}">
+                  <label class="form-check-label" for="discipline1">{{discipline.DisciplineName }}</label>
+                </div>
               </li>
               {% endfor %}
             </ul>
@@ -1859,6 +1860,18 @@
     animateCount($("#other_disability_stu_others"), data.other_disability_stu_others);
   }
 
+  function gatherSelectedFilters() {
+    return {
+      collegeCode: $("#filterCollegeCode + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+      collegeName: $("#filterCollegeName + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+      district: $("#filterDistrict + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+      taluka: $("#filterTaluka + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+      collegeType: $("#filterCollegeType + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+      belongsTo: $("#filterBelongsTo + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+      discipline: $("#filterDiscipline + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
+      programs: $("#filterProgram + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get()
+    };
+  }
 
 
   $(document).ready(function () {
@@ -2047,22 +2060,10 @@
     // Event listener
     $(document).on("change", "input[name='district']", updateTalukas);
 
-
-
-
     // Ajax for applying filter
     $("#applyFilter").click(function () {
-      // Initialize an object to hold all selected filters
-      let selectedFilters = {
-        collegeCode: $("#filterCollegeCode + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-        collegeName: $("#filterCollegeName + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-        district: $("#filterDistrict + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-        taluka: $("#filterTaluka + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-        collegeType: $("#filterCollegeType + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-        belongsTo: $("#filterBelongsTo + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-        discipline: $("#filterDiscipline + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-        programs: $("#filterProgram + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get()
-      };
+
+      let selectedFilters = gatherSelectedFilters();
       console.log("Selected Filters:", selectedFilters);
 
       // Check if at least one filter is selected
@@ -2089,7 +2090,7 @@
         success: function (response) {
           if (response.status === 200) {
             updateDashboardCounters(response);
-            showNotification("Filters applied successfully","success");
+            showNotification("Filters applied successfully", "success");
           }
         },
         error: function (xhr, status, error) {
@@ -2134,53 +2135,40 @@
       });
     });
 
-  });
 
-  $("#export_filtered_excel").click(function () {
-    // Initialize an object to hold all selected filters
-    let selectedFilters = {
-      collegeCode: $("#filterCollegeCode + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-      collegeName: $("#filterCollegeName + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-      district: $("#filterDistrict + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-      taluka: $("#filterTaluka + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-      collegeType: $("#filterCollegeType + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-      belongsTo: $("#filterBelongsTo + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-      discipline: $("#filterDiscipline + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get(),
-      programs: $("#filterProgram + .dropdown-menu .form-check-input:checked").map(function () { return this.value; }).get()
-    };
-    console.log("Selected Filters:", selectedFilters);
+    $("#export_filtered_excel").click(function () {
+      // Initialize an object to hold all selected filters
+      let selectedFilters = gatherSelectedFilters();
+      console.log("Selected Filters:", selectedFilters);
 
-    // Check if at least one filter is selected
-    let hasSelection = Object.values(selectedFilters).some(arr => arr.length > 0);
-    if (!hasSelection) {
-      showNotification("Please select at least one filter", "danger");
-      return;
-    }
-
-    // Send AJAX request
-    $.ajax({
-      type: "POST",
-      url: "{% url 'export_filtered_excel' %}",
-      data: {
-        "ColegeCode[]": selectedFilters.collegeCode,
-        "CollegeName[]": selectedFilters.collegeName,
-        "District[]": selectedFilters.district,
-        "Taluka[]": selectedFilters.taluka,
-        "CollegeType[]": selectedFilters.collegeType,
-        "BelongsTo[]": selectedFilters.belongsTo,
-        "Discipline[]": selectedFilters.discipline,
-        "Programs[]": selectedFilters.programs
-      },
-      success: function (response) {
-        if (response.status === 200) {
-          console.log("excel exported successfuly", response);
+      // Send AJAX request
+      $.ajax({
+        type: "POST",
+        url: "{% url 'export_filtered_excel' %}",
+        data: {
+          "ColegeCode[]": selectedFilters.collegeCode,
+          "CollegeName[]": selectedFilters.collegeName,
+          "District[]": selectedFilters.district,
+          "Taluka[]": selectedFilters.taluka,
+          "CollegeType[]": selectedFilters.collegeType,
+          "BelongsTo[]": selectedFilters.belongsTo,
+          "Discipline[]": selectedFilters.discipline,
+          "Programs[]": selectedFilters.programs
+        },
+        success: function (response) {
+          if (response.status === 200) {
+            console.log("excel exported successfuly");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("Error applying filters:", error);
         }
-      },
-      error: function (xhr, status, error) {
-        console.error("Error applying filters:", error);
-      }
+      });
     });
+
   });
+
+
 </script>
 
 </html>

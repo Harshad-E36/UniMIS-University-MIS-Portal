@@ -354,7 +354,6 @@
     #RecordsModal .modal-content {
       border-radius: 1rem !important;
     }
-
   </style>
 
 </head>
@@ -534,8 +533,8 @@
             <!-- Address -->
             <div class="col-12">
               <label for="address" class="form-label">Address</label>
-              <textarea class="form-control" id="address" name="address" rows="3"
-                placeholder="Enter full address"></textarea>
+              <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter full address"
+                required></textarea>
             </div>
 
             <!-- ROW 1 -->
@@ -713,87 +712,8 @@
         type: "GET"
       },
       pageLength: 10,
-      dom: 'Bfrtip', // required for Buttons placement
-      buttons: [
-        {
-          text: 'Export Excel (Server)',
-          className: 'dt-excel-btn btn-warning',
-          action: function (e, dt, node, config) {
-            // Build params that the server can use to replicate server-side query
-            const params = {
-              // global search text
-              search: dt.search(),
-              // ordering array: [[colIndex, 'asc'|'desc'], ...]
-              order: dt.order(),
-              // columns metadata (index, data key, visible)
-              columns: dt.settings().init().columns.map((c, idx) => ({
-                index: idx,
-                data: c.data,
-                visible: c.visible !== false
-              })),
-              // You can add any custom filters on the page here (example:)
-              // from an input with id #extraFilter:
-              extra_filters: {
-                // example: $('#someSelect').val()
-              }
-            };
+      dom: 'lfrtip',
 
-            // Option A: AJAX POST expecting binary blob (XLSX) in response
-            $.ajax({
-              url: '/export-colleges-excel/',
-              method: 'POST',
-              data: JSON.stringify(params),
-              contentType: 'application/json',
-              dataType: 'binary', // jQuery doesn't recognize 'binary' but we use xhrFields below
-              xhr: function () {
-                const xhr = new window.XMLHttpRequest();
-                // response should be a blob (binary)
-                xhr.responseType = 'blob';
-                return xhr;
-              },
-              success: function (blob, status, xhr) {
-                // Try to extract filename from Content-Disposition header if server sent it
-                let filename = 'colleges.xlsx';
-                const disposition = xhr.getResponseHeader('Content-Disposition');
-                if (disposition && disposition.indexOf('filename=') !== -1) {
-                  const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/);
-                  if (match && match[1]) filename = decodeURIComponent(match[1]);
-                }
-
-                // Create object URL and trigger download
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                // cleanup
-                setTimeout(function () {
-                  window.URL.revokeObjectURL(url);
-                  a.remove();
-                }, 100);
-              },
-              error: function (jqXHR, textStatus, errorThrown) {
-                // Try to read any JSON error returned by server
-                if (jqXHR.response && jqXHR.response.type === "application/json") {
-                  const reader = new FileReader();
-                  reader.onload = function () {
-                    try {
-                      const err = JSON.parse(reader.result);
-                      alert('Export failed: ' + (err.detail || JSON.stringify(err)));
-                    } catch (e) {
-                      alert('Export failed (unable to parse error).');
-                    }
-                  };
-                  reader.readAsText(jqXHR.response);
-                } else {
-                  alert('Export failed: ' + textStatus);
-                }
-              }
-            });
-          }
-        }
-      ],
       columns: [
         {
           data: null,
@@ -839,7 +759,6 @@
 
             return $('<div>').append(clone).html();
           }
-
         }
       ],
       order: [[2, 'asc']],
@@ -847,7 +766,6 @@
         // any re-init like tooltips
       }
     });
-
 
     /* -------------------------------------------
           SINGLE CLICK EXPAND = SHOW ROW + OPEN ACCORDION
@@ -858,9 +776,7 @@
       const row = table.row(tr);
       const btn = $(this);
 
-      // ------------------------------
-      // CASE 1: ROW IS OPEN → CLOSE IT SMOOTHLY
-      // ------------------------------
+      // CASE 1: ROW IS OPEN → CLOSE IT
       if (row.child.isShown()) {
 
         const collapseEl = document.querySelector("#collapse-" + row.data().college_code);
@@ -868,11 +784,9 @@
         if (collapseEl) {
           const bsCollapse = bootstrap.Collapse.getInstance(collapseEl);
 
-          // If animation instance exists → hide smoothly
           if (bsCollapse) {
             bsCollapse.hide();
 
-            // Wait for animation to COMPLETE before hiding row
             collapseEl.addEventListener("hidden.bs.collapse", function onFinished() {
               collapseEl.removeEventListener("hidden.bs.collapse", onFinished);
               row.child.hide();
@@ -883,21 +797,15 @@
           }
         }
 
-        // fallback (should rarely happen)
         row.child.hide();
         btn.html('<i class="bi bi-plus-lg"></i>');
         return;
       }
 
-
-      // ------------------------------
-      // CASE 2: ROW IS CLOSED → OPEN IT + SMOOTH OPEN ACCORDION
-      // ------------------------------
-
+      // CASE 2: ROW IS CLOSED → OPEN IT
       row.child(buildAccordion(row.data())).show();
       btn.html('<i class="bi bi-dash-lg"></i>');
 
-      // Allow DOM to mount
       setTimeout(() => {
         const collapseEl = document.querySelector("#collapse-" + row.data().college_code);
         if (collapseEl) {
@@ -905,7 +813,60 @@
         }
       }, 10);
     });
+
+    //External header button: Export to Excel
+    $('#export_excel').on('click', function () {
+      const dt = table;
+
+      const params = {
+        search: dt.search(),
+        order: dt.order(),
+        columns: dt.settings().init().columns.map((c, idx) => ({
+          index: idx,
+          data: c.data,
+          visible: c.visible !== false
+        })),
+        extra_filters: {
+          // custom filters later if needed
+        }
+      };
+
+      $.ajax({
+        url: '/export-colleges-excel/',
+        method: 'POST',
+        data: JSON.stringify(params),
+        contentType: 'application/json',
+        xhr: function () {
+          const xhr = new window.XMLHttpRequest();
+          xhr.responseType = 'blob';  // expect XLSX blob
+          return xhr;
+        },
+        success: function (blob, status, xhr) {
+          let filename = 'colleges.xlsx';
+          const disposition = xhr.getResponseHeader('Content-Disposition');
+          if (disposition && disposition.indexOf('filename=') !== -1) {
+            const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/);
+            if (match && match[1]) filename = decodeURIComponent(match[1]);
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(function () {
+            window.URL.revokeObjectURL(url);
+            a.remove();
+          }, 100);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          alert('Export failed: ' + textStatus);
+        }
+      });
+    });
   }
+
 
   function buildAccordion(rowData) {
 
@@ -982,7 +943,6 @@
   }
 
 
-
   function createCourseDropdowns(selectedDisciplines, selectedCourses = {}) {
     // Clear all previously generated dropdowns
     $("#courseDropdownsContainer").empty();
@@ -1047,13 +1007,120 @@
   }
 
 
+  function add_edit_records() {
+    // always send numeric id
+    const idVal = $('#record_id').val();
+    const id = (idVal && idVal.trim() !== '') ? parseInt(idVal, 10) : 0;
+
+    const formArray = $('#add_edit_form').serializeArray();
+    const dataObj = {};
+
+    // include normal fields
+    formArray.forEach(item => {
+      if (!item.name.startsWith('discipline') && !item.name.startsWith('courses')) {
+        dataObj[item.name] = item.value;
+      }
+    });
+
+    // FORCE the numeric id into payload
+    dataObj['id'] = id;
+
+    // Build program list
+    const selectedPrograms = [];
+    $(".discipline-checkbox:checked").each(function () {
+      const discipline = $(this).val();
+
+      $(`input[name="courses[${discipline}][]"]:checked`).each(function () {
+        selectedPrograms.push({
+          'Discipline': discipline,
+          'ProgramName': $(this).val()
+        });
+      });
+    });
+
+    dataObj['disciplines_programs'] = JSON.stringify(selectedPrograms || []);
+
+
+    $.ajax({
+      url: '{% url "add_edit_record" %}',
+      type: 'POST',
+      data: dataObj,
+      success: function (data) {
+        $('#records_table').DataTable().ajax.reload(null, false);
+        showNotification(data.message, "success");
+        $('#RecordsModal').modal('hide');
+      },
+      error: function (xhr, status, error) {
+        console.error("AJAX Error:", xhr.responseText);
+        showNotification("Server Error", "danger");
+      }
+    });
+  }
+
+
+  // ================= DELETE HANDLER =================
+  $(document).on("click", ".btn-delete", function () {
+
+    const id = $(this).data("rowid");   // primary key
+    const code = $(this).data("code");  // only for display
+
+    if (!id) {
+      console.error("Delete button missing rowid");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete '${code}' ?`)) return;
+
+    $.ajax({
+      type: "POST",
+      url: "{% url 'delete_record' %}",
+      data: {
+        id: id,
+        csrfmiddlewaretoken: getCookie("csrftoken")
+      },
+      success: function (data) {
+        if (data.status === 204) {
+          $("#records_table").DataTable().ajax.reload(null, false);
+          showNotification("Record deleted successfully!", "success");
+        } else {
+          showNotification(data.message || "Failed to delete record.", "error");
+        }
+      },
+      error: function (xhr) {
+        console.error("Delete error:", xhr.responseText);
+        showNotification("Server Error while deleting.", "danger");
+      }
+    });
+  });
+
+
+  function showNotification(message, type) {
+    var notificationClass = type === "success" ? "notification-success" : "notification-error";
+    var notification = $('<div>', {
+      class: 'notification ' + notificationClass,
+      text: message
+    });
+
+    $('body').append(notification);
+
+    setTimeout(function () {
+      notification.addClass('show-notification');
+    }, 10); // slight delay to ensure the element is in the DOM
+
+    setTimeout(function () {
+      notification.removeClass('show-notification');
+      setTimeout(function () {
+        notification.remove();
+      }, 500); // additional delay to allow transition effect
+    }, 3000);
+  }
+
   $('document').ready(function () {
 
     $.ajax({
       url: "{% url 'user_status' %}", // backend endpoint for checking auth
       type: "GET",
       success: function (response) {
-        console.log(response)
         if (response.status === 200) {
           initCollegeTable();
         } else {
@@ -1236,14 +1303,19 @@
           required: true,
           minlength: 2
         },
+        address: {
+          required: true,
+          minlength: 5
+        },
+        affiliated_to: {
+          required: true
+        },
         'discipline[]': {
           disciplineRequired: true
         },
         courses_validator: {
           coursesRequired: true
         },
-
-        // ✅ washroom fields
         total_washrooms: {
           required: true,
           min: 0,
@@ -1264,6 +1336,13 @@
         college_name: {
           required: "Please enter the college name",
           minlength: "College name must consist of at least 2 characters"
+        },
+        address: {
+          required: "Please enter full address",
+          minlength: "Address must be at least 5 characters"
+        },
+        affiliated_to: {
+          required: "Please select affiliation"
         },
         'discipline[]': {
           disciplineRequired: "Please select at least one discipline"
@@ -1300,7 +1379,7 @@
     });
 
     // Re-validate washroom fields whenever any of them changes
-    $('#total_washrooms, #male_washrooms, #female_washrooms').on('input change', function () {
+    $('#male_washrooms, #female_washrooms').on('input change', function () {
       $('#total_washrooms').valid();
       $('#male_washrooms').valid();
       $('#female_washrooms').valid();
@@ -1373,9 +1452,6 @@
       });
     });
 
-    $("#export_excel").on("click", function () {
-      window.location.href = "/export-colleges-excel/";
-    });
 
     $("#logout_btn").on("click", function (e) {
       e.preventDefault();
@@ -1392,118 +1468,8 @@
         }
       });
     });
+
   })
-
-
-  function add_edit_records() {
-    // always send numeric id
-    const idVal = $('#record_id').val();
-    const id = (idVal && idVal.trim() !== '') ? parseInt(idVal, 10) : 0;
-
-    const formArray = $('#add_edit_form').serializeArray();
-    const dataObj = {};
-
-    // include normal fields
-    formArray.forEach(item => {
-      if (!item.name.startsWith('discipline') && !item.name.startsWith('courses')) {
-        dataObj[item.name] = item.value;
-      }
-    });
-
-    // FORCE the numeric id into payload
-    dataObj['id'] = id;
-
-    // Build program list
-    const selectedPrograms = [];
-    $(".discipline-checkbox:checked").each(function () {
-      const discipline = $(this).val();
-
-      $(`input[name="courses[${discipline}][]"]:checked`).each(function () {
-        selectedPrograms.push({
-          'Discipline': discipline,
-          'ProgramName': $(this).val()
-        });
-      });
-    });
-
-    dataObj['disciplines_programs'] = JSON.stringify(selectedPrograms || []);
-
-    console.log("Submitting payload:", dataObj);
-
-    $.ajax({
-      url: '{% url "add_edit_record" %}',
-      type: 'POST',
-      data: dataObj,
-      success: function (data) {
-        console.log("Response from backend:", data);
-        $('#records_table').DataTable().ajax.reload(null, false);
-        showNotification(data.message, "success");
-        $('#RecordsModal').modal('hide');
-      },
-      error: function (xhr, status, error) {
-        console.error("AJAX Error:", xhr.responseText);
-        showNotification("Server Error", "danger");
-      }
-    });
-  }
-
-
-  // ================= DELETE HANDLER =================
-  $(document).on("click", ".btn-delete", function () {
-
-    const id = $(this).data("rowid");   // primary key
-    const code = $(this).data("code");  // only for display
-
-    if (!id) {
-      console.error("Delete button missing rowid");
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to delete '${code}' ?`)) return;
-
-    $.ajax({
-      type: "POST",
-      url: "{% url 'delete_record' %}",
-      data: {
-        id: id,
-        csrfmiddlewaretoken: getCookie("csrftoken")
-      },
-      success: function (data) {
-        if (data.status === 204) {
-          $("#records_table").DataTable().ajax.reload(null, false);
-          showNotification("Record deleted successfully!", "success");
-        } else {
-          showNotification(data.message || "Failed to delete record.", "error");
-        }
-      },
-      error: function (xhr) {
-        console.error("Delete error:", xhr.responseText);
-        showNotification("Server Error while deleting.", "danger");
-      }
-    });
-  });
-
-
-  function showNotification(message, type) {
-    var notificationClass = type === "success" ? "notification-success" : "notification-error";
-    var notification = $('<div>', {
-      class: 'notification ' + notificationClass,
-      text: message
-    });
-
-    $('body').append(notification);
-
-    setTimeout(function () {
-      notification.addClass('show-notification');
-    }, 10); // slight delay to ensure the element is in the DOM
-
-    setTimeout(function () {
-      notification.removeClass('show-notification');
-      setTimeout(function () {
-        notification.remove();
-      }, 500); // additional delay to allow transition effect
-    }, 3000);
-  }
 
 </script>
 

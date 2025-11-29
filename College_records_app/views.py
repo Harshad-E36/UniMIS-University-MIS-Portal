@@ -285,10 +285,6 @@ def user_status(request):
             'is_authenticated' : True,
             'username' : request.user.username,
             'status' : 200,
-            'total_colleges_count' : College.objects.filter(is_deleted = False).count(),
-            # aggreagate function also returns dictionary if no records found so we have to handle that case by using 'or 0' at the end
-            'total_students_count' : student_aggregate_master.objects.filter(is_deleted = False).aggregate(total=Sum('total_students'))['total'] or 0
-
         }
     else:
         response_data = {
@@ -2107,7 +2103,6 @@ def get_student_records(request):
         "recordsFiltered": records_filtered,
         "data": data
     })
-
 
 
 @ajax_login_required

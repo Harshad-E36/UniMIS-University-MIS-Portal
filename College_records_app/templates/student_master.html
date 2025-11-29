@@ -157,7 +157,7 @@
     }
 
     table.dataTable thead th {
-      text-align: center;
+      text-align: left;
       vertical-align: middle;
     }
 
@@ -1287,6 +1287,436 @@
   }
 
 
+  function initStudentTable() {
+    const table = $("#records_table").DataTable({
+      serverSide: true,
+      processing: true,
+      ajax: {
+        url: "/get-student-records/",
+        type: "GET",
+        data: function (d) {
+          // always take latest selected year
+          d.year = $("#globalAcademicYear").val();
+        }
+      },
+      pageLength: 10,
+
+      // normal layout, no DataTables Buttons
+      dom: "lfrtip",
+
+      columns: [
+        {
+          data: null,
+          orderable: false,
+          searchable: false,
+          render: function () {
+            return `
+            <button class="btn btn-sm btn-outline-primary toggle-programs">
+              <i class="bi bi-plus-lg"></i>
+            </button>`;
+          }
+        },
+        { data: "college_code" },
+        { data: "college_name" },
+        { data: "academic_year" },
+        {
+          data: "total_students",
+          render: function (d) {
+            return d ?? "-";
+          }
+        },
+        {
+          data: null,
+          render: function (data, type, row) {
+            // use jQuery instead of document.querySelector/template clone
+            const $clone = $($("#actionButtonsTemplate").html().trim());
+
+            $clone
+              .find(".btn-edit")
+              .attr("data-college", row.college_code)
+              .attr("data-year", row.academic_year);
+
+            $clone
+              .find(".btn-delete")
+              .attr("data-college", row.college_code)
+              .attr("data-year", row.academic_year);
+
+            return $("<div>").append($clone).html();
+          }
+        }
+      ],
+      order: [[2, "asc"]]
+    });
+
+    // 🔹 External export button (like Page 1)
+    $("#ExportStudentExcelButton").on("click", function () {
+      const dt = table;
+      const year = $("#globalAcademicYear").val();
+
+      if (!year) {
+        alert("Please select an academic year first.");
+        return;
+      }
+
+      const payload = {
+        year: year,
+        search: dt.search() || "",
+        order: dt.order() || []
+        // if you later want to mirror Page 1 structure:
+        // columns: dt.settings().init().columns.map((c, idx) => ({
+        //   index: idx,
+        //   data: c.data,
+        //   visible: c.visible !== false
+        // })),
+        // extra_filters: {}
+      };
+
+      $.ajax({
+        url: "/export-student-excel/",
+        method: "POST",
+        data: JSON.stringify(payload),
+        contentType: "application/json",
+        headers: {
+          "X-CSRFToken": (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || ""
+        },
+        xhr: function () {
+          const xhr = new window.XMLHttpRequest();
+          xhr.responseType = "blob";
+          return xhr;
+        },
+        success: function (blob, status, xhr) {
+          let filename = "Student_Report_" + year + ".xlsx";
+          const disp = xhr.getResponseHeader("Content-Disposition");
+
+          if (disp && disp.indexOf("filename=") !== -1) {
+            const match = disp.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/);
+            if (match && match[1]) {
+              filename = decodeURIComponent(match[1]);
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const $a = $("<a style='display:none;'></a>");
+
+          $a.attr("href", url).attr("download", filename);
+          $("body").append($a);
+
+          // trigger download
+          $a[0].click();
+
+          setTimeout(function () {
+            window.URL.revokeObjectURL(url);
+            $a.remove();
+          }, 200);
+        },
+        error: function (xhr, status, err) {
+          if (xhr.response && xhr.response.type === "application/json") {
+            const reader = new FileReader();
+            reader.onload = function () {
+              try {
+                const json = JSON.parse(reader.result);
+                alert(
+                  "Export failed: " +
+                  (json.message || json.detail || JSON.stringify(json))
+                );
+              } catch (e) {
+                alert("Export failed");
+              }
+            };
+            reader.readAsText(xhr.response);
+          } else {
+            alert("Export failed: " + status);
+          }
+        }
+      });
+    });
+
+    //  YEAR CHANGE → RELOAD TABLE
+    $("#globalAcademicYear").on("change", function () {
+      selectedYear = $(this).val();
+      table.ajax.reload();
+    });
+
+    //  LABEL MAP FOR FULL DESCRIPTIONS
+    const LABEL_MAP = {
+      // Gender
+      male: "Male",
+      female: "Female",
+      others: "Others",
+
+      // Category
+      open: "Open",
+      obc: "OBC",
+      sc: "SC",
+      st: "ST",
+      nt: "NT",
+      vjnt: "VJNT",
+      ews: "EWS",
+
+      // Religion
+      hindu: "Hindu",
+      muslim: "Muslim",
+      sikh: "Sikh",
+      christian: "Christian",
+      jain: "Jain",
+      buddhist: "Buddhist",
+      other: "Other Religions",
+
+      // Disability
+      no_disability: "No Disability",
+      lowvision: "Low Vision",
+      blindness: "Blindness",
+      hearing: "Hearing Impaired",
+      locomotor: "Locomotor Disability",
+      autism: "Autism",
+      other_disability: "Other Disabilities"
+    };
+
+    // BUILD FULL PROGRAM ACCORDION USING TEMPLATES
+    function formatPrograms(row) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "dt-child-scroll";
+
+      const container = document.createElement("div");
+      container.className = "container-fluid p-0";
+
+      const inner = document.createElement("div");
+      inner.className = "py-3";
+
+      // Main accordion container
+      const accordion = document.createElement("div");
+      accordion.className = "accordion";
+      accordion.id = `acc-${row.college_code}`;
+
+      // row.programs = [{ discipline: "", programs: [ ... ] }]
+      row.programs.forEach((group, groupIndex) => {
+
+        // ---------------------------
+        // Discipline Header (inside accordion)
+        // ---------------------------
+        const discHeader = document.createElement("div");
+        discHeader.className = "discipline-header-row";
+
+        const discText = document.createElement("span");
+        discText.className = "discipline-header-text";
+        discText.textContent = group.discipline;
+
+        discHeader.appendChild(discText);
+        accordion.appendChild(discHeader);
+
+        // Divider for proper top border before first program
+        const divider = document.createElement("div");
+        divider.className = "discipline-divider";
+        accordion.appendChild(divider);
+
+
+        // ---------------------------
+        // Programs inside this discipline
+        // ---------------------------
+        group.programs.forEach((p, i) => {
+          const tplItem = document.querySelector("#programAccordionTemplate");
+          const acc = tplItem.content.cloneNode(true);
+
+          const btn = acc.querySelector(".accordion-button");
+          btn.textContent = `${p.name} (${p.total_students} students)`;
+          btn.setAttribute("data-bs-toggle", "collapse");
+          btn.setAttribute("data-bs-target", `#collapse-${row.college_code}-${groupIndex}-${i}`);
+
+          const collapse = acc.querySelector(".accordion-collapse");
+          collapse.id = `collapse-${row.college_code}-${groupIndex}-${i}`;
+          collapse.setAttribute("data-bs-parent", `#acc-${row.college_code}`);
+
+          const rowContainer = acc.querySelector(".program-content-row");
+
+          // ---- TOTAL CARD ----
+          const tplTotal = document.querySelector("#totalCardTemplate");
+          const totalClone = tplTotal.content.cloneNode(true);
+          totalClone.querySelector(".total-value").textContent = p.total_students;
+          rowContainer.appendChild(totalClone);
+
+          // ---- METRICS ----
+          const metricGroups = {
+            "Gender": { color: "bg-primary", data: p.gender },
+            "Category (M/F/O)": { color: "bg-success", data: p.category },
+            "Religion (M/F/O)": { color: "bg-warning text-dark", data: p.religion },
+            "Disability (M/F/O)": { color: "bg-danger", data: p.disability }
+          };
+
+          Object.entries(metricGroups).forEach(([title, meta]) => {
+            const tplMetric = document.querySelector("#metricCardTemplate");
+            const clone = tplMetric.content.cloneNode(true);
+
+            const titleEl = clone.querySelector(".metric-title");
+            titleEl.textContent = title;
+            titleEl.classList.add(...meta.color.split(" "));
+
+            const tbody = clone.querySelector(".metric-body");
+
+            // NEW: handle nested {male,female,others} objects
+            Object.entries(meta.data).forEach(([label, value]) => {
+              const tr = document.createElement("tr");
+
+              let displayValue;
+
+              // if it's an object with male/female/others, format as "M/F/O"
+              if (value && typeof value === "object" && ("male" in value || "female" in value || "others" in value)) {
+                const m = Number.isFinite(Number(value.male)) ? Number(value.male) : 0;
+                const f = Number.isFinite(Number(value.female)) ? Number(value.female) : 0;
+                const o = Number.isFinite(Number(value.others)) ? Number(value.others) : 0;
+                displayValue = `${m}/${f}/${o}`;
+              } else {
+                // fallback: plain number or string (backwards compatibility)
+                displayValue = (value === null || value === undefined || value === "") ? "-" : value;
+              }
+
+              tr.innerHTML = `
+                    <td>${LABEL_MAP[label] || label}</td>
+                    <td>${displayValue}</td>
+                `;
+              tbody.appendChild(tr);
+            });
+
+            rowContainer.appendChild(clone);
+          });
+
+          accordion.appendChild(acc);
+        });
+      });
+
+      inner.appendChild(accordion);
+      container.appendChild(inner);
+      wrapper.appendChild(container);
+
+      return wrapper.outerHTML;
+    }
+
+
+    //  EXPAND / COLLAPSE CHILD ROWS
+    $("#records_table tbody").on("click", ".toggle-programs", function () {
+
+      const tr = $(this).closest("tr");
+      const row = table.row(tr);
+      const btn = $(this);
+
+      if (row.child.isShown()) {
+        row.child.hide();
+        btn.html('<i class="bi bi-plus-lg"></i>');
+      } else {
+        row.child(formatPrograms(row.data())).show();
+        btn.html('<i class="bi bi-dash-lg"></i>');
+      }
+    });
+  }
+
+
+
+  // EDIT MODE - When user clicks on "Edit"
+  $(document).on("click", ".btn-edit", function (e) {
+    e.preventDefault();
+
+    const college = $(this).data("college");
+    const year = $(this).data("year") || $("#globalAcademicYear").val();
+
+    if (!college) {
+      showNotification("Missing college code", "danger");
+      return;
+    }
+
+    const $btn = $(this);
+    $btn.prop("disabled", true).addClass("disabled");
+
+    $.ajax({
+      // 👇 revert to the original endpoint with hyphens
+      url: "/get-college-data/",
+      type: "GET",
+      data: {
+        college_code: college,
+        academic_year: year,
+        mode: "edit"
+      },
+      success: function (response) {
+        $btn.prop("disabled", false).removeClass("disabled");
+
+        if (response && response.status === 200) {
+          populateEditModal(response);
+
+          $("#collegeModal").data("mode", "edit");
+          $("#collegeModal").data("college-code", response.college_data?.College_Code || college);
+
+          $("#collegeModal").modal("show");
+        } else {
+          showNotification(response?.message || "Unable to load records", "danger");
+        }
+      },
+      error: function (xhr) {
+        $btn.prop("disabled", false).removeClass("disabled");
+        let msg = "Server error";
+        try {
+          const json = JSON.parse(xhr.responseText);
+          if (json && json.message) msg = json.message;
+        } catch (e) { }
+        showNotification(msg, "danger");
+      }
+    });
+  });
+
+  // DELETE RECORD HANDLER 
+  $(document).on("click", ".btn-delete", function () {
+    const college = $(this).data("college");
+    const year = $(this).data("year");
+
+    if (!college || !year) {
+      showNotification("Invalid record selected.", "danger");
+      return;
+    }
+
+    // Confirm deletion
+    if (!confirm(`Delete records for ${college} (${year})?`)) {
+      return;
+    }
+
+    $.ajax({
+      url: "/delete-student-record/",
+      type: "POST",
+      data: {
+        college_code: college,
+        academic_year: year
+      },
+      success: function (response) {
+        if (response.status === 204) {
+          showNotification("Record deleted successfully.", "success");
+          $("#records_table").DataTable().ajax.reload(null, false);
+        } else {
+          showNotification(response.message || "Delete failed", "danger");
+        }
+      },
+      error: function () {
+        showNotification("Server error", "danger");
+      }
+    });
+  });
+
+
+  function showNotification(message, type) {
+    var notificationClass = type === "success" ? "notification-success" : "notification-error";
+    var notification = $('<div>', {
+      class: 'notification ' + notificationClass,
+      text: message
+    });
+
+    $('body').append(notification);
+
+    setTimeout(function () {
+      notification.addClass('show-notification');
+    }, 10); // slight delay to ensure the element is in the DOM
+
+    setTimeout(function () {
+      notification.removeClass('show-notification');
+      setTimeout(function () {
+        notification.remove();
+      }, 500); // additional delay to allow transition effect
+    }, 3000);
+  }
 
 
   $('document').ready(function () {
@@ -1296,7 +1726,7 @@
       type: "GET",
       success: function (response) {
         if (response.status === 200) {
-          // add datatable initialization
+          initStudentTable()
         } else {
           window.location.href = "/home/";
         }
@@ -1539,431 +1969,7 @@
       });
     });
 
-    // Export Student Excel
-    $(document).on("click", "#ExportStudentExcelButton", function () {
-      const year = $("#globalAcademicYear").val();
-
-      if (!year) {
-        showNotification("Please select an academic year first", "danger");
-        return;
-      }
-
-      // Direct download request
-      window.location.href = "/export-student-excel/?year=" + encodeURIComponent(year);
-    });
-
   })
-
-  let selectedYear = $("#globalAcademicYear").val();
-
-  const table = $("#records_table").DataTable({
-    serverSide: true,
-    processing: true,
-    ajax: {
-      url: "/get-student-records/",
-      type: "GET",
-      data: function (d) {
-        d.year = selectedYear;
-      }
-    },
-    pageLength: 10,
-    dom: 'Bfrtip',
-    buttons: [
-      {
-        text: '<span class="excel-icon"></span> Export to Excel',
-        className: 'dt-excel-btn',
-        action: function (e, dt, node, config) {
-          const year = selectedYear || $("#globalAcademicYear").val();
-          if (!year) {
-            alert("Please select an academic year first.");
-            return;
-          }
-
-          const payload = {
-            year: year,
-            search: dt.search() || '',
-            order: dt.order() || []
-          };
-
-          $.ajax({
-            url: '/export-student-excel/',
-            method: 'POST',
-            data: JSON.stringify(payload),
-            contentType: 'application/json',
-            headers: { 'X-CSRFToken': (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '' },
-            xhr: function () {
-              const xhr = new window.XMLHttpRequest();
-              xhr.responseType = 'blob';
-              return xhr;
-            },
-            success: function (blob, status, xhr) {
-              let filename = `Student_Report_${year}.xlsx`;
-              const disp = xhr.getResponseHeader('Content-Disposition');
-              if (disp && disp.indexOf('filename=') !== -1) {
-                const match = disp.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/);
-                if (match && match[1]) filename = decodeURIComponent(match[1]);
-              }
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = filename;
-              document.body.appendChild(a);
-              a.click();
-              setTimeout(() => { window.URL.revokeObjectURL(url); a.remove(); }, 200);
-            },
-            error: function (xhr, status, err) {
-              // try parse JSON
-              if (xhr.response && xhr.response.type === 'application/json') {
-                const reader = new FileReader();
-                reader.onload = function () {
-                  try {
-                    const json = JSON.parse(reader.result);
-                    alert('Export failed: ' + (json.message || json.detail || JSON.stringify(json)));
-                  } catch (e) {
-                    alert('Export failed');
-                  }
-                };
-                reader.readAsText(xhr.response);
-              } else {
-                alert('Export failed: ' + status);
-              }
-            }
-          });
-        }
-      }
-    ],
-
-    columns: [
-      {
-        data: null,
-        orderable: false,
-        searchable: false,
-        render: function () {
-          return `
-                        <button class="btn btn-sm btn-outline-primary toggle-programs">
-                            <i class="bi bi-plus-lg"></i>
-                        </button>`;
-        }
-      },
-      { data: "college_code" },
-      { data: "college_name" },
-      { data: "academic_year" },
-      {
-        data: "total_students",
-        render: (d) => d ?? "-"
-      },
-      {
-        data: null,
-        render: function (data, type, row) {
-          const tpl = document.querySelector("#actionButtonsTemplate");
-          const clone = tpl.content.cloneNode(true);
-
-          // set edit attributes
-          clone.querySelector(".btn-edit").setAttribute("data-college", row.college_code);
-          clone.querySelector(".btn-edit").setAttribute("data-year", row.academic_year);
-
-          // set delete handler
-          clone.querySelector(".btn-delete").setAttribute("data-college", row.college_code);
-          clone.querySelector(".btn-delete").setAttribute("data-year", row.academic_year);
-
-
-          return $("<div>").append(clone).html();
-        }
-      }
-    ],
-    order: [[2, "asc"]]
-  });
-
-  //  YEAR CHANGE → RELOAD TABLE
-
-  $("#globalAcademicYear").on("change", function () {
-    selectedYear = $(this).val();
-    table.ajax.reload();
-  });
-
-  //  LABEL MAP FOR FULL DESCRIPTIONS
-  const LABEL_MAP = {
-    // Gender
-    male: "Male",
-    female: "Female",
-    others: "Others",
-
-    // Category
-    open: "Open",
-    obc: "OBC",
-    sc: "SC",
-    st: "ST",
-    nt: "NT",
-    vjnt: "VJNT",
-    ews: "EWS",
-
-    // Religion
-    hindu: "Hindu",
-    muslim: "Muslim",
-    sikh: "Sikh",
-    christian: "Christian",
-    jain: "Jain",
-    buddhist: "Buddhist",
-    other: "Other Religions",
-
-    // Disability
-    no_disability: "No Disability",
-    lowvision: "Low Vision",
-    blindness: "Blindness",
-    hearing: "Hearing Impaired",
-    locomotor: "Locomotor Disability",
-    autism: "Autism",
-    other_disability: "Other Disabilities"
-  };
-
-  // BUILD FULL PROGRAM ACCORDION USING TEMPLATES
-  function formatPrograms(row) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "dt-child-scroll";
-
-    const container = document.createElement("div");
-    container.className = "container-fluid p-0";
-
-    const inner = document.createElement("div");
-    inner.className = "py-3";
-
-    // Main accordion container
-    const accordion = document.createElement("div");
-    accordion.className = "accordion";
-    accordion.id = `acc-${row.college_code}`;
-
-    // row.programs = [{ discipline: "", programs: [ ... ] }]
-    row.programs.forEach((group, groupIndex) => {
-
-      // ---------------------------
-      // Discipline Header (inside accordion)
-      // ---------------------------
-      const discHeader = document.createElement("div");
-      discHeader.className = "discipline-header-row";
-
-      const discText = document.createElement("span");
-      discText.className = "discipline-header-text";
-      discText.textContent = group.discipline;
-
-      discHeader.appendChild(discText);
-      accordion.appendChild(discHeader);
-
-      // Divider for proper top border before first program
-      const divider = document.createElement("div");
-      divider.className = "discipline-divider";
-      accordion.appendChild(divider);
-
-
-      // ---------------------------
-      // Programs inside this discipline
-      // ---------------------------
-      group.programs.forEach((p, i) => {
-        const tplItem = document.querySelector("#programAccordionTemplate");
-        const acc = tplItem.content.cloneNode(true);
-
-        const btn = acc.querySelector(".accordion-button");
-        btn.textContent = `${p.name} (${p.total_students} students)`;
-        btn.setAttribute("data-bs-toggle", "collapse");
-        btn.setAttribute("data-bs-target", `#collapse-${row.college_code}-${groupIndex}-${i}`);
-
-        const collapse = acc.querySelector(".accordion-collapse");
-        collapse.id = `collapse-${row.college_code}-${groupIndex}-${i}`;
-        collapse.setAttribute("data-bs-parent", `#acc-${row.college_code}`);
-
-        const rowContainer = acc.querySelector(".program-content-row");
-
-        // ---- TOTAL CARD ----
-        const tplTotal = document.querySelector("#totalCardTemplate");
-        const totalClone = tplTotal.content.cloneNode(true);
-        totalClone.querySelector(".total-value").textContent = p.total_students;
-        rowContainer.appendChild(totalClone);
-
-        // ---- METRICS ----
-        const metricGroups = {
-          "Gender": { color: "bg-primary", data: p.gender },
-          "Category (M/F/O)": { color: "bg-success", data: p.category },
-          "Religion (M/F/O)": { color: "bg-warning text-dark", data: p.religion },
-          "Disability (M/F/O)": { color: "bg-danger", data: p.disability }
-        };
-
-        Object.entries(metricGroups).forEach(([title, meta]) => {
-          const tplMetric = document.querySelector("#metricCardTemplate");
-          const clone = tplMetric.content.cloneNode(true);
-
-          const titleEl = clone.querySelector(".metric-title");
-          titleEl.textContent = title;
-          titleEl.classList.add(...meta.color.split(" "));
-
-          const tbody = clone.querySelector(".metric-body");
-
-          // NEW: handle nested {male,female,others} objects
-          Object.entries(meta.data).forEach(([label, value]) => {
-            const tr = document.createElement("tr");
-
-            let displayValue;
-
-            // if it's an object with male/female/others, format as "M/F/O"
-            if (value && typeof value === "object" && ("male" in value || "female" in value || "others" in value)) {
-              const m = Number.isFinite(Number(value.male)) ? Number(value.male) : 0;
-              const f = Number.isFinite(Number(value.female)) ? Number(value.female) : 0;
-              const o = Number.isFinite(Number(value.others)) ? Number(value.others) : 0;
-              displayValue = `${m}/${f}/${o}`;
-            } else {
-              // fallback: plain number or string (backwards compatibility)
-              displayValue = (value === null || value === undefined || value === "") ? "-" : value;
-            }
-
-            tr.innerHTML = `
-                    <td>${LABEL_MAP[label] || label}</td>
-                    <td>${displayValue}</td>
-                `;
-            tbody.appendChild(tr);
-          });
-
-          rowContainer.appendChild(clone);
-        });
-
-        accordion.appendChild(acc);
-      });
-    });
-
-    inner.appendChild(accordion);
-    container.appendChild(inner);
-    wrapper.appendChild(container);
-
-    return wrapper.outerHTML;
-  }
-
-
-  //  EXPAND / COLLAPSE CHILD ROWS
-  $("#records_table tbody").on("click", ".toggle-programs", function () {
-
-    const tr = $(this).closest("tr");
-    const row = table.row(tr);
-    const btn = $(this);
-
-    if (row.child.isShown()) {
-      row.child.hide();
-      btn.html('<i class="bi bi-plus-lg"></i>');
-    } else {
-      row.child(formatPrograms(row.data())).show();
-      btn.html('<i class="bi bi-dash-lg"></i>');
-    }
-  });
-
-
-  // EDIT MODE - When user clicks on "Edit"
-  $(document).on("click", ".btn-edit", function (e) {
-    e.preventDefault();
-
-    const college = $(this).data("college");
-    const year = $(this).data("year") || $("#globalAcademicYear").val();
-
-    if (!college) {
-      showNotification("Missing college code", "danger");
-      return;
-    }
-
-    const $btn = $(this);
-    $btn.prop("disabled", true).addClass("disabled");
-
-    $.ajax({
-      // 👇 revert to the original endpoint with hyphens
-      url: "/get-college-data/",
-      type: "GET",
-      data: {
-        college_code: college,
-        academic_year: year,
-        mode: "edit"
-      },
-      success: function (response) {
-        $btn.prop("disabled", false).removeClass("disabled");
-
-        if (response && response.status === 200) {
-          populateEditModal(response);
-
-          $("#collegeModal").data("mode", "edit");
-          $("#collegeModal").data("college-code", response.college_data?.College_Code || college);
-
-          $("#collegeModal").modal("show");
-        } else {
-          showNotification(response?.message || "Unable to load records", "danger");
-        }
-      },
-      error: function (xhr) {
-        $btn.prop("disabled", false).removeClass("disabled");
-        let msg = "Server error";
-        try {
-          const json = JSON.parse(xhr.responseText);
-          if (json && json.message) msg = json.message;
-        } catch (e) { }
-        showNotification(msg, "danger");
-      }
-    });
-  });
-
-
-
-  // DELETE RECORD HANDLER 
-  $(document).on("click", ".btn-delete", function () {
-    const college = $(this).data("college");
-    console.log(college);
-    const year = $(this).data("year");
-    console.log(year);
-
-    if (!college || !year) {
-      showNotification("Invalid record selected.", "danger");
-      return;
-    }
-
-    // Confirm deletion
-    if (!confirm(`Delete records for ${college} (${year})?`)) {
-      return;
-    }
-
-    $.ajax({
-      url: "/delete-student-record/",
-      type: "POST",
-      data: {
-        college_code: college,
-        academic_year: year
-      },
-      success: function (response) {
-        if (response.status === 204) {
-          showNotification("Record deleted successfully.", "success");
-          $("#records_table").DataTable().ajax.reload(null, false);
-        } else {
-          showNotification(response.message || "Delete failed", "danger");
-        }
-      },
-      error: function () {
-        showNotification("Server error", "danger");
-      }
-    });
-  });
-
-
-
-  function showNotification(message, type) {
-    var notificationClass = type === "success" ? "notification-success" : "notification-error";
-    var notification = $('<div>', {
-      class: 'notification ' + notificationClass,
-      text: message
-    });
-
-    $('body').append(notification);
-
-    setTimeout(function () {
-      notification.addClass('show-notification');
-    }, 10); // slight delay to ensure the element is in the DOM
-
-    setTimeout(function () {
-      notification.removeClass('show-notification');
-      setTimeout(function () {
-        notification.remove();
-      }, 500); // additional delay to allow transition effect
-    }, 3000);
-  }
 
 </script>
 
