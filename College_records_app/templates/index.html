@@ -1892,6 +1892,9 @@
           $.ajax({
             url: "{% url 'get_dashboard_data' %}",
             type: "GET",
+            data :{
+              "academic_year" : $("globalAcademicYear").value()
+            },
             success: function (response) {
               if (response.status === 200) {
                 // keep original counters
@@ -2085,7 +2088,8 @@
           "CollegeType[]": selectedFilters.collegeType,
           "BelongsTo[]": selectedFilters.belongsTo,
           "Discipline[]": selectedFilters.discipline,
-          "Programs[]": selectedFilters.programs
+          "Programs[]": selectedFilters.programs,
+          "academic" : selectedFilters.year
         },
         success: function (response) {
           if (response.status === 200) {
