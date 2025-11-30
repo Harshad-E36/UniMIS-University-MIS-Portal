@@ -53,6 +53,12 @@ class BelongsTo(models.Model):
     def __str__(self):
         return self.BelongsToName
 
+# static table for academic year
+class academic_year(models.Model):
+    Academic_Year = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.Academic_Year
 
 # College master table
 class College(models.Model):
@@ -95,13 +101,6 @@ class CollegeProgram(models.Model):
     def __str__(self):
         return f"({self.Discipline}) {self.ProgramName}"
     
-
-# static table for academic year
-class academic_year(models.Model):
-    Academic_Year = models.CharField(max_length=20)
-
-    def __str__(self):
-        return self.Academic_Year
 
 class student_aggregate_master(models.Model):
     College = models.ForeignKey(College, on_delete=models.CASCADE, related_name='student_aggregates')

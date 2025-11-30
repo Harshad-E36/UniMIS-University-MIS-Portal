@@ -59,7 +59,8 @@ def home(request):
         "disciplines": Discipline.objects.all(),
         "Collegetype": CollegeType.objects.all(),
         "BelongsTo": BelongsTo.objects.all(),
-        "programs": Programs.objects.all()
+        "programs": Programs.objects.all(),
+        "academic_year": academic_year.objects.all()
     })
    
 
@@ -2808,228 +2809,292 @@ def export_student_excel(request):
 
 
 
-   # =============================================================
-# VIEW 2: export_filters_excel 
-# =============================================================
+@ajax_login_required
 def export_filtered_excel(request):
-
     if request.method != "POST":
-        return JsonResponse({"status": 405, "message": "POST required"}, status=405)
+        return HttpResponseBadRequest("Only POST allowed")
 
-    # read filter inputs
-    college_codes = request.POST.getlist('ColegeCode[]')
-    college_names = request.POST.getlist('CollegeName[]')
-    districts = request.POST.getlist('District[]')
-    talukas = request.POST.getlist('Taluka[]')
-    college_types = request.POST.getlist('CollegeType[]')
-    belongs_tos = request.POST.getlist('BelongsTo[]')
-    disciplines = request.POST.getlist('Discipline[]')
-    programs = request.POST.getlist('Programs[]')
+    # --- Academic year: REQUIRED from POST ---
+    year = (request.POST.get("year") or "").strip()
+    if not year:
+        return HttpResponseBadRequest("Missing academic year")
 
-    # BASE filter
-    filter_criteria = Q(is_deleted=False)
+    # --- Gather filters from POST (exact keys from JS) ---
+    def non_empty_list(key):
+        return [v for v in request.POST.getlist(key) if v]
 
+    college_codes   = non_empty_list("CollegeCode[]")
+    college_names   = non_empty_list("CollegeName[]")
+    districts       = non_empty_list("District[]")
+    talukas         = non_empty_list("Taluka[]")
+    college_types   = non_empty_list("CollegeType[]")
+    belongs_to_list = non_empty_list("BelongsTo[]")
+    disciplines     = non_empty_list("Discipline[]")
+    programs        = non_empty_list("Programs[]")
+
+    # --- Base queryset: ONLY this year, only colleges that have student data that year ---
+    qs = College.objects.filter(
+        is_deleted=False,
+        student_aggregates__Academic_Year=year,
+        student_aggregates__is_deleted=False,
+    ).prefetch_related("college_programs", "student_aggregates").distinct()
+
+    # --- Apply filters ONLY if lists have values ---
     if college_codes:
-        filter_criteria &= Q(College_Code__in=college_codes)
+        qs = qs.filter(College_Code__in=college_codes)
+
     if college_names:
-        filter_criteria &= Q(College_Name__in=college_names)
+        qs = qs.filter(College_Name__in=college_names)
+
     if districts:
-        filter_criteria &= Q(District__in=districts)
+        qs = qs.filter(District__in=districts)
+
     if talukas:
-        filter_criteria &= Q(taluka__in=talukas)
+        qs = qs.filter(taluka__in=talukas)
+
     if college_types:
-        filter_criteria &= Q(college_type__in=college_types)
-    if belongs_tos:
-        filter_criteria &= Q(belongs_to__in=belongs_tos)
+        qs = qs.filter(college_type__in=college_types)
 
-    base_ids = set(
-        College.objects.filter(filter_criteria)
-        .values_list("id", flat=True)
-        .distinct()
-    )
+    if belongs_to_list:
+        qs = qs.filter(belongs_to__in=belongs_to_list)
 
-    # PROGRAM/DISCIPLINE filtering
-    if disciplines or programs:
-        prog_q = Q(is_deleted=False)
-        if disciplines:
-            prog_q &= Q(Discipline__in=disciplines)
-        if programs:
-            prog_q &= Q(ProgramName__in=programs)
+    if disciplines:
+        qs = qs.filter(college_programs__Discipline__in=disciplines)
 
-        match_ids = set(
-            CollegeProgram.objects.filter(prog_q)
-            .values_list("College_id", flat=True)
-            .distinct()
-        )
+    if programs:
+        qs = qs.filter(college_programs__ProgramName__in=programs)
 
-        filtered_college_ids = list(base_ids.intersection(match_ids))
-    else:
-        filtered_college_ids = list(base_ids)
+    qs = qs.distinct().order_by("College_Name")
 
-    # prepare workbook and headers
+    # -----------------------
+    # Build XLSX (same layout as export_student_excel)
+    # -----------------------
     wb = Workbook()
     ws = wb.active
-    ws.title = "Filtered Data"
+    ws.title = "Student Records"
 
     headers = [
-        "College_Code", "College_Name", "Address", "Country", "State",
-        "District", "Taluka", "City", "Pincode",
-        "College_Type", "Belongs_To", "Affiliated",
-        "Total_Washrooms", "Male_Washrooms", "Female_Washrooms"
+        "College Code", "College Name", "Address", "Pincode", "Country",
+        "State", "District", "Taluka", "City",
+        "College Type", "Belongs To", "Affiliated To",
+        "Total Washrooms", "Male Washrooms", "Female Washrooms",
+        "Discipline", "Program",
+
+        # Student census columns (start at column 18)
+        "Total Students",
+        "Total Male", "Total Female", "Total Others",
+
+        # Caste-wise (gender split)
+        "OPEN Male", "OPEN Female", "OPEN Others",
+        "OBC Male", "OBC Female", "OBC Others",
+        "SC Male", "SC Female", "SC Others",
+        "ST Male", "ST Female", "ST Others",
+        "NT Male", "NT Female", "NT Others",
+        "VJNT Male", "VJNT Female", "VJNT Others",
+        "EWS Male", "EWS Female", "EWS Others",
+
+        # Religion-wise (gender split)
+        "Hindu Male", "Hindu Female", "Hindu Others",
+        "Muslim Male", "Muslim Female", "Muslim Others",
+        "Sikh Male", "Sikh Female", "Sikh Others",
+        "Christian Male", "Christian Female", "Christian Others",
+        "Jain Male", "Jain Female", "Jain Others",
+        "Buddhist Male", "Buddhist Female", "Buddhist Others",
+        "Other Religion Male", "Other Religion Female", "Other Religion Others",
+
+        # Disability-wise (gender split)
+        "No Disability Male", "No Disability Female", "No Disability Others",
+        "Low Vision Male", "Low Vision Female", "Low Vision Others",
+        "Blindness Male", "Blindness Female", "Blindness Others",
+        "Hearing Impaired Male", "Hearing Impaired Female", "Hearing Impaired Others",
+        "Locomotor Disability Male", "Locomotor Disability Female", "Locomotor Disability Others",
+        "Autism Male", "Autism Female", "Autism Others",
+        "Other Disability Male", "Other Disability Female", "Other Disability Others",
     ]
     ws.append(headers)
 
-    # fetch colleges and write rows
-    college_qs = College.objects.filter(id__in=filtered_college_ids).order_by("College_Code")
-    for c in college_qs:
-        ws.append([
-            c.College_Code,
-            c.College_Name,
-            c.address,
-            c.country,
-            c.state,
-            c.District,
-            c.taluka,
-            c.city,
-            c.pincode,
-            c.college_type,
-            c.belongs_to,
-            c.affiliated,
-            c.total_washrooms,
-            c.male_washrooms,
-            c.female_washrooms,
-        ])
+    header_fill = PatternFill(start_color="006699", fill_type="solid")
+    for col in range(1, len(headers) + 1):
+        c = ws.cell(row=1, column=col)
+        c.font = Font(bold=True, color="FFFFFF")
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # washroom aggregates
-    wash_agg = college_qs.aggregate(
-        total=Sum("total_washrooms"),
-        male=Sum("male_washrooms"),
-        female=Sum("female_washrooms"),
+    row_num = 2
+
+    student_fields = [
+        "total_students",
+        "total_male", "total_female", "total_others",
+
+        # caste (gender split)
+        "open_male", "open_female", "open_others",
+        "obc_male", "obc_female", "obc_others",
+        "sc_male", "sc_female", "sc_others",
+        "st_male", "st_female", "st_others",
+        "nt_male", "nt_female", "nt_others",
+        "vjnt_male", "vjnt_female", "vjnt_others",
+        "ews_male", "ews_female", "ews_others",
+
+        # religion (gender split)
+        "hindu_male", "hindu_female", "hindu_others",
+        "muslim_male", "muslim_female", "muslim_others",
+        "sikh_male", "sikh_female", "sikh_others",
+        "christian_male", "christian_female", "christian_others",
+        "jain_male", "jain_female", "jain_others",
+        "buddhist_male", "buddhist_female", "buddhist_others",
+        "other_religion_male", "other_religion_female", "other_religion_others",
+
+        # disability (gender split)
+        "no_disability_male", "no_disability_female", "no_disability_others",
+        "low_vision_male", "low_vision_female", "low_vision_others",
+        "blindness_male", "blindness_female", "blindness_others",
+        "hearing_male", "hearing_female", "hearing_others",
+        "locomotor_male", "locomotor_female", "locomotor_others",
+        "autism_male", "autism_female", "autism_others",
+        "other_disability_male", "other_disability_female", "other_disability_others",
+    ]
+
+    overall_agg = {f: 0 for f in student_fields}
+
+    # washroom aggregate trackers
+    total_washrooms_sum = 0
+    male_washrooms_sum = 0
+    female_washrooms_sum = 0
+
+    # iterate colleges (THIS year, after filters)
+    for college in qs:
+        total_washrooms_sum += college.total_washrooms or 0
+        male_washrooms_sum += college.male_washrooms or 0
+        female_washrooms_sum += college.female_washrooms or 0
+
+        # student aggregates for THIS year only
+        year_records = {
+            rec.Program_id: rec
+            for rec in college.student_aggregates.filter(
+                Academic_Year=year,
+                is_deleted=False
+            )
+        }
+
+        # group programs by discipline
+        discipline_map = {}
+        for cp in college.college_programs.filter(is_deleted=False):
+            discipline_map.setdefault(cp.Discipline, []).append(cp)
+        if not discipline_map:
+            discipline_map = {"No Discipline": []}
+
+        total_program_rows = sum(len(plist) if plist else 1 for _, plist in discipline_map.items())
+        if total_program_rows <= 0:
+            total_program_rows = 1
+        start_row = row_num
+        end_row = row_num + total_program_rows - 1
+
+        # MERGE college info across the rows
+        college_fields = [
+            college.College_Code,
+            college.College_Name,
+            college.address or "",
+            college.pincode or "",
+            college.country or "",
+            college.state or "",
+            college.District or "",
+            college.taluka or "",
+            college.city or "",
+            college.college_type or "",
+            college.belongs_to or "",
+            college.affiliated or "",
+            college.total_washrooms if college.total_washrooms is not None else "",
+            college.male_washrooms if college.male_washrooms is not None else "",
+            college.female_washrooms if college.female_washrooms is not None else "",
+        ]
+        for ci, val in enumerate(college_fields, start=1):
+            ws.merge_cells(start_row=start_row, start_column=ci, end_row=end_row, end_column=ci)
+            cell = ws.cell(row=start_row, column=ci, value=val)
+            cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+        # write discipline & program rows
+        current_row = row_num
+        for discipline, progs in discipline_map.items():
+            progs_list = progs if progs else [None]
+            # discipline is column 16
+            ws.merge_cells(
+                start_row=current_row,
+                start_column=16,
+                end_row=current_row + len(progs_list) - 1,
+                end_column=16,
+            )
+            ws.cell(row=current_row, column=16, value=discipline).alignment = Alignment(
+                vertical="center", horizontal="center", wrap_text=True
+            )
+
+            for prog in progs_list:
+                if prog:
+                    ws.cell(current_row, 17, prog.ProgramName)
+                    rec = year_records.get(prog.id)
+                else:
+                    ws.cell(current_row, 17, "No Program")
+                    rec = None
+
+                # write student fields starting at column 18
+                if rec:
+                    for i, field in enumerate(student_fields):
+                        v = getattr(rec, field, 0) or 0
+                        ws.cell(current_row, 18 + i, v)
+                        overall_agg[field] += v
+                else:
+                    for i, field in enumerate(student_fields):
+                        ws.cell(current_row, 18 + i, 0)
+                current_row += 1
+
+        row_num = end_row + 1
+
+    # FINAL AGGREGATE ROW
+    agg_row = row_num
+
+    # merge only columns 1..12 for the label (leave 13–15 free for washroom totals)
+    ws.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=12)
+    label_cell = ws.cell(agg_row, 1, f"Aggregate Values - {year}")
+    label_cell.font = Font(bold=True)
+    label_cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    # washroom totals in columns 13–15
+    ws.cell(agg_row, 13, total_washrooms_sum)
+    ws.cell(agg_row, 14, male_washrooms_sum)
+    ws.cell(agg_row, 15, female_washrooms_sum)
+
+    for col_idx in (13, 14, 15):
+        c = ws.cell(agg_row, col_idx)
+        c.font = Font(bold=True, color="CC6600")
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    # overall student census aggregates starting at column 18
+    for i, field in enumerate(student_fields):
+        tot = overall_agg[field]
+        cell = ws.cell(agg_row, 18 + i, tot)
+        cell.font = Font(bold=True, color="CC6600")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    # Auto-width heuristic
+    for col in range(1, len(headers) + 1):
+        letter = get_column_letter(col)
+        max_len = 0
+        for cell in ws[letter]:
+            if cell.value:
+                l = len(str(cell.value))
+                if l > max_len:
+                    max_len = l
+        ws.column_dimensions[letter].width = min(max_len + 5, 60)
+
+    # Return XLSX
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    import datetime
+    date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"Statistics_data_{year}_{date_str}.xlsx"
+    resp = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    total_washrooms = wash_agg["total"] or 0
-    male_washrooms = wash_agg["male"] or 0
-    female_washrooms = wash_agg["female"] or 0
-
-    # student aggregates (filter by same college ids and optional program/discipline)
-    students = student_aggregate_master.objects.filter(College_id__in=filtered_college_ids, is_deleted=False)
-    if disciplines:
-        students = students.filter(Program__Discipline__in=disciplines)
-    if programs:
-        students = students.filter(Program__ProgramName__in=programs)
-
-    def agg(field):
-        return students.aggregate(total=Sum(field))["total"] or 0
-
-    aggregates = {
-        "total_colleges": len(filtered_college_ids),
-        "total_washrooms": total_washrooms,
-        "male_washrooms": male_washrooms,
-        "female_washrooms": female_washrooms,
-        "total_students": agg("total_students"),
-
-        "total_male": agg("total_male"),
-        "total_female": agg("total_female"),
-        "total_others": agg("total_others"),
-
-        "open_male": agg("open_male"),
-        "open_female": agg("open_female"),
-        "open_others": agg("open_others"),
-
-        "obc_male": agg("obc_male"),
-        "obc_female": agg("obc_female"),
-        "obc_others": agg("obc_others"),
-
-        "sc_male": agg("sc_male"),
-        "sc_female": agg("sc_female"),
-        "sc_others": agg("sc_others"),
-
-        "st_male": agg("st_male"),
-        "st_female": agg("st_female"),
-        "st_others": agg("st_others"),
-
-        "nt_male": agg("nt_male"),
-        "nt_female": agg("nt_female"),
-        "nt_others": agg("nt_others"),
-
-        "vjnt_male": agg("vjnt_male"),
-        "vjnt_female": agg("vjnt_female"),
-        "vjnt_others": agg("vjnt_others"),
-
-        "ews_male": agg("ews_male"),
-        "ews_female": agg("ews_female"),
-        "ews_others": agg("ews_others"),
-
-        "hindu_male": agg("hindu_male"),
-        "hindu_female": agg("hindu_female"),
-        "hindu_others": agg("hindu_others"),
-
-        "muslim_male": agg("muslim_male"),
-        "muslim_female": agg("muslim_female"),
-        "muslim_others": agg("muslim_others"),
-
-        "sikh_male": agg("sikh_male"),
-        "sikh_female": agg("sikh_female"),
-        "sikh_others": agg("sikh_others"),
-
-        "christian_male": agg("christian_male"),
-        "christian_female": agg("christian_female"),
-        "christian_others": agg("christian_others"),
-
-        "jain_male": agg("jain_male"),
-        "jain_female": agg("jain_female"),
-        "jain_others": agg("jain_others"),
-
-        "buddhist_male": agg("buddhist_male"),
-        "buddhist_female": agg("buddhist_female"),
-        "buddhist_others": agg("buddhist_others"),
-
-        "other_religion_male": agg("other_religion_male"),
-        "other_religion_female": agg("other_religion_female"),
-        "other_religion_others": agg("other_religion_others"),
-
-        "no_disability_male": agg("no_disability_male"),
-        "no_disability_female": agg("no_disability_female"),
-        "no_disability_others": agg("no_disability_others"),
-
-        "low_vision_male": agg("low_vision_male"),
-        "low_vision_female": agg("low_vision_female"),
-        "low_vision_others": agg("low_vision_others"),
-
-        "blindness_male": agg("blindness_male"),
-        "blindness_female": agg("blindness_female"),
-        "blindness_others": agg("blindness_others"),
-
-        "hearing_male": agg("hearing_male"),
-        "hearing_female": agg("hearing_female"),
-        "hearing_others": agg("hearing_others"),
-
-        "locomotor_male": agg("locomotor_male"),
-        "locomotor_female": agg("locomotor_female"),
-        "locomotor_others": agg("locomotor_others"),
-
-        "autism_male": agg("autism_male"),
-        "autism_female": agg("autism_female"),
-        "autism_others": agg("autism_others"),
-
-        "other_disability_male": agg("other_disability_male"),
-        "other_disability_female": agg("other_disability_female"),
-        "other_disability_others": agg("other_disability_others"),
-    }
-
-    # write aggregates after college rows
-    ws.append([])
-    ws.append(["Aggregate", "Value"])
-    for k, v in aggregates.items():
-        ws.append([k, v])
-
-    # stream xlsx back
-    bio = io.BytesIO()
-    wb.save(bio)
-    bio.seek(0)
-
-    response = HttpResponse(
-        bio.getvalue(),
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    response["Content-Disposition"] = 'attachment; filename="filtered_data.xlsx"'
-    return response
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp
