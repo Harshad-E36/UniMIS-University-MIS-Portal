@@ -1913,8 +1913,8 @@
           $.ajax({
             url: "{% url 'get_dashboard_data' %}",
             type: "GET",
-            data :{
-              "academic_year" : $("globalAcademicYear").value()
+            data: {
+              "year": $("#globalAcademicYear").val()
             },
             success: function (response) {
               if (response.status === 200) {
@@ -2110,7 +2110,7 @@
           "BelongsTo[]": selectedFilters.belongsTo,
           "Discipline[]": selectedFilters.discipline,
           "Programs[]": selectedFilters.programs,
-          "academic" : selectedFilters.year
+          "year": selectedFilters.year
         },
         success: function (response) {
           if (response.status === 200) {
@@ -2134,6 +2134,9 @@
       $.ajax({
         url: "{% url 'get_dashboard_data' %}",
         type: "GET",
+        data: {
+          year:$("#globalAcademicYear").val()
+        },
         success: function (response) {
           if (response.status === 200) {
 
@@ -2171,7 +2174,7 @@
         type: "POST",
         url: "{% url 'export_filtered_excel' %}",
         data: {
-          "year": selectedFilters.year,                 
+          "year": selectedFilters.year,
           "CollegeCode[]": selectedFilters.collegeCode,
           "CollegeName[]": selectedFilters.collegeName,
           "District[]": selectedFilters.district,
@@ -2234,7 +2237,31 @@
 
     });
 
+    $('#globalAcademicYear').on('change', function () {
+      const year = $(this).val();
+      // Uncheck all checkboxes in every filter dropdown
+      $(".filter-dropdown .form-check-input").prop("checked", false);
+      $("input[name='district']").trigger("change");
 
+      $.ajax({
+        url: "{% url 'get_dashboard_data' %}",
+        type: "GET",
+        data: {
+          year: year   // <-- matches backend param name
+        },
+        success: function (response) {
+          if (response && response.status === 200) {
+            updateDashboardCounters(response);
+
+          } else {
+            showNotification("Failed to load dashboard data.", "error");
+          }
+        },
+        error: function () {
+          showNotification("Error fetching dashboard data.", "error");
+        }
+      });
+    });
   });
 
 

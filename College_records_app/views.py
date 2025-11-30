@@ -301,12 +301,13 @@ def get_dashboard_data(request):
     if request.method == 'GET':
 
         # get academic year from request
-        academic_year = request.GET.get('academic_year', None)
+        academic_year = request.GET.get('year', None)
+        print(academic_year)
 
         # base queryset for students (filtered by academic_year if provided)
         student_qs = student_aggregate_master.objects.filter(is_deleted=False)
         if academic_year:
-            student_qs = student_qs.filter(academic_year=academic_year)
+            student_qs = student_qs.filter(Academic_Year=academic_year)
 
         # colleges aggregates
         total_colleges = College.objects.filter(is_deleted=False).count()
@@ -496,6 +497,8 @@ def user_logout(request):
     
 
 
+
+@ajax_login_required
 def apply_filters(request):
     if request.method == "POST":
         college_codes = request.POST.getlist('ColegeCode[]')
@@ -506,7 +509,7 @@ def apply_filters(request):
         belongs_tos = request.POST.getlist('BelongsTo[]')
         disciplines = request.POST.getlist('Discipline[]')
         programs = request.POST.getlist('Programs[]')
-        academic_year = request.POST.get('academic_year')
+        academic_year = request.POST.get('year')  # kept 'year' to match your frontend
 
         # ============================================================
         # FIX 1 — BASE FILTER (no college_programs join here!)
@@ -535,22 +538,38 @@ def apply_filters(request):
 
         # ============================================================
         # FIX 1 — DISCIPLINE/PROGRAM filtering (separate query)
-        # Apply academic_year to CollegeProgram if provided
+        # If academic_year provided, derive matches from student_aggregate_master
+        # else use CollegeProgram as before
         # ============================================================
         if disciplines or programs:
-            prog_q = Q(is_deleted=False)
-            if disciplines:
-                prog_q &= Q(Discipline__in=disciplines)
-            if programs:
-                prog_q &= Q(ProgramName__in=programs)
             if academic_year:
-                prog_q &= Q(academic_year=academic_year)  # apply academic year to CollegeProgram
+                # use student_aggregate_master which has Academic_Year field
+                prog_match_q = Q(is_deleted=False, Academic_Year=academic_year)
 
-            match_ids = set(
-                CollegeProgram.objects.filter(prog_q)
-                .values_list("College_id", flat=True)
-                .distinct()
-            )
+                if disciplines:
+                    # student_aggregate_master -> Program (FK) -> Discipline
+                    prog_match_q &= Q(Program__Discipline__in=disciplines)
+                if programs:
+                    prog_match_q &= Q(Program__ProgramName__in=programs)
+
+                match_ids = set(
+                    student_aggregate_master.objects.filter(prog_match_q)
+                    .values_list("College_id", flat=True)
+                    .distinct()
+                )
+            else:
+                # no academic_year: fall back to CollegeProgram master table
+                prog_q = Q(is_deleted=False)
+                if disciplines:
+                    prog_q &= Q(Discipline__in=disciplines)
+                if programs:
+                    prog_q &= Q(ProgramName__in=programs)
+
+                match_ids = set(
+                    CollegeProgram.objects.filter(prog_q)
+                    .values_list("College_id", flat=True)
+                    .distinct()
+                )
 
             filtered_college_ids = list(base_ids.intersection(match_ids))
         else:
@@ -560,9 +579,11 @@ def apply_filters(request):
         # FIX 4 — Zero response if no matched colleges
         # ============================================================
         if not filtered_college_ids:
+            # return zeros and echo academic_year for clarity
             return JsonResponse({
                 "status": 200,
                 "message": "Filters applied successfully",
+                "academic_year": academic_year,
                 "total_colleges": 0,
                 "total_washrooms": 0,
                 "male_washrooms": 0,
@@ -673,14 +694,14 @@ def apply_filters(request):
 
         # ============================================================
         # FIX 3 — Student rows filtered by College + Program/Discipline
-        # Apply academic_year to student_aggregate_master if provided
+        # Apply academic_year to students if provided
         # ============================================================
         students = student_aggregate_master.objects.filter(
             College_id__in=filtered_college_ids,
             is_deleted=False
         )
         if academic_year:
-            students = students.filter(academic_year=academic_year)
+            students = students.filter(Academic_Year=academic_year)
 
         # If programs/disciplines were provided, narrow students via related Program fields
         if disciplines:
@@ -791,6 +812,7 @@ def apply_filters(request):
         return JsonResponse({
             "status": 200,
             "message": "Filters applied successfully",
+            "academic_year": academic_year,
             "total_colleges": len(filtered_college_ids),
             "total_washrooms": total_washrooms,
             "male_washrooms": male_washrooms,
