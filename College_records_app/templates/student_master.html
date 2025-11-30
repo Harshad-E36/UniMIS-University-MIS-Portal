@@ -1238,50 +1238,42 @@
 
     const programsByDiscipline = data.programs || {};
 
-    // keys (used in template classnames: cat-<key>-male, rel-<key>-female, dis-<key>-others)
     const catKeys = ["open", "obc", "sc", "st", "nt", "vjnt", "ews"];
     const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other_religion"];
     const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other_disability"];
 
-    // small helper to coerce to integer default 0
     const n = v => {
       const x = Number(v);
       return Number.isFinite(x) ? x : 0;
     };
 
-    // iterate disciplines
     Object.entries(programsByDiscipline).forEach(([discipline, programList]) => {
       const discTpl = document.querySelector("#disciplineTemplate");
       const discFrag = discTpl.content.cloneNode(true);
 
-      // set discipline title once
       const discTitleEl = discFrag.querySelector(".discipline-title");
       if (discTitleEl) discTitleEl.textContent = discipline;
 
       const programContainer = discFrag.querySelector(".discipline-programs-container");
-
-      // build programs fragment to minimize reflows
       const progBatch = document.createDocumentFragment();
 
       programList.forEach(programName => {
         const progTpl = document.querySelector("#programTemplate");
         const progFrag = progTpl.content.cloneNode(true);
 
-        // find the program section root inside the cloned fragment
         const sectionEl = progFrag.querySelector(".program-section");
         if (sectionEl) sectionEl.setAttribute("data-program", programName);
 
         const titleEl = progFrag.querySelector(".program-title");
         if (titleEl) titleEl.textContent = programName;
 
-        // quickly set total & triplet fields using native selectors (fewer lookups)
         const saved = savedRecords[programName] || {};
 
         // total students
         const totalEl = progFrag.querySelector(".total-students");
         if (totalEl) totalEl.value = saved.total_students !== undefined ? saved.total_students : "";
 
-        // gender
+        // GENDER
         const g = saved.gender || { male: 0, female: 0, others: 0 };
         const gm = progFrag.querySelector(".gender-male");
         const gf = progFrag.querySelector(".gender-female");
@@ -1290,7 +1282,22 @@
         if (gf) gf.value = n(g.female);
         if (go) go.value = n(g.others);
 
-        // categories
+        // WASHROOMS (program-level)
+        const w = saved.washrooms || {
+          total_washrooms: 0,
+          male_washrooms: 0,
+          female_washrooms: 0
+        };
+
+        const wt = progFrag.querySelector(".wash-total");
+        const wm = progFrag.querySelector(".wash-male");
+        const wf = progFrag.querySelector(".wash-female");
+
+        if (wt) wt.value = n(w.total_washrooms);
+        if (wm) wm.value = n(w.male_washrooms);
+        if (wf) wf.value = n(w.female_washrooms);
+
+        // CATEGORY
         const cat = saved.category || {};
         catKeys.forEach(key => {
           const grp = cat[key] || { male: 0, female: 0, others: 0 };
@@ -1302,7 +1309,7 @@
           if (othersEl) othersEl.value = n(grp.others);
         });
 
-        // religion
+        // RELIGION
         const rel = saved.religion || {};
         relKeys.forEach(key => {
           const grp = rel[key] || { male: 0, female: 0, others: 0 };
@@ -1314,7 +1321,7 @@
           if (othersEl) othersEl.value = n(grp.others);
         });
 
-        // disability
+        // DISABILITY
         const dis = saved.disability || {};
         disKeys.forEach(key => {
           const grp = dis[key] || { male: 0, female: 0, others: 0 };
@@ -1329,7 +1336,6 @@
         progBatch.appendChild(progFrag);
       });
 
-      // append all programs for this discipline and then the discipline block
       programContainer.appendChild(progBatch);
       container.appendChild(discFrag);
     });
@@ -1341,7 +1347,7 @@
       serverSide: true,
       processing: true,
       ajax: {
-        url: "/get-student-records/",
+        url: "/get_student_records/",
         type: "GET",
         data: function (d) {
           // always take latest selected year
@@ -1397,7 +1403,7 @@
       order: [[2, "asc"]]
     });
 
-    // 🔹 External export button (like Page 1)
+    // External export button (like Page 1)
     $("#ExportStudentExcelButton").on("click", function () {
       const dt = table;
       const year = $("#globalAcademicYear").val();
@@ -1411,13 +1417,6 @@
         year: year,
         search: dt.search() || "",
         order: dt.order() || []
-        // if you later want to mirror Page 1 structure:
-        // columns: dt.settings().init().columns.map((c, idx) => ({
-        //   index: idx,
-        //   data: c.data,
-        //   visible: c.visible !== false
-        // })),
-        // extra_filters: {}
       };
 
       $.ajax({
@@ -1656,6 +1655,7 @@
     });
   }
 
+  
   function showNotification(message, type) {
     var notificationClass = type === "success" ? "notification-success" : "notification-error";
     var notification = $('<div>', {
@@ -1986,6 +1986,7 @@
         }
       });
     });
+
 
     // DELETE RECORD HANDLER 
     $(document).on("click", ".btn-delete", function () {
