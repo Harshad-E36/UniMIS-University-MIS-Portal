@@ -155,7 +155,7 @@
         success: function (res) {
           if (res.status === 200) {
             showNotification(res.message, "success");
-            setTimeout(() => window.location.href = "/", 500);
+            setTimeout(() => window.location.href = "/", 350);
           } else {
             showNotification(res.message, "error");
           }

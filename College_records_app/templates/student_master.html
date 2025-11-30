@@ -36,6 +36,9 @@
   <title>Student Records</title>
 
   <style>
+    /* =========================================================
+     GLOBAL / BODY
+  ========================================================= */
     /* Validation */
     label.error {
       color: #dc3545;
@@ -54,7 +57,9 @@
       /* IMPORTANT */
     }
 
-    /* Modal scroll fixes */
+    /* =========================================================
+     MODAL SCROLL / SIZING
+  ========================================================= */
     .modal-dialog {
       max-width: 90%;
       margin: 1.5rem auto;
@@ -73,7 +78,9 @@
       padding-right: 15px;
     }
 
-    /* Header */
+    /* =========================================================
+     HEADER BANNER (TOP OF PAGE)
+  ========================================================= */
     .header-container {
       margin-top: 0.5rem;
     }
@@ -84,31 +91,24 @@
       border-radius: 1rem;
       padding: 2.5rem 1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Scoped header-actions CSS — append this to existing header styles */
-    .header-banner {
       position: relative;
+      /* for header-actions positioning */
     }
 
-    /* absolutely-positioned, vertically-centered right-side actions */
+    /* Right-side header actions (Create / Logout / Export / Year) */
     .header-banner .header-actions {
       position: absolute;
       right: 1rem;
-      /* distance from right */
       top: 50%;
       transform: translateY(-50%);
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      /* right-align stacked content */
       gap: 0.5rem;
       z-index: 5;
       padding: 0.25rem;
-      /* small breathing room */
     }
 
-    /* Rows inside header-actions */
     .header-banner .header-actions .btn-row,
     .header-banner .header-actions .bottom-row {
       display: flex;
@@ -117,13 +117,12 @@
       justify-content: flex-end;
     }
 
-    /* Keep select width but responsive */
     .header-banner .header-actions select#globalAcademicYear {
       width: 110px;
       max-width: 100%;
     }
 
-    /* Responsive fallback: on narrow screens, make actions flow under the center */
+    /* Responsive header actions */
     @media (max-width: 720px) {
       .header-banner .header-actions {
         position: static;
@@ -142,8 +141,9 @@
       }
     }
 
-
-    /* Table */
+    /* =========================================================
+     TABLE CONTAINER / DATATABLE HEADER
+  ========================================================= */
     .table-container {
       background: white;
       border-radius: 1rem;
@@ -161,7 +161,9 @@
       vertical-align: middle;
     }
 
-    /* Notification styles */
+    /* =========================================================
+     NOTIFICATIONS
+  ========================================================= */
     .notification {
       position: fixed;
       top: 10px;
@@ -192,7 +194,9 @@
       transform: translateX(-50%) translateY(20px);
     }
 
-    /* College code cassette */
+    /* =========================================================
+     COLLEGE CODE CASSETTE
+  ========================================================= */
     #collegeCodeCassette {
       width: 100%;
       display: flex;
@@ -201,14 +205,14 @@
       max-height: 0;
       opacity: 0;
       overflow: hidden;
-      transition: max-height .35s ease, opacity .3s ease;
+      transition: max-height 0.35s ease, opacity 0.3s ease;
     }
 
     #collegeCodeCassette .inner-cassette {
       background: white;
-      padding: .6rem .9rem;
-      border-radius: .75rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+      padding: 0.6rem 0.9rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       border: 1px solid rgba(0, 0, 0, 0.08);
       width: auto;
       display: inline-flex;
@@ -231,16 +235,19 @@
     #collegeCodeInput:focus {
       background: #fff;
       border-color: #0d6efd;
-      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, .15);
+      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15);
     }
 
-    /* Fix right white space in DataTables child accordion */
+    /* =========================================================
+     DATATABLE CHILD / ACCORDION WIDTH FIXES
+  ========================================================= */
+    /* kill extra side margins in DataTables child rows */
     .dt-child-scroll .row {
       margin-left: 0 !important;
       margin-right: 0 !important;
     }
 
-    /* Ensure accordion inside DataTable row uses 100% width */
+    /* Ensure accordion inside DataTable row uses full width */
     .dt-child-scroll .accordion-item,
     .dt-child-scroll .accordion-button,
     .dt-child-scroll .accordion-body,
@@ -251,9 +258,73 @@
       overflow-x: hidden;
     }
 
-    /* ------------------------------
-   DISCIPLINE HEADER STYLING
------------------------------- */
+    /* =========================================================
+     DISCIPLINE HEADER (IN CHILD ACCORDION)
+  ========================================================= */
+    .discipline-header-row {
+      display: flex;
+      align-items: center;
+      padding: 2px 4px;
+      margin: 4px 0 2px 0;
+      width: 100%;
+    }
+
+    .discipline-header-text {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0d6efd;
+      text-align: left;
+      display: inline-block;
+    }
+
+    .discipline-divider {
+      border-top: 1px solid #d7dce2;
+      margin: 4px 0 10px 0;
+    }
+
+    .accordion .discipline-header-row,
+    .accordion .discipline-header-text {
+      padding-left: 0 !important;
+      margin-left: 0 !important;
+      text-align: left !important;
+    }
+
+    /* =========================================================
+     PROGRAM CARDS LAYOUT (4 columns, full width)
+     - Column 1: Gender + Washrooms stacked
+     - Column 2: Category
+     - Column 3: Religion
+     - Column 4: Disability
+  ========================================================= */
+    .program-content-row {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      /* keep 4 cards in one row */
+      width: 100% !important;
+      margin: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      --bs-gutter-x: 0;
+      /* kill Bootstrap gutters */
+    }
+
+    .metric-col {
+      flex: 0 0 25% !important;
+      /* exactly 1/4 each */
+      max-width: 25% !important;
+      min-width: 0 !important;
+      padding: 0 0.5rem !important;
+      /* small internal gap */
+      box-sizing: border-box !important;
+    }
+
+    .metric-col .card {
+      width: 100%;
+    }
+
+    /* =========================================================
+     PROGRAM EDIT MODAL (DISCIPLINE / PROGRAM BLOCKS)
+  ========================================================= */
     .discipline-wrapper {
       background: #f1f5f9;
       border: 1px solid #d6dbe1;
@@ -272,9 +343,6 @@
       font-size: 1.1rem;
     }
 
-    /* ------------------------------
-   PROGRAM BLOCK STYLING
------------------------------- */
     .program-section {
       background: #ffffff;
       border: 1px solid #e3e6ea;
@@ -289,7 +357,6 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     }
 
-    /* Program Title */
     .program-title {
       font-size: 1.2rem;
       font-weight: 700;
@@ -297,9 +364,6 @@
       margin-bottom: 10px;
     }
 
-    /* ------------------------------
-   SECTION HEADINGS (Gender / Category / Religion etc.)
------------------------------- */
     .program-section h6 {
       font-size: 1.1rem !important;
       font-weight: 700 !important;
@@ -309,15 +373,11 @@
       border-bottom: 2px solid #dee2e6;
     }
 
-    /* “Total Students” label */
     .program-section label.fw-semibold {
       font-size: 1.05rem;
       font-weight: 600 !important;
     }
 
-    /* ------------------------------
-   FORM INPUT SPACING
------------------------------- */
     .program-section .row {
       margin-bottom: 0.6rem;
     }
@@ -326,82 +386,30 @@
       border-radius: 6px !important;
     }
 
-    /* ------------------------------
-   SEPARATOR LINE between programs
------------------------------- */
     .discipline-programs-container .program-section:not(:last-child) {
       border-bottom: 2px dashed #d2d6da;
       padding-bottom: 1.2rem;
       margin-bottom: 1.5rem;
     }
 
-    /* ------------------------------
-   Smooth collapse animation
------------------------------- */
     .discipline-programs-container {
       overflow: hidden;
     }
 
-    /* ------------------------------
-   CLEAN DISCIPLINE HEADER (DATATABLE ACCORDION)
------------------------------- */
-
-    .discipline-header-row {
-      display: flex;
-      align-items: center;
-      padding: 2px 4px;
-      margin: 4px 0 2px 0;
-      width: 100%;
+    .dt-child-scroll .accordion-button {
+      font-weight: 600 !important;
+      color: #1a1a1a !important;
+      font-size: 1.02rem !important;
     }
 
-    .discipline-header-text {
-      font-size: 1rem;
-      /* same size as program titles */
-      font-weight: 600;
-      color: #0d6efd;
-      text-align: left;
-      display: inline-block;
+    .dt-child-scroll .accordion-button:not(.collapsed) {
+      background-color: #fafafa !important;
+      color: #1a1a1a !important;
     }
-
-    /* subtle divider between discipline header and programs */
-    .discipline-divider {
-      border-top: 1px solid #d7dce2;
-      margin: 4px 0 10px 0;
-    }
-
-    /* Override Bootstrap accordion spacing interference */
-    .accordion .discipline-header-row,
-    .accordion .discipline-header-text {
-      padding-left: 0 !important;
-      margin-left: 0 !important;
-      text-align: left !important;
-    }
-
-    /* minimal: let program cards fill the available width, flex-based and responsive */
-    .program-content-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      /* small spacing between cards */
-      padding-left: 0;
-      /* safe, scoped */
-      padding-right: 0;
-    }
-
-    .metric-col {
-      flex: 1 1 16%;
-      /* allow cards to grow; target ~6 per row */
-      min-width: 140px;
-      /* prevents cards from collapsing too small */
-      max-width: 22%;
-      /* prevents each card from becoming too wide on large screens */
-      box-sizing: border-box;
-    }
-
 
     /* =========================================================
-   MODAL HEADER - MATCH PAGE GRADIENT
-   ========================================================= */
+     MODAL HEADER – MATCH PAGE GRADIENT
+  ========================================================= */
     #collegeModal .modal-header {
       background: linear-gradient(135deg, #0d6efd, #198754) !important;
       color: #fff !important;
@@ -410,7 +418,6 @@
       padding: 1.4rem 1.6rem !important;
     }
 
-    /* Make close button white */
     #collegeModal .btn-close {
       filter: invert(1) brightness(200%) !important;
       opacity: 0.9;
@@ -420,7 +427,6 @@
       opacity: 1;
     }
 
-    /* Ensure college name + address become white */
     #modalCollegeName {
       color: #fff !important;
     }
@@ -429,7 +435,6 @@
       color: rgba(255, 255, 255, 0.9) !important;
     }
 
-    /* Fix white tips on modal header corners */
     #collegeModal .modal-content {
       background: #ffffff;
       border-top-left-radius: 0 !important;
@@ -438,19 +443,18 @@
       /* allow header to round properly */
     }
 
-    /* Ensure FULL modal box has smooth corner radius except header */
     #collegeModal .modal-dialog {
       border-radius: 1rem !important;
       overflow: hidden;
       /* clips corners cleanly */
     }
 
-    /* Reapply bottom corners to modal-content */
     #collegeModal .modal-content {
       border-bottom-left-radius: 1rem !important;
       border-bottom-right-radius: 1rem !important;
     }
   </style>
+
 </head>
 
 <body>
@@ -611,11 +615,18 @@
         <!-- GENDER COUNT -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Gender Count</h6>
         <div class="row mt-2">
-          <div class="col-md-3"> <label>Male</label> <input type="number" class="form-control gender-male" min="0">
+          <div class="col-md-3">
+            <label>Male</label>
+            <input type="number" class="form-control gender-male" min="0" placeholder="M">
           </div>
-          <div class="col-md-3"> <label>Female</label> <input type="number" class="form-control gender-female" min="0">
+          <div class="col-md-3">
+            <label>Female</label>
+            <input type="number
+               " class="form-control gender-female" min="0" placeholder="F">
           </div>
-          <div class="col-md-3"> <label>Others</label> <input type="number" class="form-control gender-others" min="0">
+          <div class="col-md-3">
+            <label>Others</label>
+            <input type="number" class="form-control gender-others" min="0" placeholder="O">
           </div>
         </div>
 
@@ -624,28 +635,30 @@
         <div class="row mt-2">
           <div class="col-md-4">
             <label>Total Washrooms</label>
-            <input type="number" class="form-control wash-total" min="0" placeholder="Total">
+            <input type="number" class="form-control wash-total" min="0" placeholder="T">
           </div>
           <div class="col-md-4">
             <label>Male Washrooms</label>
-            <input type="number" class="form-control wash-male" min="0" placeholder="Male">
+            <input type="number" class="form-control wash-male" min="0" placeholder="M">
           </div>
           <div class="col-md-4">
             <label>Female Washrooms</label>
-            <input type="number" class="form-control wash-female" min="0" placeholder="Female">
+            <input type="number" class="form-control wash-female" min="0" placeholder="F">
           </div>
         </div>
 
         <!-- Immediately after total: quick per-subcategory gender breakdown header -->
         <div class="row mt-3">
           <div class="col-12">
-            <small class="text-muted">For each subcategory below enter Male / Female / Others counts</small>
+            <small class="text-muted">
+              For each subcategory below enter Male / Female / Others counts
+            </small>
           </div>
         </div>
 
         <!-- ---------------------------
-         CATEGORY COUNT (each subcategory now has 3 inputs: M / F / O)
-         --------------------------- -->
+     CATEGORY COUNT (each subcategory now has 3 inputs: M / F / O)
+     --------------------------- -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Category Count</h6>
 
         <!-- OPEN -->
@@ -724,7 +737,7 @@
           </div>
         </div>
 
-        <!-- NT / VJNT / EWS -->
+        <!-- NT -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3">
             <label class="form-label mb-1">Nomadic Tribe (NT)</label>
@@ -743,6 +756,7 @@
           </div>
         </div>
 
+        <!-- VJNT -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3">
             <label class="form-label mb-1">VJNT (Vimukta Jati Nomadic Tribe)</label>
@@ -761,6 +775,7 @@
           </div>
         </div>
 
+        <!-- EWS -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3">
             <label class="form-label mb-1">Economically Weaker Section (EWS)</label>
@@ -780,165 +795,258 @@
         </div>
 
         <!-- ---------------------------
-         RELIGION COUNT (same pattern)
-         --------------------------- -->
+     RELIGION COUNT (same pattern)
+     --------------------------- -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Religion Count</h6>
 
         <!-- Hindu -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Hindu</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control rel-hindu-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control rel-hindu-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control rel-hindu-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control rel-hindu-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control rel-hindu-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control rel-hindu-others" min="0" placeholder="O">
+          </div>
         </div>
 
         <!-- Muslim -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Muslim</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control rel-muslim-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control rel-muslim-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control rel-muslim-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control rel-muslim-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control rel-muslim-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control rel-muslim-others" min="0" placeholder="O">
+          </div>
         </div>
 
         <!-- Sikh -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Sikh</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number" class="form-control rel-sikh-male"
-              min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control rel-sikh-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control rel-sikh-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control rel-sikh-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control rel-sikh-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control rel-sikh-others" min="0" placeholder="O">
+          </div>
         </div>
 
         <!-- Christian -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Christian</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control rel-christian-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control rel-christian-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control rel-christian-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control rel-christian-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control rel-christian-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control rel-christian-others" min="0" placeholder="O">
+          </div>
         </div>
 
-        <!-- Jain / Buddhist / Other -->
+        <!-- Jain -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Jain</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number" class="form-control rel-jain-male"
-              min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control rel-jain-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control rel-jain-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control rel-jain-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control rel-jain-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control rel-jain-others" min="0" placeholder="O">
+          </div>
         </div>
 
+        <!-- Buddhist -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Buddhist</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control rel-buddhist-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control rel-buddhist-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control rel-buddhist-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control rel-buddhist-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control rel-buddhist-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control rel-buddhist-others" min="0" placeholder="O">
+          </div>
         </div>
 
+        <!-- Other Religions -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Other Religions</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control rel-other_religion-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control rel-other_religion-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control rel-other_religion-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control rel-other_religion-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control rel-other_religion-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control rel-other_religion-others" min="0" placeholder="O">
+          </div>
         </div>
-
 
         <!-- ---------------------------
-         DISABILITY COUNT (same pattern)
-         --------------------------- -->
+     DISABILITY COUNT (same pattern)
+     --------------------------- -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Disability Count</h6>
 
+        <!-- No Disability -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">No Disability</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control dis-no_disability-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-no_disability-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-no_disability-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control dis-no_disability-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control dis-no_disability-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control dis-no_disability-others" min="0" placeholder="O">
+          </div>
         </div>
 
+        <!-- Low Vision -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Low Vision</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control dis-lowvision-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-lowvision-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-lowvision-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control dis-lowvision-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control dis-lowvision-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control dis-lowvision-others" min="0" placeholder="O">
+          </div>
         </div>
 
+        <!-- Blindness -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Blindness</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control dis-blindness-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-blindness-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-blindness-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control dis-blindness-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control dis-blindness-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control dis-blindness-others" min="0" placeholder="O">
+          </div>
         </div>
 
+        <!-- Hearing Impaired -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Hearing Impaired</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control dis-hearing-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-hearing-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-hearing-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control dis-hearing-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control dis-hearing-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control dis-hearing-others" min="0" placeholder="O">
+          </div>
         </div>
 
+        <!-- Locomotor Disability -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Locomotor Disability</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control dis-locomotor-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-locomotor-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-locomotor-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control dis-locomotor-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control dis-locomotor-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control dis-locomotor-others" min="0" placeholder="O">
+          </div>
         </div>
 
+        <!-- Autism -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Autism</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control dis-autism-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-autism-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-autism-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control dis-autism-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control dis-autism-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control dis-autism-others" min="0" placeholder="O">
+          </div>
         </div>
 
+        <!-- Other Disabilities -->
         <div class="row mt-2 align-items-end">
           <div class="col-md-3"><label class="form-label mb-1">Other Disabilities</label></div>
-          <div class="col-md-3"><label class="small">Male</label><input type="number"
-              class="form-control dis-other_disability-male" min="0"></div>
-          <div class="col-md-3"><label class="small">Female</label><input type="number"
-              class="form-control dis-other_disability-female" min="0"></div>
-          <div class="col-md-3"><label class="small">Others</label><input type="number"
-              class="form-control dis-other_disability-others" min="0"></div>
+          <div class="col-md-3">
+            <label class="small">Male</label>
+            <input type="number" class="form-control dis-other_disability-male" min="0" placeholder="M">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Female</label>
+            <input type="number" class="form-control dis-other_disability-female" min="0" placeholder="F">
+          </div>
+          <div class="col-md-3">
+            <label class="small">Others</label>
+            <input type="number" class="form-control dis-other_disability-others" min="0" placeholder="O">
+          </div>
         </div>
 
       </div>
     </template>
 
 
+    <!-- Program accordion card -->
     <template id="programAccordionTemplate">
       <div class="accordion-item">
         <h2 class="accordion-header">
@@ -954,24 +1062,13 @@
     </template>
 
     <template id="metricCardTemplate">
-      <div class="col-md-2 mb-3 metric-col">
+      <div class="col-12 col-md-3 mb-3 metric-col">
         <div class="card shadow-sm">
           <div class="card-header text-white py-2 text-center fw-bold metric-title"></div>
           <div class="card-body p-2">
             <table class="table table-sm mb-0">
               <tbody class="metric-body"></tbody>
             </table>
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <template id="totalCardTemplate">
-      <div class="col-md-2 mb-3">
-        <div class="card shadow-sm">
-          <div class="card-header bg-secondary text-white py-2 text-center fw-bold">Total</div>
-          <div class="card-body p-2">
-            <h4 class="text-center fw-bold mb-0 total-value"></h4>
           </div>
         </div>
       </div>
@@ -1538,7 +1635,6 @@
 
       // row.programs = [{ discipline: "", programs: [ ... ] }]
       row.programs.forEach((group, groupIndex) => {
-
         // ---------------------------
         // Discipline Header (inside accordion)
         // ---------------------------
@@ -1557,7 +1653,6 @@
         divider.className = "discipline-divider";
         accordion.appendChild(divider);
 
-
         // ---------------------------
         // Programs inside this discipline
         // ---------------------------
@@ -1566,7 +1661,8 @@
           const acc = tplItem.content.cloneNode(true);
 
           const btn = acc.querySelector(".accordion-button");
-          btn.textContent = `${p.name} (${p.total_students} students)`;
+          // Header text: show total students here
+          btn.textContent = `${p.name} (Total Students: ${p.total_students})`;
           btn.setAttribute("data-bs-toggle", "collapse");
           btn.setAttribute("data-bs-target", `#collapse-${row.college_code}-${groupIndex}-${i}`);
 
@@ -1576,13 +1672,14 @@
 
           const rowContainer = acc.querySelector(".program-content-row");
 
-          // ---- TOTAL CARD ----
-          const tplTotal = document.querySelector("#totalCardTemplate");
-          const totalClone = tplTotal.content.cloneNode(true);
-          totalClone.querySelector(".total-value").textContent = p.total_students;
-          rowContainer.appendChild(totalClone);
+          // Washroom data for this program (used with Gender column)
+          const wash = p.washrooms || {
+            total_washrooms: 0,
+            male_washrooms: 0,
+            female_washrooms: 0
+          };
 
-          // ---- METRICS ----
+          // ---- METRICS: 4 columns -> Gender(+Washrooms), Category, Religion, Disability
           const metricGroups = {
             "Gender": { color: "bg-primary", data: p.gender },
             "Category (M/F/O)": { color: "bg-success", data: p.category },
@@ -1600,29 +1697,63 @@
 
             const tbody = clone.querySelector(".metric-body");
 
-            // NEW: handle nested {male,female,others} objects
+            // handle nested {male,female,others} objects
             Object.entries(meta.data).forEach(([label, value]) => {
               const tr = document.createElement("tr");
 
               let displayValue;
-
-              // if it's an object with male/female/others, format as "M/F/O"
               if (value && typeof value === "object" && ("male" in value || "female" in value || "others" in value)) {
                 const m = Number.isFinite(Number(value.male)) ? Number(value.male) : 0;
                 const f = Number.isFinite(Number(value.female)) ? Number(value.female) : 0;
                 const o = Number.isFinite(Number(value.others)) ? Number(value.others) : 0;
                 displayValue = `${m}/${f}/${o}`;
               } else {
-                // fallback: plain number or string (backwards compatibility)
                 displayValue = (value === null || value === undefined || value === "") ? "-" : value;
               }
 
               tr.innerHTML = `
-                    <td>${LABEL_MAP[label] || label}</td>
-                    <td>${displayValue}</td>
-                `;
+            <td>${LABEL_MAP[label] || label}</td>
+            <td>${displayValue}</td>
+          `;
               tbody.appendChild(tr);
             });
+
+            // For Gender column only, add a second card (Washrooms) stacked below
+            if (title === "Gender") {
+              const colDiv = clone.querySelector(".metric-col") || clone.firstElementChild;
+
+              if (colDiv) {
+                const washCard = document.createElement("div");
+                washCard.className = "card shadow-sm mt-2";
+
+                washCard.innerHTML = `
+              <div class="card-header bg-info text-white py-2 text-center fw-bold">
+                Washrooms
+              </div>
+              <div class="card-body p-2">
+                <table class="table table-sm mb-0">
+                  <tbody>
+                    <tr>
+                      <td>Total</td>
+                      <td class="text-end">${wash.total_washrooms ?? 0}</td>
+                    </tr>
+                    <tr>
+                      <td>Male</td>
+                      <td class="text-end">${wash.male_washrooms ?? 0}</td>
+                    </tr>
+                    <tr>
+                      <td>Female</td>
+                      <td class="text-end">${wash.female_washrooms ?? 0}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            `;
+
+                // stack below Gender in the same col-md-3
+                colDiv.appendChild(washCard);
+              }
+            }
 
             rowContainer.appendChild(clone);
           });
@@ -1655,7 +1786,7 @@
     });
   }
 
-  
+
   function showNotification(message, type) {
     var notificationClass = type === "success" ? "notification-success" : "notification-error";
     var notification = $('<div>', {
