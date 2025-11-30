@@ -619,6 +619,23 @@
           </div>
         </div>
 
+        <!-- WASHROOM COUNT -->
+        <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Washroom Count</h6>
+        <div class="row mt-2">
+          <div class="col-md-4">
+            <label>Total Washrooms</label>
+            <input type="number" class="form-control wash-total" min="0" placeholder="Total">
+          </div>
+          <div class="col-md-4">
+            <label>Male Washrooms</label>
+            <input type="number" class="form-control wash-male" min="0" placeholder="Male">
+          </div>
+          <div class="col-md-4">
+            <label>Female Washrooms</label>
+            <input type="number" class="form-control wash-female" min="0" placeholder="Female">
+          </div>
+        </div>
+
         <!-- Immediately after total: quick per-subcategory gender breakdown header -->
         <div class="row mt-3">
           <div class="col-12">
@@ -1058,7 +1075,6 @@
   }
 
 
-
   function validateProgramSection(section) {
     // section is expected to be a jQuery object for the .program-section
     const programName = section.data("program") || "Program";
@@ -1098,6 +1114,39 @@
       return {
         valid: false,
         message: `${programName}: Gender total (${genderSum}) does not match Total Students (${total}).`
+      };
+    }
+
+    // WASHROOM VALIDATION: mandatory (cannot be empty), but 0 is allowed
+    const $washTotal = section.find(".wash-total");
+    const $washMale = section.find(".wash-male");
+    const $washFemale = section.find(".wash-female");
+
+    const rawWashTotal = ($washTotal.val() ?? "").trim();
+    const rawWashMale = ($washMale.val() ?? "").trim();
+    const rawWashFemale = ($washFemale.val() ?? "").trim();
+
+    // must NOT be empty (but "0" is OK)
+    if (rawWashTotal === "" || rawWashMale === "" || rawWashFemale === "") {
+      return {
+        valid: false,
+        message: `${programName}: All washroom fields (Total, Male, Female) are required. They may be 0 but cannot be left blank.`
+      };
+    }
+
+    const washTotal = parseInt(rawWashTotal, 10);
+    const washMale = parseInt(rawWashMale, 10);
+    const washFemale = parseInt(rawWashFemale, 10);
+
+    const safeWashTotal = Number.isFinite(washTotal) ? washTotal : 0;
+    const safeWashMale = Number.isFinite(washMale) ? washMale : 0;
+    const safeWashFemale = Number.isFinite(washFemale) ? washFemale : 0;
+    const washSum = safeWashMale + safeWashFemale;
+
+    if (safeWashTotal !== washSum) {
+      return {
+        valid: false,
+        message: `${programName}: Washroom total (${safeWashTotal}) does not match Male (${safeWashMale}) + Female (${safeWashFemale}).`
       };
     }
 
@@ -1590,7 +1639,6 @@
       return wrapper.outerHTML;
     }
 
-
     //  EXPAND / COLLAPSE CHILD ROWS
     $("#records_table tbody").on("click", ".toggle-programs", function () {
 
@@ -1607,95 +1655,6 @@
       }
     });
   }
-
-
-
-  // EDIT MODE - When user clicks on "Edit"
-  $(document).on("click", ".btn-edit", function (e) {
-    e.preventDefault();
-
-    const college = $(this).data("college");
-    const year = $(this).data("year") || $("#globalAcademicYear").val();
-
-    if (!college) {
-      showNotification("Missing college code", "danger");
-      return;
-    }
-
-    const $btn = $(this);
-    $btn.prop("disabled", true).addClass("disabled");
-
-    $.ajax({
-      // 👇 revert to the original endpoint with hyphens
-      url: "/get-college-data/",
-      type: "GET",
-      data: {
-        college_code: college,
-        academic_year: year,
-        mode: "edit"
-      },
-      success: function (response) {
-        $btn.prop("disabled", false).removeClass("disabled");
-
-        if (response && response.status === 200) {
-          populateEditModal(response);
-
-          $("#collegeModal").data("mode", "edit");
-          $("#collegeModal").data("college-code", response.college_data?.College_Code || college);
-
-          $("#collegeModal").modal("show");
-        } else {
-          showNotification(response?.message || "Unable to load records", "danger");
-        }
-      },
-      error: function (xhr) {
-        $btn.prop("disabled", false).removeClass("disabled");
-        let msg = "Server error";
-        try {
-          const json = JSON.parse(xhr.responseText);
-          if (json && json.message) msg = json.message;
-        } catch (e) { }
-        showNotification(msg, "danger");
-      }
-    });
-  });
-
-  // DELETE RECORD HANDLER 
-  $(document).on("click", ".btn-delete", function () {
-    const college = $(this).data("college");
-    const year = $(this).data("year");
-
-    if (!college || !year) {
-      showNotification("Invalid record selected.", "danger");
-      return;
-    }
-
-    // Confirm deletion
-    if (!confirm(`Delete records for ${college} (${year})?`)) {
-      return;
-    }
-
-    $.ajax({
-      url: "/delete-student-record/",
-      type: "POST",
-      data: {
-        college_code: college,
-        academic_year: year
-      },
-      success: function (response) {
-        if (response.status === 204) {
-          showNotification("Record deleted successfully.", "success");
-          $("#records_table").DataTable().ajax.reload(null, false);
-        } else {
-          showNotification(response.message || "Delete failed", "danger");
-        }
-      },
-      error: function () {
-        showNotification("Server error", "danger");
-      }
-    });
-  });
-
 
   function showNotification(message, type) {
     var notificationClass = type === "success" ? "notification-success" : "notification-error";
@@ -1841,7 +1800,10 @@
           return false; // stop loop
         }
 
-        let program = section.data("program") || section.find(".program-title").text().trim() || "program";
+        let program =
+          section.data("program") ||
+          section.find(".program-title").text().trim() ||
+          "program";
 
         // top-level totals/gender
         const total_students = toInt(section.find(".total-students").val());
@@ -1849,6 +1811,13 @@
           male: toInt(section.find(".gender-male").val()),
           female: toInt(section.find(".gender-female").val()),
           others: toInt(section.find(".gender-others").val())
+        };
+
+        // washroom counts (per program section)
+        const washrooms = {
+          total: toInt(section.find(".wash-total").val()),
+          male: toInt(section.find(".wash-male").val()),
+          female: toInt(section.find(".wash-female").val())
         };
 
         // categories (each with male/female/others)
@@ -1888,6 +1857,7 @@
         records[program] = {
           total_students: total_students,
           gender: gender,
+          washrooms: washrooms,
           category: category,
           religion: religion,
           disability: disability
@@ -1905,9 +1875,9 @@
         academic_year: academicYear,
         records: records
       };
-      console.log(records)
+      console.log(records);
 
-      // send (URLs unchanged as requested)
+      // send (URLs unchanged)
       if (mode === "add") {
         $.ajax({
           url: "/add_student/",
@@ -1927,8 +1897,7 @@
             showNotification("Server error", "danger");
           }
         });
-      }
-      else {
+      } else {
         // EDIT MODE
         $.ajax({
           url: "/edit_student/",
@@ -1951,6 +1920,91 @@
       }
     });
 
+
+    // EDIT MODE - When user clicks on "Edit"
+    $(document).on("click", ".btn-edit", function (e) {
+      e.preventDefault();
+
+      const college = $(this).data("college");
+      const year = $(this).data("year") || $("#globalAcademicYear").val();
+
+      if (!college) {
+        showNotification("Missing college code", "danger");
+        return;
+      }
+
+      const $btn = $(this);
+      $btn.prop("disabled", true).addClass("disabled");
+
+      $.ajax({
+        url: "/get-college-data/",
+        type: "GET",
+        data: {
+          college_code: college,
+          academic_year: year,
+          mode: "edit"
+        },
+        success: function (response) {
+          $btn.prop("disabled", false).removeClass("disabled");
+
+          if (response && response.status === 200) {
+            populateEditModal(response);
+
+            $("#collegeModal").data("mode", "edit");
+            $("#collegeModal").data("college-code", response.college_data?.College_Code || college);
+
+            $("#collegeModal").modal("show");
+          } else {
+            showNotification(response?.message || "Unable to load records", "danger");
+          }
+        },
+        error: function (xhr) {
+          $btn.prop("disabled", false).removeClass("disabled");
+          let msg = "Server error";
+          try {
+            const json = JSON.parse(xhr.responseText);
+            if (json && json.message) msg = json.message;
+          } catch (e) { }
+          showNotification(msg, "danger");
+        }
+      });
+    });
+
+    // DELETE RECORD HANDLER 
+    $(document).on("click", ".btn-delete", function () {
+      const college = $(this).data("college");
+      const year = $(this).data("year");
+
+      if (!college || !year) {
+        showNotification("Invalid record selected.", "danger");
+        return;
+      }
+
+      // Confirm deletion
+      if (!confirm(`Delete records for ${college} (${year})?`)) {
+        return;
+      }
+
+      $.ajax({
+        url: "/delete-student-record/",
+        type: "POST",
+        data: {
+          college_code: college,
+          academic_year: year
+        },
+        success: function (response) {
+          if (response.status === 204) {
+            showNotification("Record deleted successfully.", "success");
+            $("#records_table").DataTable().ajax.reload(null, false);
+          } else {
+            showNotification(response.message || "Delete failed", "danger");
+          }
+        },
+        error: function () {
+          showNotification("Server error", "danger");
+        }
+      });
+    });
 
 
     $("#logout_btn").on("click", function (e) {
