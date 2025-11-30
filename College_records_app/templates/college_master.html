@@ -733,11 +733,11 @@
         { data: "belongs_to" },
 
         // Hidden columns to carry full data used by modal autofill:
-        { data: "country", visible: false, searchable: false },
-        { data: "affiliated", visible: false, searchable: false },
-        { data: "total_washrooms", visible: false, searchable: false },
-        { data: "male_washrooms", visible: false, searchable: false },
-        { data: "female_washrooms", visible: false, searchable: false },
+        { data: "country", visible: false},
+        { data: "affiliated", visible: false},
+        { data: "total_washrooms", visible: false},
+        { data: "male_washrooms", visible: false},
+        { data: "female_washrooms", visible: false},
 
         // Action buttons (template-based)
         {
@@ -783,8 +783,10 @@
 
         if (collapseEl) {
           const bsCollapse = bootstrap.Collapse.getInstance(collapseEl);
+          const isOpen = collapseEl.classList.contains("show"); // <-- key line
 
-          if (bsCollapse) {
+          if (bsCollapse && isOpen) {
+            // accordion is open → wait for its animation to finish, then hide row
             bsCollapse.hide();
 
             collapseEl.addEventListener("hidden.bs.collapse", function onFinished() {
@@ -795,8 +797,14 @@
 
             return;
           }
+
+          // accordion is already closed or no instance → just close the child row immediately
+          row.child.hide();
+          btn.html('<i class="bi bi-plus-lg"></i>');
+          return;
         }
 
+        // no collapse element found → just close row
         row.child.hide();
         btn.html('<i class="bi bi-plus-lg"></i>');
         return;
@@ -814,7 +822,7 @@
       }, 10);
     });
 
-    //External header button: Export to Excel
+    //External header button to export to Excel
     $('#export_excel').on('click', function () {
       const dt = table;
 
@@ -865,81 +873,80 @@
         }
       });
     });
-  }
 
+    function buildAccordion(rowData) {
 
-  function buildAccordion(rowData) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "dt-child-scroll";
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "dt-child-scroll";
+      const tpl = document.querySelector("#collegeAccordionTemplate");
+      const clone = tpl.content.cloneNode(true);
 
-    const tpl = document.querySelector("#collegeAccordionTemplate");
-    const clone = tpl.content.cloneNode(true);
+      const rootAccordion = clone.querySelector(".accordion");
+      const headerBtn = clone.querySelector(".acc-header-text");
+      const collapseDiv = clone.querySelector(".acc-collapse");
 
-    const rootAccordion = clone.querySelector(".accordion");
-    const headerBtn = clone.querySelector(".acc-header-text");
-    const collapseDiv = clone.querySelector(".acc-collapse");
+      const accId = "acc-" + rowData.college_code;
+      const collapseId = "collapse-" + rowData.college_code;
 
-    const accId = "acc-" + rowData.college_code;
-    const collapseId = "collapse-" + rowData.college_code;
+      rootAccordion.id = accId;
+      collapseDiv.id = collapseId;
 
-    rootAccordion.id = accId;
-    collapseDiv.id = collapseId;
+      headerBtn.setAttribute("data-bs-toggle", "collapse");
+      headerBtn.setAttribute("data-bs-target", "#" + collapseId);
 
-    headerBtn.setAttribute("data-bs-toggle", "collapse");
-    headerBtn.setAttribute("data-bs-target", "#" + collapseId);
+      headerBtn.textContent = `${rowData.college_name} — Programs`;
 
-    headerBtn.textContent = `${rowData.college_name} — Programs`;
+      clone.querySelector(".full-address").textContent =
+        `${rowData.address || ""}`
+        + `${rowData.taluka ? ", " + rowData.taluka : ""}`
+        + `${rowData.district ? ", " + rowData.district : ""}`
+        + `${rowData.pincode ? " - " + rowData.pincode : ""}`;
 
-    clone.querySelector(".full-address").textContent =
-      `${rowData.address || ""}`
-      + `${rowData.taluka ? ", " + rowData.taluka : ""}`
-      + `${rowData.district ? ", " + rowData.district : ""}`
-      + `${rowData.pincode ? " - " + rowData.pincode : ""}`;
+      // Affiliated
+      clone.querySelector(".affiliated-to").textContent =
+        rowData.affiliated || "Not Available";
 
-    // Affiliated
-    clone.querySelector(".affiliated-to").textContent =
-      rowData.affiliated || "Not Available";
+      // Washrooms line (Total | Male | Female)
+      const totalWash = (rowData.total_washrooms ?? "") === "" ? "Not specified" : rowData.total_washrooms;
+      const maleWash = (rowData.male_washrooms ?? "") === "" ? "Not specified" : rowData.male_washrooms;
+      const femaleWash = (rowData.female_washrooms ?? "") === "" ? "Not specified" : rowData.female_washrooms;
 
-    // Washrooms line (Total | Male | Female)
-    const totalWash = (rowData.total_washrooms ?? "") === "" ? "Not specified" : rowData.total_washrooms;
-    const maleWash = (rowData.male_washrooms ?? "") === "" ? "Not specified" : rowData.male_washrooms;
-    const femaleWash = (rowData.female_washrooms ?? "") === "" ? "Not specified" : rowData.female_washrooms;
+      const totalSpan = clone.querySelector(".wash-total");
+      const maleSpan = clone.querySelector(".wash-male");
+      const femaleSpan = clone.querySelector(".wash-female");
 
-    const totalSpan = clone.querySelector(".wash-total");
-    const maleSpan = clone.querySelector(".wash-male");
-    const femaleSpan = clone.querySelector(".wash-female");
+      if (totalSpan) totalSpan.textContent = totalWash;
+      if (maleSpan) maleSpan.textContent = maleWash;
+      if (femaleSpan) femaleSpan.textContent = femaleWash;
 
-    if (totalSpan) totalSpan.textContent = totalWash;
-    if (maleSpan) maleSpan.textContent = maleWash;
-    if (femaleSpan) femaleSpan.textContent = femaleWash;
+      const programList = clone.querySelector(".program-list");
+      const disciplineTpl = document.querySelector("#disciplineCardTemplate");
 
-    const programList = clone.querySelector(".program-list");
-    const disciplineTpl = document.querySelector("#disciplineCardTemplate");
+      if (rowData.programs && Object.keys(rowData.programs).length) {
 
-    if (rowData.programs && Object.keys(rowData.programs).length) {
+        Object.entries(rowData.programs).forEach(([disc, programs]) => {
 
-      Object.entries(rowData.programs).forEach(([disc, programs]) => {
+          const discClone = disciplineTpl.content.cloneNode(true);
+          discClone.querySelector(".discipline-title").textContent = disc;
 
-        const discClone = disciplineTpl.content.cloneNode(true);
-        discClone.querySelector(".discipline-title").textContent = disc;
+          const ul = discClone.querySelector(".discipline-programs");
+          programs.forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = p;
+            ul.appendChild(li);
+          });
 
-        const ul = discClone.querySelector(".discipline-programs");
-        programs.forEach(p => {
-          const li = document.createElement("li");
-          li.textContent = p;
-          ul.appendChild(li);
+          programList.appendChild(discClone);
         });
 
-        programList.appendChild(discClone);
-      });
+      } else {
+        programList.innerHTML = "<p class='text-muted'>No programs available.</p>";
+      }
 
-    } else {
-      programList.innerHTML = "<p class='text-muted'>No programs available.</p>";
+      wrapper.appendChild(clone);
+      return wrapper.outerHTML;
     }
-
-    wrapper.appendChild(clone);
-    return wrapper.outerHTML;
   }
 
 
