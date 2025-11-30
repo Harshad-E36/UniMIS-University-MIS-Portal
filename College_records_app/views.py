@@ -14,6 +14,7 @@ from openpyxl.styles import PatternFill, Font, Alignment
 from openpyxl.utils import get_column_letter
 import datetime
 from io import BytesIO
+import io
 
 
 # Create your views here.
@@ -577,6 +578,7 @@ def apply_filters(request):
         belongs_tos = request.POST.getlist('BelongsTo[]')
         disciplines = request.POST.getlist('Discipline[]')
         programs = request.POST.getlist('Programs[]')
+
 
         # ============================================================
         # FIX 1 — BASE FILTER (no college_programs join here!)
@@ -2805,5 +2807,229 @@ def export_student_excel(request):
     return resp
 
 
+
+   # =============================================================
+# VIEW 2: export_filters_excel 
+# =============================================================
 def export_filtered_excel(request):
-    pass
+
+    if request.method != "POST":
+        return JsonResponse({"status": 405, "message": "POST required"}, status=405)
+
+    # read filter inputs
+    college_codes = request.POST.getlist('ColegeCode[]')
+    college_names = request.POST.getlist('CollegeName[]')
+    districts = request.POST.getlist('District[]')
+    talukas = request.POST.getlist('Taluka[]')
+    college_types = request.POST.getlist('CollegeType[]')
+    belongs_tos = request.POST.getlist('BelongsTo[]')
+    disciplines = request.POST.getlist('Discipline[]')
+    programs = request.POST.getlist('Programs[]')
+
+    # BASE filter
+    filter_criteria = Q(is_deleted=False)
+
+    if college_codes:
+        filter_criteria &= Q(College_Code__in=college_codes)
+    if college_names:
+        filter_criteria &= Q(College_Name__in=college_names)
+    if districts:
+        filter_criteria &= Q(District__in=districts)
+    if talukas:
+        filter_criteria &= Q(taluka__in=talukas)
+    if college_types:
+        filter_criteria &= Q(college_type__in=college_types)
+    if belongs_tos:
+        filter_criteria &= Q(belongs_to__in=belongs_tos)
+
+    base_ids = set(
+        College.objects.filter(filter_criteria)
+        .values_list("id", flat=True)
+        .distinct()
+    )
+
+    # PROGRAM/DISCIPLINE filtering
+    if disciplines or programs:
+        prog_q = Q(is_deleted=False)
+        if disciplines:
+            prog_q &= Q(Discipline__in=disciplines)
+        if programs:
+            prog_q &= Q(ProgramName__in=programs)
+
+        match_ids = set(
+            CollegeProgram.objects.filter(prog_q)
+            .values_list("College_id", flat=True)
+            .distinct()
+        )
+
+        filtered_college_ids = list(base_ids.intersection(match_ids))
+    else:
+        filtered_college_ids = list(base_ids)
+
+    # prepare workbook and headers
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Filtered Data"
+
+    headers = [
+        "College_Code", "College_Name", "Address", "Country", "State",
+        "District", "Taluka", "City", "Pincode",
+        "College_Type", "Belongs_To", "Affiliated",
+        "Total_Washrooms", "Male_Washrooms", "Female_Washrooms"
+    ]
+    ws.append(headers)
+
+    # fetch colleges and write rows
+    college_qs = College.objects.filter(id__in=filtered_college_ids).order_by("College_Code")
+    for c in college_qs:
+        ws.append([
+            c.College_Code,
+            c.College_Name,
+            c.address,
+            c.country,
+            c.state,
+            c.District,
+            c.taluka,
+            c.city,
+            c.pincode,
+            c.college_type,
+            c.belongs_to,
+            c.affiliated,
+            c.total_washrooms,
+            c.male_washrooms,
+            c.female_washrooms,
+        ])
+
+    # washroom aggregates
+    wash_agg = college_qs.aggregate(
+        total=Sum("total_washrooms"),
+        male=Sum("male_washrooms"),
+        female=Sum("female_washrooms"),
+    )
+    total_washrooms = wash_agg["total"] or 0
+    male_washrooms = wash_agg["male"] or 0
+    female_washrooms = wash_agg["female"] or 0
+
+    # student aggregates (filter by same college ids and optional program/discipline)
+    students = student_aggregate_master.objects.filter(College_id__in=filtered_college_ids, is_deleted=False)
+    if disciplines:
+        students = students.filter(Program__Discipline__in=disciplines)
+    if programs:
+        students = students.filter(Program__ProgramName__in=programs)
+
+    def agg(field):
+        return students.aggregate(total=Sum(field))["total"] or 0
+
+    aggregates = {
+        "total_colleges": len(filtered_college_ids),
+        "total_washrooms": total_washrooms,
+        "male_washrooms": male_washrooms,
+        "female_washrooms": female_washrooms,
+        "total_students": agg("total_students"),
+
+        "total_male": agg("total_male"),
+        "total_female": agg("total_female"),
+        "total_others": agg("total_others"),
+
+        "open_male": agg("open_male"),
+        "open_female": agg("open_female"),
+        "open_others": agg("open_others"),
+
+        "obc_male": agg("obc_male"),
+        "obc_female": agg("obc_female"),
+        "obc_others": agg("obc_others"),
+
+        "sc_male": agg("sc_male"),
+        "sc_female": agg("sc_female"),
+        "sc_others": agg("sc_others"),
+
+        "st_male": agg("st_male"),
+        "st_female": agg("st_female"),
+        "st_others": agg("st_others"),
+
+        "nt_male": agg("nt_male"),
+        "nt_female": agg("nt_female"),
+        "nt_others": agg("nt_others"),
+
+        "vjnt_male": agg("vjnt_male"),
+        "vjnt_female": agg("vjnt_female"),
+        "vjnt_others": agg("vjnt_others"),
+
+        "ews_male": agg("ews_male"),
+        "ews_female": agg("ews_female"),
+        "ews_others": agg("ews_others"),
+
+        "hindu_male": agg("hindu_male"),
+        "hindu_female": agg("hindu_female"),
+        "hindu_others": agg("hindu_others"),
+
+        "muslim_male": agg("muslim_male"),
+        "muslim_female": agg("muslim_female"),
+        "muslim_others": agg("muslim_others"),
+
+        "sikh_male": agg("sikh_male"),
+        "sikh_female": agg("sikh_female"),
+        "sikh_others": agg("sikh_others"),
+
+        "christian_male": agg("christian_male"),
+        "christian_female": agg("christian_female"),
+        "christian_others": agg("christian_others"),
+
+        "jain_male": agg("jain_male"),
+        "jain_female": agg("jain_female"),
+        "jain_others": agg("jain_others"),
+
+        "buddhist_male": agg("buddhist_male"),
+        "buddhist_female": agg("buddhist_female"),
+        "buddhist_others": agg("buddhist_others"),
+
+        "other_religion_male": agg("other_religion_male"),
+        "other_religion_female": agg("other_religion_female"),
+        "other_religion_others": agg("other_religion_others"),
+
+        "no_disability_male": agg("no_disability_male"),
+        "no_disability_female": agg("no_disability_female"),
+        "no_disability_others": agg("no_disability_others"),
+
+        "low_vision_male": agg("low_vision_male"),
+        "low_vision_female": agg("low_vision_female"),
+        "low_vision_others": agg("low_vision_others"),
+
+        "blindness_male": agg("blindness_male"),
+        "blindness_female": agg("blindness_female"),
+        "blindness_others": agg("blindness_others"),
+
+        "hearing_male": agg("hearing_male"),
+        "hearing_female": agg("hearing_female"),
+        "hearing_others": agg("hearing_others"),
+
+        "locomotor_male": agg("locomotor_male"),
+        "locomotor_female": agg("locomotor_female"),
+        "locomotor_others": agg("locomotor_others"),
+
+        "autism_male": agg("autism_male"),
+        "autism_female": agg("autism_female"),
+        "autism_others": agg("autism_others"),
+
+        "other_disability_male": agg("other_disability_male"),
+        "other_disability_female": agg("other_disability_female"),
+        "other_disability_others": agg("other_disability_others"),
+    }
+
+    # write aggregates after college rows
+    ws.append([])
+    ws.append(["Aggregate", "Value"])
+    for k, v in aggregates.items():
+        ws.append([k, v])
+
+    # stream xlsx back
+    bio = io.BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+
+    response = HttpResponse(
+        bio.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="filtered_data.xlsx"'
+    return response

@@ -1376,9 +1376,9 @@
         method: "POST",
         data: JSON.stringify(payload),
         contentType: "application/json",
-        headers: {
-          "X-CSRFToken": (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || ""
-        },
+        // headers: {
+        //   "X-CSRFToken": (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || ""
+        // },
         xhr: function () {
           const xhr = new window.XMLHttpRequest();
           xhr.responseType = "blob";

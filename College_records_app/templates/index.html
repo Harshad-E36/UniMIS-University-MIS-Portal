@@ -2155,18 +2155,60 @@
           "Discipline[]": selectedFilters.discipline,
           "Programs[]": selectedFilters.programs
         },
-        success: function (response) {
-          if (response.status === 200) {
-            console.log("excel exported successfuly");
-          }
+        xhr: function () {
+          const xhr = new window.XMLHttpRequest();
+          xhr.responseType = "blob";
+          return xhr;
         },
-        error: function (xhr, status, error) {
-          console.error("Error applying filters:", error);
+        success: function (blob, status, xhr) {
+          let filename = "Stastics_data.xlsx";
+          const disp = xhr.getResponseHeader("Content-Disposition");
+
+          if (disp && disp.indexOf("filename=") !== -1) {
+            const match = disp.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/);
+            if (match && match[1]) {
+              filename = decodeURIComponent(match[1]);
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const $a = $("<a style='display:none;'></a>");
+
+          $a.attr("href", url).attr("download", filename);
+          $("body").append($a);
+
+          // trigger download
+          $a[0].click();
+
+          setTimeout(function () {
+            window.URL.revokeObjectURL(url);
+            $a.remove();
+          }, 200);
+        },
+        error: function (xhr, status, err) {
+          if (xhr.response && xhr.response.type === "application/json") {
+            const reader = new FileReader();
+            reader.onload = function () {
+              try {
+                const json = JSON.parse(reader.result);
+                alert(
+                  "Export failed: " +
+                  (json.message || json.detail || JSON.stringify(json))
+                );
+              } catch (e) {
+                alert("Export failed");
+              }
+            };
+            reader.readAsText(xhr.response);
+          } else {
+            alert("Export failed: " + status);
+          }
         }
       });
-    });
 
+    });
   });
+
 
 
 </script>
