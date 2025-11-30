@@ -941,6 +941,11 @@ def get_college_data(request):
                     "female": agg.total_female,
                     "others": agg.total_others,
                 },
+                "washrooms": {
+                    "total_washrooms":agg.total_washrooms or 0,
+                    "male_washrooms": agg.male_washrooms or 0,
+                    "female_washrooms" : agg.female_washrooms or 0,
+                },
                 "category": {
                     "open": {
                         "male": agg.open_male,
@@ -1090,9 +1095,34 @@ def add_student_aggregate(request):
         if not isinstance(records, dict) or len(records) == 0:
             return JsonResponse({"status": 400, "message": "No records provided"}, status=400)
         
+        def _prog_wash_total_from_payload(prog_payload):
+            try:
+                w = prog_payload.get("washrooms", {}) or {}
+                print("w", w)
+                return _to_int(w.get("total"), 0)
+            except Exception:
+                return 0
+        
+        sum_payload_washrooms = 0
+        for prog_name, prog_payload in records.items():
+            sum_payload_washrooms += _prog_wash_total_from_payload(prog_payload)
+
+        # Compare with college master value
+        college_master_washrooms = (college.total_washrooms or 0)
+
+        if sum_payload_washrooms != college_master_washrooms:
+            return JsonResponse({
+                "status": 400,
+                "message": "Washroom totals mismatch",
+                "college_total_washrooms": college_master_washrooms,
+                "sum_of_program_washrooms_in_payload": sum_payload_washrooms
+            })
+        
+
         saved = []
         errors = []
 
+        
         with transaction.atomic():
             for program_name, data in records.items():
                 program_obj = CollegeProgram.objects.filter(
@@ -1115,6 +1145,12 @@ def add_student_aggregate(request):
                 male = _to_int(gender.get("male"), 0)
                 female = _to_int(gender.get("female"), 0)
                 others = _to_int(gender.get("others") or gender.get("other"), 0)
+
+                washrooms = data.get("washrooms", {}) or {}
+                total_washrooms = _to_int(washrooms.get("total"), 0)
+                male_washrooms = _to_int(washrooms.get("male"), 0)
+                female_washrooms = _to_int(washrooms.get("female"), 0)
+
 
                 category = data.get("category", {}) or {}
                 open = category.get("open", {}) or {}
@@ -1233,6 +1269,10 @@ def add_student_aggregate(request):
                     "total_male": male,
                     "total_female": female,
                     "total_others": others,
+
+                    "total_washrooms": total_washrooms,
+                    "male_washrooms" : male_washrooms,
+                    "female_washrooms": female_washrooms,
 
                     "open_male": open_male,
                     "open_female": open_female,
@@ -1390,6 +1430,30 @@ def update_student_aggregate(request):
 
         if not isinstance(records, dict) or len(records) == 0:
             return JsonResponse({"status": 400, "message": "No records provided"}, status=400)
+        
+        def _prog_wash_total_from_payload(prog_payload):
+            try:
+                w = prog_payload.get("washrooms", {}) or {}
+                print("print",w)
+                return _to_int(w.get("total"), 0)
+            except Exception:
+                return 0
+        
+        sum_payload_washrooms = 0
+        for prog_name, prog_payload in records.items():
+            sum_payload_washrooms += _prog_wash_total_from_payload(prog_payload)
+
+        # Compare with college master value
+        college_master_washrooms = (college.total_washrooms or 0)
+
+        if sum_payload_washrooms != college_master_washrooms:
+            return JsonResponse({
+                "status": 400,
+                "message": "Washroom totals mismatch",
+                "college_total_washrooms": college_master_washrooms,
+                "sum_of_program_washrooms_in_payload": sum_payload_washrooms
+            })
+        
 
         updated = []
         created = []
@@ -1417,6 +1481,12 @@ def update_student_aggregate(request):
                 male = _to_int(gender.get("male"), 0)
                 female = _to_int(gender.get("female"), 0)
                 others = _to_int(gender.get("others") or gender.get("other"), 0)
+
+                washrooms = data.get("washrooms", {}) or {}
+                print(washrooms)
+                total_washrooms = _to_int(washrooms.get("total"), 0)
+                male_washrooms = _to_int(washrooms.get("male"), 0)
+                female_washrooms = _to_int(washrooms.get("female"), 0)
 
                 category = data.get("category", {}) or {}
                 open = category.get("open", {}) or {}
@@ -1548,6 +1618,10 @@ def update_student_aggregate(request):
                         existing.total_female = female
                         existing.total_others = others
 
+                        existing.total_washrooms = total_washrooms
+                        existing.male_washrooms = male_washrooms
+                        existing.female_washrooms = female_washrooms
+
                         existing.open_male = open_male
                         existing.open_female = open_female
                         existing.open_others = open_others
@@ -1646,10 +1720,17 @@ def update_student_aggregate(request):
                             Academic_Year=academic_year,
                             is_deleted=False,
                             created_by=client_ip,
+
                             total_students=total_students,
                             total_male=male,
                             total_female=female,
                             total_others=others,
+
+                            total_washrooms = total_washrooms,
+                            male_washrooms = male_washrooms,
+                            female_washrooms = female_washrooms,
+
+
                             open_male = open_male,
                             open_female = open_female,
                             open_others = open_others,
@@ -1863,6 +1944,11 @@ def get_student_records(request):
                     "male": pc.total_male or 0,
                     "female": pc.total_female or 0,
                     "others": pc.total_others or 0,
+                },
+                "washrooms": {
+                    "total_washrooms":pc.total_washrooms or 0,
+                    "male_washrooms": pc.male_washrooms or 0,
+                    "female_washrooms" : pc.female_washrooms or 0,
                 },
                 "category": {
                     "open": {
