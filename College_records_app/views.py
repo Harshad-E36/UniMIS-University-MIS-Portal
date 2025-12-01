@@ -1099,23 +1099,48 @@ def add_student_aggregate(request):
             try:
                 w = prog_payload.get("washrooms", {}) or {}
                 print("w", w)
-                return _to_int(w.get("total"), 0)
+                total_washrooms = _to_int(w.get("total"), 0)
+                male_washrooms = _to_int(w.get("male"), 0)
+                female_washrooms = _to_int(w.get("female"), 0)
+                return total_washrooms, male_washrooms, female_washrooms
             except Exception:
                 return 0
         
-        sum_payload_washrooms = 0
+        sum_total_washrooms = 0
+        sum_total_male_washrooms = 0
+        sum_total_female_washrooms = 0
         for prog_name, prog_payload in records.items():
-            sum_payload_washrooms += _prog_wash_total_from_payload(prog_payload)
+            total, male, female = _prog_wash_total_from_payload(prog_payload)
+            sum_total_washrooms += total
+            sum_total_male_washrooms +=male
+            sum_total_female_washrooms += female
 
         # Compare with college master value
-        college_master_washrooms = (college.total_washrooms or 0)
+        college_master_total_washrooms = (college.total_washrooms or 0)
+        college_master_male_washrooms = (college.male_washrooms or 0)
+        college_master_female_washrooms = (college.female_washrooms or 0)
 
-        if sum_payload_washrooms != college_master_washrooms:
+
+        if sum_total_washrooms != college_master_total_washrooms:
             return JsonResponse({
                 "status": 400,
                 "message": "Washroom totals mismatch",
-                "college_total_washrooms": college_master_washrooms,
-                "sum_of_program_washrooms_in_payload": sum_payload_washrooms
+                "college_total_washrooms": college_master_total_washrooms,
+                "sum_of_program_washrooms_in_payload": sum_total_washrooms
+            })
+        elif sum_total_male_washrooms != college_master_male_washrooms:
+            return JsonResponse({
+                "status": 400,
+                "message": "Washroom totals mismatch",
+                "college_total_washrooms": college_master_male_washrooms,
+                "sum_of_program_washrooms_in_payload": sum_total_male_washrooms
+            })
+        elif sum_total_female_washrooms != college_master_female_washrooms:
+            return JsonResponse({
+                "status": 400,
+                "message": "Washroom totals mismatch",
+                "college_total_washrooms": college_master_female_washrooms,
+                "sum_of_program_washrooms_in_payload": sum_total_female_washrooms
             })
         
 
@@ -1434,27 +1459,54 @@ def update_student_aggregate(request):
         def _prog_wash_total_from_payload(prog_payload):
             try:
                 w = prog_payload.get("washrooms", {}) or {}
-                print("print",w)
-                return _to_int(w.get("total"), 0)
+                print("w", w)
+                total_washrooms = _to_int(w.get("total"), 0)
+                male_washrooms = _to_int(w.get("male"), 0)
+                female_washrooms = _to_int(w.get("female"), 0)
+                return total_washrooms, male_washrooms, female_washrooms
             except Exception:
                 return 0
         
-        sum_payload_washrooms = 0
+        sum_total_washrooms = 0
+        sum_total_male_washrooms = 0
+        sum_total_female_washrooms = 0
         for prog_name, prog_payload in records.items():
-            sum_payload_washrooms += _prog_wash_total_from_payload(prog_payload)
+            total, male, female = _prog_wash_total_from_payload(prog_payload)
+            sum_total_washrooms += total
+            sum_total_male_washrooms +=male
+            sum_total_female_washrooms += female
 
         # Compare with college master value
-        college_master_washrooms = (college.total_washrooms or 0)
+        college_master_total_washrooms = (college.total_washrooms or 0)
+        college_master_male_washrooms = (college.male_washrooms or 0)
+        college_master_female_washrooms = (college.female_washrooms or 0)
 
-        if sum_payload_washrooms != college_master_washrooms:
+
+        if sum_total_washrooms != college_master_total_washrooms:
             return JsonResponse({
                 "status": 400,
                 "message": "Washroom totals mismatch",
-                "college_total_washrooms": college_master_washrooms,
-                "sum_of_program_washrooms_in_payload": sum_payload_washrooms
+                "type" : "total washrooms",
+                "college_total_washrooms": college_master_total_washrooms,
+                "sum_of_program_washrooms_in_payload": sum_total_washrooms
+            })
+        elif sum_total_male_washrooms != college_master_male_washrooms:
+            return JsonResponse({
+                "status": 400,
+                "message": "Washroom totals mismatch",
+                "type" : "Male washrooms",
+                "college_total_washrooms": college_master_male_washrooms,
+                "sum_of_program_washrooms_in_payload": sum_total_male_washrooms
+            })
+        elif sum_total_female_washrooms != college_master_female_washrooms:
+            return JsonResponse({
+                "status": 400,
+                "message": "Washroom totals mismatch",
+                "type" : "Female Washrooms",
+                "college_total_washrooms": college_master_female_washrooms,
+                "sum_of_program_washrooms_in_payload": sum_total_female_washrooms
             })
         
-
         updated = []
         created = []
         errors = []
