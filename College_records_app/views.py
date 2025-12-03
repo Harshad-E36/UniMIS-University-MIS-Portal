@@ -391,10 +391,11 @@ def get_dashboard_data(request):
         response_data = {
             'total_colleges': total_colleges,
             'total_students': total_students,
+            # send total staff num here
 
             'total_stu_washrooms': washroom_agg('total_washrooms'),
-            'total_stu_male_washrooms': washroom_agg('male_washrooms'),
-            'total_stu_female_washrooms': washroom_agg('female_washrooms'),
+            'male_stu_washrooms': washroom_agg('male_washrooms'),
+            'female_stu_washrooms': washroom_agg('female_washrooms'),
 
             'total_stu_male': agg('total_male'),
             'total_stu_female': agg('total_female'),
@@ -562,8 +563,8 @@ def apply_filters(request):
 
             # washrooms
             "total_stu_washrooms": 0,
-            "total_stu_male_washrooms": 0,
-            "total_stu_female_washrooms": 0,
+            "male_stu_washrooms": 0,
+            "female_stu_washrooms": 0,
 
             # gender totals
             "total_stu_male": 0,
@@ -714,8 +715,8 @@ def apply_filters(request):
     total_stu_others_sum = agg("total_others")
 
     total_stu_washroom_sum = washroom_agg("total_washrooms")
-    total_stu_male_washroom_sum = washroom_agg("male_washrooms")
-    total_stu_female_washroom_sum = washroom_agg("female_washrooms") 
+    male_stu_washroom_sum = washroom_agg("male_washrooms")
+    female_stu_washroom_sum = washroom_agg("female_washrooms") 
 
     open_stu_male_sum = agg("open_male")
     open_stu_female_sum = agg("open_female")
@@ -812,8 +813,8 @@ def apply_filters(request):
         "total_students": total_students_sum,
 
         "total_stu_washrooms" : total_stu_washroom_sum,
-        "total_stu_male_washrooms": total_stu_male_washroom_sum,
-        "total_stu_female_washrooms" : total_stu_female_washroom_sum,
+        "male_stu_washrooms": male_stu_washroom_sum,
+        "female_stu_washrooms" : female_stu_washroom_sum,
 
         "total_stu_male": total_stu_male_sum,
         "total_stu_female": total_stu_female_sum,
