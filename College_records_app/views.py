@@ -99,9 +99,6 @@ def add_edit_record(request):
     college_type = request.POST.get('college_type')
     belongs_to = request.POST.get('belongs_to')
     affiliated = request.POST.get('affiliated_to')
-    total_washrooms = request.POST.get('total_washrooms', 0)
-    male_washrooms = request.POST.get('male_washrooms', 0)
-    female_washrooms = request.POST.get('female_washrooms', 0)
 
     # Parse JSON safely
     programs_json = request.POST.get('disciplines_programs', '[]')
@@ -132,9 +129,6 @@ def add_edit_record(request):
             college.college_type = college_type
             college.belongs_to = belongs_to
             college.affiliated = affiliated
-            college.total_washrooms = total_washrooms
-            college.male_washrooms = male_washrooms
-            college.female_washrooms = female_washrooms
             college.updated_by = get_client_ip(request)
             college.save()
 
@@ -241,9 +235,6 @@ def add_edit_record(request):
             college_type=college_type,
             belongs_to=belongs_to,
             affiliated=affiliated,
-            total_washrooms=total_washrooms,
-            male_washrooms=male_washrooms,
-            female_washrooms=female_washrooms,
             created_by=get_client_ip(request)
         )
 
@@ -313,22 +304,24 @@ def get_dashboard_data(request):
         total_colleges = College.objects.filter(is_deleted=False).count()
         total_students = student_qs.aggregate(total=Sum('total_students'))['total'] or 0
 
-        # washrooms aggregates
-        total_washrooms = College.objects.filter(is_deleted=False).aggregate(total=Sum('total_washrooms'))['total'] or 0
-        male_washrooms = College.objects.filter(is_deleted=False).aggregate(total=Sum('male_washrooms'))['total'] or 0
-        female_washrooms = College.objects.filter(is_deleted=False).aggregate(total=Sum('female_washrooms'))['total'] or 0
 
         # helper function
         def agg(field):
-            return student_qs.aggregate(total=Sum(field))['total'] or 0
+            return student_qs.aggregate(total= Sum(field))['total'] or 0
+        
+        def washroom_agg(field):
+            s = student_qs.aggregate(total=Sum(field))['total'] or 0
+            print(s)
+            return s
 
         # student aggregates
         response_data = {
             'total_colleges': total_colleges,
             'total_students': total_students,
-            'total_washrooms': total_washrooms,
-            'male_washrooms': male_washrooms,
-            'female_washrooms': female_washrooms,
+
+            'total_stu_washrooms': washroom_agg('total_washrooms'),
+            'total_stu_male_washrooms': washroom_agg('male_washrooms'),
+            'total_stu_female_washrooms': washroom_agg('female_washrooms'),
 
             'total_stu_male': agg('total_male'),
             'total_stu_female': agg('total_female'),
@@ -565,29 +558,117 @@ def apply_filters(request):
             "status": 200,
             "message": "Filters applied successfully",
             "academic_year": academic_year,
+
             "total_colleges": 0,
-            "total_washrooms": 0,
-            "male_washrooms": 0,
-            "female_washrooms": 0,
             "total_students": 0,
-            # ... all other zeroed fields ...
+
+            # washrooms
+            "total_stu_washrooms": 0,
+            "total_stu_male_washrooms": 0,
+            "total_stu_female_washrooms": 0,
+
+            # gender totals
             "total_stu_male": 0,
             "total_stu_female": 0,
             "total_stu_others": 0,
-            # and so on (you can keep the same long zero-response as before)
-        })
 
-    # ============================================================
-    # Washroom aggregations (from College master)
-    # ============================================================
-    wash_agg = College.objects.filter(id__in=filtered_college_ids).aggregate(
-        total=Sum("total_washrooms"),
-        male=Sum("male_washrooms"),
-        female=Sum("female_washrooms")
-    )
-    total_washrooms = wash_agg.get("total") or 0
-    male_washrooms = wash_agg.get("male") or 0
-    female_washrooms = wash_agg.get("female") or 0
+            # open category
+            "open_stu_male": 0,
+            "open_stu_female": 0,
+            "open_stu_others": 0,
+
+            # obc
+            "obc_stu_male": 0,
+            "obc_stu_female": 0,
+            "obc_stu_others": 0,
+
+            # sc
+            "sc_stu_male": 0,
+            "sc_stu_female": 0,
+            "sc_stu_others": 0,
+
+            # st
+            "st_stu_male": 0,
+            "st_stu_female": 0,
+            "st_stu_others": 0,
+
+            # nt
+            "nt_stu_male": 0,
+            "nt_stu_female": 0,
+            "nt_stu_others": 0,
+
+            # vjnt
+            "vjnt_stu_male": 0,
+            "vjnt_stu_female": 0,
+            "vjnt_stu_others": 0,
+
+            # ews
+            "ews_stu_male": 0,
+            "ews_stu_female": 0,
+            "ews_stu_others": 0,
+
+            # religions
+            "hindu_stu_male": 0,
+            "hindu_stu_female": 0,
+            "hindu_stu_others": 0,
+
+            "muslim_stu_male": 0,
+            "muslim_stu_female": 0,
+            "muslim_stu_others": 0,
+
+            "sikh_stu_male": 0,
+            "sikh_stu_female": 0,
+            "sikh_stu_others": 0,
+
+            "christian_stu_male": 0,
+            "christian_stu_female": 0,
+            "christian_stu_others": 0,
+
+            "jain_stu_male": 0,
+            "jain_stu_female": 0,
+            "jain_stu_others": 0,
+
+            "buddhist_stu_male": 0,
+            "buddhist_stu_female": 0,
+            "buddhist_stu_others": 0,
+
+            "other_religion_stu_male": 0,
+            "other_religion_stu_female": 0,
+            "other_religion_stu_others": 0,
+
+            # disabilities
+            "no_disability_stu_male": 0,
+            "no_disability_stu_female": 0,
+            "no_disability_stu_others": 0,
+
+            "low_vision_stu_male": 0,
+            "low_vision_stu_female": 0,
+            "low_vision_stu_others": 0,
+
+            "blindness_stu_male": 0,
+            "blindness_stu_female": 0,
+            "blindness_stu_others": 0,
+
+            "hearing_stu_male": 0,
+            "hearing_stu_female": 0,
+            "hearing_stu_others": 0,
+
+            "locomotor_stu_male": 0,
+            "locomotor_stu_female": 0,
+            "locomotor_stu_others": 0,
+
+            "autism_stu_male": 0,
+            "autism_stu_female": 0,
+            "autism_stu_others": 0,
+
+            "other_disability_stu_male": 0,
+            "other_disability_stu_female": 0,
+            "other_disability_stu_others": 0,
+
+            # special UI fields
+            "colleges_without_student_data": [],
+            "colleges_without_student_data_count": 0,
+        })
 
     # ============================================================
     # Student rows to aggregate (year-specific, and narrowed by Program/Discipline if requested)
@@ -621,6 +702,10 @@ def apply_filters(request):
     # helper aggregator
     def agg(field_name):
         return students_qs.aggregate(total=Sum(field_name))['total'] or 0
+    
+    def washroom_agg(field_name):
+        return students_qs.aggregate(total=Sum(field_name))['total'] or 0
+         
 
     # ============================================================
     # Aggregations
@@ -629,6 +714,10 @@ def apply_filters(request):
     total_stu_male_sum = agg("total_male")
     total_stu_female_sum = agg("total_female")
     total_stu_others_sum = agg("total_others")
+
+    total_stu_washroom_sum = washroom_agg("total_washrooms")
+    total_stu_male_washroom_sum = washroom_agg("male_washrooms")
+    total_stu_female_washroom_sum = washroom_agg("female_washrooms") 
 
     open_stu_male_sum = agg("open_male")
     open_stu_female_sum = agg("open_female")
@@ -722,10 +811,11 @@ def apply_filters(request):
         "message": "Filters applied successfully",
         "academic_year": academic_year,
         "total_colleges": len(filtered_college_ids),
-        "total_washrooms": total_washrooms,
-        "male_washrooms": male_washrooms,
-        "female_washrooms": female_washrooms,
         "total_students": total_students_sum,
+
+        "total_stu_washrooms" : total_stu_washroom_sum,
+        "total_stu_male_washrooms": total_stu_male_washroom_sum,
+        "total_stu_female_washrooms" : total_stu_female_washroom_sum,
 
         "total_stu_male": total_stu_male_sum,
         "total_stu_female": total_stu_female_sum,
@@ -851,7 +941,7 @@ def get_programs_for_discipline(request):
     return JsonResponse(response_data)
 
 @ajax_login_required
-def get_college_data(request):
+def get_college_data_for_student_modal(request):
     if request.method != "GET":
         return JsonResponse({'status': 400, 'message': 'Invalid request'})
 
@@ -896,9 +986,9 @@ def get_college_data(request):
         "District": college.District,
         "Taluka": college.taluka,
         "pincode": college.pincode,
-        "country": getattr(college, "country", ""),
-        "state": getattr(college, "state", ""),
-        "affiliated": getattr(college, "affiliated", ""),
+        "country": college.country,
+        "state": college.state,
+        "affiliated": college.affiliated,
         "programs": discipline_map
     }
 
@@ -1094,55 +1184,6 @@ def add_student_aggregate(request):
         
         if not isinstance(records, dict) or len(records) == 0:
             return JsonResponse({"status": 400, "message": "No records provided"}, status=400)
-        
-        def _prog_wash_total_from_payload(prog_payload):
-            try:
-                w = prog_payload.get("washrooms", {}) or {}
-                print("w", w)
-                total_washrooms = _to_int(w.get("total"), 0)
-                male_washrooms = _to_int(w.get("male"), 0)
-                female_washrooms = _to_int(w.get("female"), 0)
-                return total_washrooms, male_washrooms, female_washrooms
-            except Exception:
-                return 0
-        
-        sum_total_washrooms = 0
-        sum_total_male_washrooms = 0
-        sum_total_female_washrooms = 0
-        for prog_name, prog_payload in records.items():
-            total, male, female = _prog_wash_total_from_payload(prog_payload)
-            sum_total_washrooms += total
-            sum_total_male_washrooms +=male
-            sum_total_female_washrooms += female
-
-        # Compare with college master value
-        college_master_total_washrooms = (college.total_washrooms or 0)
-        college_master_male_washrooms = (college.male_washrooms or 0)
-        college_master_female_washrooms = (college.female_washrooms or 0)
-
-
-        if sum_total_washrooms != college_master_total_washrooms:
-            return JsonResponse({
-                "status": 400,
-                "message": "Washroom totals mismatch",
-                "college_total_washrooms": college_master_total_washrooms,
-                "sum_of_program_washrooms_in_payload": sum_total_washrooms
-            })
-        elif sum_total_male_washrooms != college_master_male_washrooms:
-            return JsonResponse({
-                "status": 400,
-                "message": "Washroom totals mismatch",
-                "college_total_washrooms": college_master_male_washrooms,
-                "sum_of_program_washrooms_in_payload": sum_total_male_washrooms
-            })
-        elif sum_total_female_washrooms != college_master_female_washrooms:
-            return JsonResponse({
-                "status": 400,
-                "message": "Washroom totals mismatch",
-                "college_total_washrooms": college_master_female_washrooms,
-                "sum_of_program_washrooms_in_payload": sum_total_female_washrooms
-            })
-        
 
         saved = []
         errors = []
@@ -1455,57 +1496,6 @@ def update_student_aggregate(request):
 
         if not isinstance(records, dict) or len(records) == 0:
             return JsonResponse({"status": 400, "message": "No records provided"}, status=400)
-        
-        def _prog_wash_total_from_payload(prog_payload):
-            try:
-                w = prog_payload.get("washrooms", {}) or {}
-                print("w", w)
-                total_washrooms = _to_int(w.get("total"), 0)
-                male_washrooms = _to_int(w.get("male"), 0)
-                female_washrooms = _to_int(w.get("female"), 0)
-                return total_washrooms, male_washrooms, female_washrooms
-            except Exception:
-                return 0
-        
-        sum_total_washrooms = 0
-        sum_total_male_washrooms = 0
-        sum_total_female_washrooms = 0
-        for prog_name, prog_payload in records.items():
-            total, male, female = _prog_wash_total_from_payload(prog_payload)
-            sum_total_washrooms += total
-            sum_total_male_washrooms +=male
-            sum_total_female_washrooms += female
-
-        # Compare with college master value
-        college_master_total_washrooms = (college.total_washrooms or 0)
-        college_master_male_washrooms = (college.male_washrooms or 0)
-        college_master_female_washrooms = (college.female_washrooms or 0)
-
-
-        if sum_total_washrooms != college_master_total_washrooms:
-            return JsonResponse({
-                "status": 400,
-                "message": "Washroom totals mismatch",
-                "type" : "total washrooms",
-                "college_total_washrooms": college_master_total_washrooms,
-                "sum_of_program_washrooms_in_payload": sum_total_washrooms
-            })
-        elif sum_total_male_washrooms != college_master_male_washrooms:
-            return JsonResponse({
-                "status": 400,
-                "message": "Washroom totals mismatch",
-                "type" : "Male washrooms",
-                "college_total_washrooms": college_master_male_washrooms,
-                "sum_of_program_washrooms_in_payload": sum_total_male_washrooms
-            })
-        elif sum_total_female_washrooms != college_master_female_washrooms:
-            return JsonResponse({
-                "status": 400,
-                "message": "Washroom totals mismatch",
-                "type" : "Female Washrooms",
-                "college_total_washrooms": college_master_female_washrooms,
-                "sum_of_program_washrooms_in_payload": sum_total_female_washrooms
-            })
         
         updated = []
         created = []
@@ -2235,9 +2225,6 @@ def get_college_records(request):
             "college_type": college.college_type,
             "belongs_to": college.belongs_to,
             "affiliated": college.affiliated if hasattr(college, "affiliated") else "",
-            "total_washrooms": college.total_washrooms,
-            "male_washrooms": college.male_washrooms,
-            "female_washrooms": college.female_washrooms,
             "programs": programs_map,
             "id": college.id
         }
@@ -2262,9 +2249,6 @@ COLUMN_INDEX_TO_FIELD = {
     7: 'belongs_to',
     8: 'country',
     9: 'affiliated',
-    10: 'total_washrooms',
-    11: 'male_washrooms',
-    12: 'female_washrooms',
 }
 
 
@@ -2357,7 +2341,7 @@ def export_colleges_excel(request):
         "College Code", "College Name", "Address", "Pincode", "Country",
         "State", "District", "Taluka", "City",
         "College Type", "Belongs To", "Affiliated To",
-        "Total Washrooms", "Male Washrooms", "Female Washrooms",
+        # removed college-level washrooms here
         "Discipline", "Program"
     ]
     ws.append(headers)
@@ -2372,18 +2356,8 @@ def export_colleges_excel(request):
 
     row_num = 2  # start from row 2
 
-    # Washroom aggregate trackers
-    total_washrooms_sum = 0
-    male_washrooms_sum = 0
-    female_washrooms_sum = 0
-
     # Iterate over colleges (qs already filtered & ordered)
     for college in qs:
-        # accumulate washroom totals
-        total_washrooms_sum += getattr(college, 'total_washrooms', 0) or 0
-        male_washrooms_sum += getattr(college, 'male_washrooms', 0) or 0
-        female_washrooms_sum += getattr(college, 'female_washrooms', 0) or 0
-
         # Group programs under each discipline
         discipline_map = {}
         for cp in college.college_programs.all():
@@ -2423,9 +2397,7 @@ def export_colleges_excel(request):
             getattr(college, 'college_type', '') or '',
             getattr(college, 'belongs_to', '') or '',
             getattr(college, 'affiliated', '') or '',
-            getattr(college, 'total_washrooms', 0) or 0,
-            getattr(college, 'male_washrooms', 0) or 0,
-            getattr(college, 'female_washrooms', 0) or 0,
+            # college-level washrooms removed
         ]
 
         for col_index, value in enumerate(college_fields, start=1):
@@ -2444,47 +2416,28 @@ def export_colleges_excel(request):
             discipline_start_row = current_row
             discipline_end_row = current_row + discipline_rowspan - 1
 
-            # Merge discipline cell (column 16)
+            # Merge discipline cell (column 13 now, since we removed washrooms)
             ws.merge_cells(
-                start_row=discipline_start_row, start_column=16,
-                end_row=discipline_end_row, end_column=16
+                start_row=discipline_start_row, start_column=13,
+                end_row=discipline_end_row, end_column=13
             )
-            disc_cell = ws.cell(row=discipline_start_row, column=16, value=discipline)
+            disc_cell = ws.cell(row=discipline_start_row, column=13, value=discipline)
             disc_cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
 
-            # Write each program in its own row (column 17)
+            # Write each program in its own row (column 14)
             if programs:
                 for p in programs:
                     prog_val = p or ''
-                    prog_cell = ws.cell(current_row, 17, prog_val)
+                    prog_cell = ws.cell(current_row, 14, prog_val)
                     prog_cell.alignment = Alignment(vertical="center", horizontal="left", wrap_text=True)
                     current_row += 1
             else:
-                prog_cell = ws.cell(current_row, 17, '')
+                prog_cell = ws.cell(current_row, 14, '')
                 prog_cell.alignment = Alignment(vertical="center", horizontal="left", wrap_text=True)
                 current_row += 1
 
         # Move pointer after writing all rows for this college
         row_num = end_row + 1
-
-    # ========= FINAL AGGREGATE ROW (washrooms) ==========
-    agg_row = row_num
-
-    # Merge columns 1..12 for label, leave 13–15 free for totals
-    ws.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=12)
-    label_cell = ws.cell(agg_row, 1, "Aggregate Values")
-    label_cell.font = Font(bold=True)
-    label_cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    # Put washroom totals in columns 13–15
-    ws.cell(agg_row, 13, total_washrooms_sum)
-    ws.cell(agg_row, 14, male_washrooms_sum)
-    ws.cell(agg_row, 15, female_washrooms_sum)
-
-    for col_idx in (13, 14, 15):
-        c = ws.cell(agg_row, col_idx)
-        c.font = Font(bold=True, color="CC6600")
-        c.alignment = Alignment(horizontal="center", vertical="center")
 
     # Auto column widths
     for col in range(1, len(headers) + 1):
@@ -2507,7 +2460,6 @@ def export_colleges_excel(request):
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     wb.save(response)
     return response
-
 
 @ajax_login_required
 def export_student_excel(request):
@@ -2536,7 +2488,7 @@ def export_student_excel(request):
     ).prefetch_related("college_programs", "student_aggregates").distinct()
 
     # -----------------------
-    # Global search
+    # Global Search (restored)
     # -----------------------
     if global_search:
         qs = qs.filter(
@@ -2554,16 +2506,17 @@ def export_student_excel(request):
         ).distinct()
 
     # -----------------------
-    # Ordering (same mapping as before)
-    # DataTable columns: 0 toggle,1 college_code,2 college_name,3 academic_year,4 total_students,5 actions
+    # Ordering support (optional; payload 'order' should be list of [column_index, dir] pairs)
+    # Map visible column indexes to model fields if you want server-side ordering.
+    # NOTE: Column mapping assumes columns before student area are the meta columns.
     # -----------------------
     COLUMN_INDEX_TO_FIELD = {
         1: "College_Code",
         2: "College_Name",
         3: "student_aggregates__Academic_Year",
+        # Depending on your frontend column ordering, adjust index 4 mapping if needed:
         4: "student_aggregates__total_students",
     }
-
     order_by = []
     try:
         for pair in order_instructions:
@@ -2591,19 +2544,24 @@ def export_student_excel(request):
     ws = wb.active
     ws.title = "Student Records"
 
-    # HEADERS
+    # ---------- HEADERS ----------
     headers = [
         "College Code", "College Name", "Address", "Pincode", "Country",
         "State", "District", "Taluka", "City",
         "College Type", "Belongs To", "Affiliated To",
-        "Total Washrooms", "Male Washrooms", "Female Washrooms",
+
         "Discipline", "Program",
 
-        # Student census columns (start at column 18)
-        "Total Students",
+        # Student census columns (student-area starts at column 15)
+        # Washrooms first (renamed the first washroom header as requested)
+        "Total Students Washrooms",   # student.total_washrooms
+        "Male Students washrooms",             # student.male_washrooms
+        "Female Students washrooms",           # student.female_washrooms
+
+        "Total Students",             # student.total_students
         "Total Male", "Total Female", "Total Others",
 
-        # Caste-wise (gender split)
+        # caste
         "OPEN Male", "OPEN Female", "OPEN Others",
         "OBC Male", "OBC Female", "OBC Others",
         "SC Male", "SC Female", "SC Others",
@@ -2612,7 +2570,7 @@ def export_student_excel(request):
         "VJNT Male", "VJNT Female", "VJNT Others",
         "EWS Male", "EWS Female", "EWS Others",
 
-        # Religion-wise (gender split)
+        # religion
         "Hindu Male", "Hindu Female", "Hindu Others",
         "Muslim Male", "Muslim Female", "Muslim Others",
         "Sikh Male", "Sikh Female", "Sikh Others",
@@ -2621,7 +2579,7 @@ def export_student_excel(request):
         "Buddhist Male", "Buddhist Female", "Buddhist Others",
         "Other Religion Male", "Other Religion Female", "Other Religion Others",
 
-        # Disability-wise (gender split)
+        # disability
         "No Disability Male", "No Disability Female", "No Disability Others",
         "Low Vision Male", "Low Vision Female", "Low Vision Others",
         "Blindness Male", "Blindness Female", "Blindness Others",
@@ -2632,6 +2590,7 @@ def export_student_excel(request):
     ]
     ws.append(headers)
 
+    # style header
     header_fill = PatternFill(start_color="006699", fill_type="solid")
     for col in range(1, len(headers) + 1):
         c = ws.cell(row=1, column=col)
@@ -2641,8 +2600,10 @@ def export_student_excel(request):
 
     row_num = 2
 
-    # Student fields matching model
+    # ---------- student fields (student-area order) ----------
+    # order: washrooms (3) -> total_students -> gender totals -> caste/religion/disability...
     student_fields = [
+        "total_washrooms", "male_washrooms", "female_washrooms",
         "total_students",
         "total_male", "total_female", "total_others",
 
@@ -2655,7 +2616,7 @@ def export_student_excel(request):
         "vjnt_male", "vjnt_female", "vjnt_others",
         "ews_male", "ews_female", "ews_others",
 
-        # religion (gender split)
+        # religion
         "hindu_male", "hindu_female", "hindu_others",
         "muslim_male", "muslim_female", "muslim_others",
         "sikh_male", "sikh_female", "sikh_others",
@@ -2664,7 +2625,7 @@ def export_student_excel(request):
         "buddhist_male", "buddhist_female", "buddhist_others",
         "other_religion_male", "other_religion_female", "other_religion_others",
 
-        # disability (gender split)
+        # disability
         "no_disability_male", "no_disability_female", "no_disability_others",
         "low_vision_male", "low_vision_female", "low_vision_others",
         "blindness_male", "blindness_female", "blindness_others",
@@ -2676,25 +2637,17 @@ def export_student_excel(request):
 
     overall_agg = {f: 0 for f in student_fields}
 
-    # washroom aggregate trackers
-    total_washrooms_sum = 0
-    male_washrooms_sum = 0
-    female_washrooms_sum = 0
-
-    # iterate colleges that actually have aggregates for the year
+    # -----------------------
+    # Iterate colleges and write rows
+    # -----------------------
     for college in qs:
-        # accumulate washroom totals
-        total_washrooms_sum += college.total_washrooms or 0
-        male_washrooms_sum += college.male_washrooms or 0
-        female_washrooms_sum += college.female_washrooms or 0
-
-        # map program_id -> student_aggregate for this year
+        # map program_id -> student_aggregate record for this year (may be empty)
         year_records = {
             r.Program_id: r
             for r in college.student_aggregates.filter(Academic_Year=year, is_deleted=False)
         }
 
-        # group programs by discipline
+        # group programs by discipline (master)
         discipline_map = {}
         for cp in college.college_programs.filter(is_deleted=False):
             discipline_map.setdefault(cp.Discipline, []).append(cp)
@@ -2707,7 +2660,7 @@ def export_student_excel(request):
         start_row = row_num
         end_row = row_num + total_program_rows - 1
 
-        # MERGE college info across the rows
+        # MERGE college info across the rows (12 meta fields)
         college_fields = [
             college.College_Code,
             college.College_Name,
@@ -2721,10 +2674,8 @@ def export_student_excel(request):
             college.college_type or "",
             college.belongs_to or "",
             college.affiliated or "",
-            college.total_washrooms if college.total_washrooms is not None else "",
-            college.male_washrooms if college.male_washrooms is not None else "",
-            college.female_washrooms if college.female_washrooms is not None else "",
         ]
+        # discipline column = 13, program = 14, student data starts at 15
         for ci, val in enumerate(college_fields, start=1):
             ws.merge_cells(start_row=start_row, start_column=ci, end_row=end_row, end_column=ci)
             cell = ws.cell(row=start_row, column=ci, value=val)
@@ -2734,61 +2685,66 @@ def export_student_excel(request):
         current_row = row_num
         for discipline, progs in discipline_map.items():
             progs_list = progs if progs else [None]
-            # discipline is column 16
             ws.merge_cells(
                 start_row=current_row,
-                start_column=16,
+                start_column=13,
                 end_row=current_row + len(progs_list) - 1,
-                end_column=16,
+                end_column=13,
             )
-            ws.cell(row=current_row, column=16, value=discipline).alignment = Alignment(
+            ws.cell(row=current_row, column=13, value=discipline).alignment = Alignment(
                 vertical="center", horizontal="center", wrap_text=True
             )
 
             for prog in progs_list:
                 if prog:
-                    ws.cell(current_row, 17, prog.ProgramName)
+                    ws.cell(current_row, 14, prog.ProgramName)
                     rec = year_records.get(prog.id)
                 else:
-                    ws.cell(current_row, 17, "No Program")
+                    ws.cell(current_row, 14, "No Program")
                     rec = None
 
-                # write student fields starting at column 18
+                # write student fields starting at column 15
                 if rec:
                     for i, field in enumerate(student_fields):
                         v = getattr(rec, field, 0) or 0
-                        ws.cell(current_row, 18 + i, v)
+                        ws.cell(current_row, 15 + i, v)
                         overall_agg[field] += v
                 else:
                     for i, field in enumerate(student_fields):
-                        ws.cell(current_row, 18 + i, 0)
+                        ws.cell(current_row, 15 + i, 0)
                 current_row += 1
 
         row_num = end_row + 1
 
+    # -----------------------
     # FINAL AGGREGATE ROW
+    # -----------------------
     agg_row = row_num
-
-    # merge only columns 1..12 for the label (leave 13–15 free for washroom totals)
     ws.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=12)
     label_cell = ws.cell(agg_row, 1, f"Aggregate Values - {year}")
     label_cell.font = Font(bold=True)
     label_cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # washroom totals in columns 13–15
-    ws.cell(agg_row, 13, total_washrooms_sum)
-    ws.cell(agg_row, 14, male_washrooms_sum)
-    ws.cell(agg_row, 15, female_washrooms_sum)
+    # student area starts at 15. Because we reordered student_fields:
+    # 15 -> total_washrooms (header "Total Students Washrooms")
+    # 16 -> male_washrooms
+    # 17 -> female_washrooms
+    # 18 -> total_students
+    ws.cell(agg_row, 15, overall_agg.get("total_washrooms", 0))
+    ws.cell(agg_row, 16, overall_agg.get("male_washrooms", 0))
+    ws.cell(agg_row, 17, overall_agg.get("female_washrooms", 0))
+    ws.cell(agg_row, 18, overall_agg.get("total_students", 0))
 
-    for col_idx in (13, 14, 15):
+    # style the key student washroom/total cells
+    for col_idx in (15, 16, 17, 18):
         c = ws.cell(agg_row, col_idx)
         c.font = Font(bold=True, color="CC6600")
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # overall student census aggregates starting at column 18
+    # overall student census aggregates starting at column 15
     for i, field in enumerate(student_fields):
         tot = overall_agg[field]
-        cell = ws.cell(agg_row, 18 + i, tot)
+        cell = ws.cell(agg_row, 15 + i, tot)
         cell.font = Font(bold=True, color="CC6600")
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
@@ -2815,7 +2771,6 @@ def export_student_excel(request):
     )
     resp["Content-Disposition"] = f'attachment; filename="{filename}"'
     return resp
-
 
 
 @ajax_login_required
@@ -2878,7 +2833,7 @@ def export_filtered_excel(request):
     qs = qs.distinct().order_by("College_Name")
 
     # -----------------------
-    # Build XLSX (same layout as before)
+    # Build XLSX (updated layout like export_student_excel)
     # -----------------------
     wb = Workbook()
     ws = wb.active
@@ -2888,11 +2843,16 @@ def export_filtered_excel(request):
         "College Code", "College Name", "Address", "Pincode", "Country",
         "State", "District", "Taluka", "City",
         "College Type", "Belongs To", "Affiliated To",
-        "Total Washrooms", "Male Washrooms", "Female Washrooms",
+
         "Discipline", "Program",
 
-        # Student census columns (start at column 18)
-        "Total Students",
+        # Student census columns (student-area starts at column 15)
+        # washrooms first (renamed first header)
+        "Total Students Washrooms",   # student.total_washrooms
+        "Male Students washrooms",             # student.male_washrooms
+        "Female Stduents washrooms",           # student.female_washrooms
+
+        "Total Students",             # student.total_students
         "Total Male", "Total Female", "Total Others",
 
         # Caste-wise (gender split)
@@ -2933,7 +2893,9 @@ def export_filtered_excel(request):
 
     row_num = 2
 
+    # student fields (student-area order): washrooms first then total_students etc.
     student_fields = [
+        "total_washrooms", "male_washrooms", "female_washrooms",
         "total_students",
         "total_male", "total_female", "total_others",
 
@@ -2967,18 +2929,10 @@ def export_filtered_excel(request):
 
     overall_agg = {f: 0 for f in student_fields}
 
-    # washroom aggregate trackers
-    total_washrooms_sum = 0
-    male_washrooms_sum = 0
-    female_washrooms_sum = 0
-
     # iterate colleges (masters; may have no student rows for the chosen year)
     for college in qs:
-        total_washrooms_sum += college.total_washrooms or 0
-        male_washrooms_sum += college.male_washrooms or 0
-        female_washrooms_sum += college.female_washrooms or 0
-
-        # student aggregates for THIS year only (may be empty -> recs missing)
+        # remove accumulation of college-level washrooms (we now use student-level washrooms)
+        # student aggregates for THIS year only
         year_records = {
             rec.Program_id: rec
             for rec in college.student_aggregates.filter(
@@ -3000,7 +2954,7 @@ def export_filtered_excel(request):
         start_row = row_num
         end_row = row_num + total_program_rows - 1
 
-        # MERGE college info across the rows
+        # MERGE college info across the rows (college meta fields = 12)
         college_fields = [
             college.College_Code,
             college.College_Name,
@@ -3014,10 +2968,8 @@ def export_filtered_excel(request):
             college.college_type or "",
             college.belongs_to or "",
             college.affiliated or "",
-            college.total_washrooms if college.total_washrooms is not None else "",
-            college.male_washrooms if college.male_washrooms is not None else "",
-            college.female_washrooms if college.female_washrooms is not None else "",
         ]
+        # discipline column = 13, program = 14, student data starts at 15
         for ci, val in enumerate(college_fields, start=1):
             ws.merge_cells(start_row=start_row, start_column=ci, end_row=end_row, end_column=ci)
             cell = ws.cell(row=start_row, column=ci, value=val)
@@ -3029,31 +2981,31 @@ def export_filtered_excel(request):
             progs_list = progs if progs else [None]
             ws.merge_cells(
                 start_row=current_row,
-                start_column=16,
+                start_column=13,
                 end_row=current_row + len(progs_list) - 1,
-                end_column=16,
+                end_column=13,
             )
-            ws.cell(row=current_row, column=16, value=discipline).alignment = Alignment(
+            ws.cell(row=current_row, column=13, value=discipline).alignment = Alignment(
                 vertical="center", horizontal="center", wrap_text=True
             )
 
             for prog in progs_list:
                 if prog:
-                    ws.cell(current_row, 17, prog.ProgramName)
+                    ws.cell(current_row, 14, prog.ProgramName)
                     rec = year_records.get(prog.id)
                 else:
-                    ws.cell(current_row, 17, "No Program")
+                    ws.cell(current_row, 14, "No Program")
                     rec = None
 
-                # write student fields starting at column 18 — if rec is None write zeros
+                # write student fields starting at column 15 — if rec is None write zeros
                 if rec:
                     for i, field in enumerate(student_fields):
                         v = getattr(rec, field, 0) or 0
-                        ws.cell(current_row, 18 + i, v)
+                        ws.cell(current_row, 15 + i, v)
                         overall_agg[field] += v
                 else:
                     for i, field in enumerate(student_fields):
-                        ws.cell(current_row, 18 + i, 0)
+                        ws.cell(current_row, 15 + i, 0)
                 current_row += 1
 
         row_num = end_row + 1
@@ -3065,19 +3017,25 @@ def export_filtered_excel(request):
     label_cell.font = Font(bold=True)
     label_cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # washroom totals in columns 13–15
-    ws.cell(agg_row, 13, total_washrooms_sum)
-    ws.cell(agg_row, 14, male_washrooms_sum)
-    ws.cell(agg_row, 15, female_washrooms_sum)
-    for col_idx in (13, 14, 15):
+    # Write student-level washroom totals inside the student area:
+    # student columns start at 15:
+    # 15 -> total_washrooms (header "Total Students Washrooms")
+    # 16 -> male_washrooms
+    # 17 -> female_washrooms
+    # 18 -> total_students
+    ws.cell(agg_row, 15, overall_agg.get("total_washrooms", 0))
+    ws.cell(agg_row, 16, overall_agg.get("male_washrooms", 0))
+    ws.cell(agg_row, 17, overall_agg.get("female_washrooms", 0))
+    ws.cell(agg_row, 18, overall_agg.get("total_students", 0))
+    for col_idx in (15, 16, 17, 18):
         c = ws.cell(agg_row, col_idx)
         c.font = Font(bold=True, color="CC6600")
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # overall student census aggregates starting at column 18
+    # overall student census aggregates starting at column 15
     for i, field in enumerate(student_fields):
         tot = overall_agg[field]
-        cell = ws.cell(agg_row, 18 + i, tot)
+        cell = ws.cell(agg_row, 15 + i, tot)
         cell.font = Font(bold=True, color="CC6600")
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
