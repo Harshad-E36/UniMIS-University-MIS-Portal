@@ -416,9 +416,6 @@
                 <!-- Hidden data columns -->
                 <th style="display:none;">Country</th>
                 <th style="display:none;">Affiliated To</th>
-                <th style="display:none;">Total Washrooms</th>
-                <th style="display:none;">Male Washrooms</th>
-                <th style="display:none;">Female Washrooms</th>
 
                 <th>Actions</th>
               </tr>
@@ -467,20 +464,6 @@
                 <span class="affiliated-to"></span>
               </div>
 
-              <!-- WASHROOMS -->
-              <div class="mb-3">
-                <strong>Washrooms:</strong>
-                <span class="washrooms-line">
-                  Total:
-                  <span class="wash-total fw-semibold"></span>
-                  &nbsp;|&nbsp;
-                  Male:
-                  <span class="wash-male fw-semibold"></span>
-                  &nbsp;|&nbsp;
-                  Female:
-                  <span class="wash-female fw-semibold"></span>
-                </span>
-              </div>
 
               <!-- DISCIPLINE LIST HERE -->
               <div class="row program-list"></div>
@@ -584,22 +567,6 @@
             </div>
 
             <!-- ROW 3: -->
-            <div class="col-md-4">
-              <label for="total_washrooms" class="form-label">Total washrooms</label>
-              <input type="number" min="0" class="form-control" id="total_washrooms" name="total_washrooms" value="0">
-            </div>
-
-            <div class="col-md-4">
-              <label for="female_washrooms" class="form-label">Female washrooms</label>
-              <input type="number" min="0" class="form-control" id="female_washrooms" name="female_washrooms" value="0">
-            </div>
-
-            <div class="col-md-4">
-              <label for="male_washrooms" class="form-label">Male washrooms</label>
-              <input type="number" min="0" class="form-control" id="male_washrooms" name="male_washrooms" value="0">
-            </div>
-
-            <!-- ROW 4: -->
             <div class="col-md-6">
               <label for="college_type" class="form-label">College Type</label>
               <select class="form-select" id="college_type" name="college_type" required>
@@ -735,9 +702,6 @@
         // Hidden columns to carry full data used by modal autofill:
         { data: "country", visible: false},
         { data: "affiliated", visible: false},
-        { data: "total_washrooms", visible: false},
-        { data: "male_washrooms", visible: false},
-        { data: "female_washrooms", visible: false},
 
         // Action buttons (template-based)
         {
@@ -907,18 +871,6 @@
       clone.querySelector(".affiliated-to").textContent =
         rowData.affiliated || "Not Available";
 
-      // Washrooms line (Total | Male | Female)
-      const totalWash = (rowData.total_washrooms ?? "") === "" ? "Not specified" : rowData.total_washrooms;
-      const maleWash = (rowData.male_washrooms ?? "") === "" ? "Not specified" : rowData.male_washrooms;
-      const femaleWash = (rowData.female_washrooms ?? "") === "" ? "Not specified" : rowData.female_washrooms;
-
-      const totalSpan = clone.querySelector(".wash-total");
-      const maleSpan = clone.querySelector(".wash-male");
-      const femaleSpan = clone.querySelector(".wash-female");
-
-      if (totalSpan) totalSpan.textContent = totalWash;
-      if (maleSpan) maleSpan.textContent = maleWash;
-      if (femaleSpan) femaleSpan.textContent = femaleWash;
 
       const programList = clone.querySelector(".program-list");
       const disciplineTpl = document.querySelector("#disciplineCardTemplate");
@@ -1221,9 +1173,6 @@
       $modal.find('#college_type').val(row.college_type);
       $modal.find('#belongs_to').val(row.belongs_to);
       $modal.find('#affiliated_to').val(row.affiliated);
-      $modal.find('#total_washrooms').val(row.total_washrooms);
-      $modal.find('#male_washrooms').val(row.male_washrooms);
-      $modal.find('#female_washrooms').val(row.female_washrooms);
 
       // === Discipline & Courses ===
       const programsMap = row.programs || {};
@@ -1291,16 +1240,6 @@
     }, "Please select at least one course for each selected discipline");
 
 
-    // Washroom validation: Total = Male + Female
-    $.validator.addMethod("washroomSum", function (value, element) {
-      const total = parseInt($("#total_washrooms").val(), 10) || 0;
-      const male = parseInt($("#male_washrooms").val(), 10) || 0;
-      const female = parseInt($("#female_washrooms").val(), 10) || 0;
-
-      return total === (male + female);
-    }, "Total washrooms must equal Male + Female washrooms");
-
-
     // Validation for add/edit form
     $('#add_edit_form').validate({
       // include hidden fields (we need #courses_validator)
@@ -1323,21 +1262,6 @@
         courses_validator: {
           coursesRequired: true
         },
-        total_washrooms: {
-          required: true,
-          min: 0,
-          washroomSum: true
-        },
-        male_washrooms: {
-          required: true,
-          min: 0,
-          washroomSum: true
-        },
-        female_washrooms: {
-          required: true,
-          min: 0,
-          washroomSum: true
-        }
       },
       messages: {
         college_name: {
@@ -1357,19 +1281,6 @@
         courses_validator: {
           coursesRequired: "Please select at least one course for each discipline"
         },
-
-        total_washrooms: {
-          required: "Please enter total washrooms",
-          washroomSum: "Total washrooms must equal Male + Female washrooms"
-        },
-        male_washrooms: {
-          required: "Please enter male washrooms",
-          washroomSum: "Total washrooms must equal Male + Female washrooms"
-        },
-        female_washrooms: {
-          required: "Please enter female washrooms",
-          washroomSum: "Total washrooms must equal Male + Female washrooms"
-        }
       },
       errorPlacement: function (error, element) {
         if (element.attr("id") === "courses_validator") {
@@ -1384,14 +1295,6 @@
         add_edit_records();
       }
     });
-
-    // Re-validate washroom fields whenever any of them changes
-    $('#male_washrooms, #female_washrooms').on('input change', function () {
-      $('#total_washrooms').valid();
-      $('#male_washrooms').valid();
-      $('#female_washrooms').valid();
-    });
-
 
     //re-validate when user checks unchecks course or discipline
     $(document).on("change", ".course-checkbox, .discipline-checkbox", function () {
