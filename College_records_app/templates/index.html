@@ -1006,21 +1006,21 @@
                   <div class="sr-gender-row">
                     <div class="sr-key">Total</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="wash_stu_total">0</span>
+                      <span class="sr-num" id="total_stu_washrooms">0</span>
                     </div>
                   </div>
 
                   <div class="sr-gender-row">
                     <div class="sr-key">Male</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="wash_stu_male">0</span>
+                      <span class="sr-num" id="male_stu_washrooms">0</span>
                     </div>
                   </div>
 
                   <div class="sr-gender-row">
                     <div class="sr-key">Female</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="wash_stu_female">0</span>
+                      <span class="sr-num" id="female_stu_washrooms">0</span>
                     </div>
                   </div>
                 </div>
@@ -1352,21 +1352,21 @@
                   <div class="sr-gender-row">
                     <div class="sr-key">Total</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="wash_stf_total">0</span>
+                      <span class="sr-num" id="total_stf_washrooms">0</span>
                     </div>
                   </div>
 
                   <div class="sr-gender-row">
                     <div class="sr-key">Male</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="wash_stf_male">0</span>
+                      <span class="sr-num" id="male_stf_washrooms">0</span>
                     </div>
                   </div>
 
                   <div class="sr-gender-row">
                     <div class="sr-key">Female</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="wash_stf_female">0</span>
+                      <span class="sr-num" id="female_stf_washrooms">0</span>
                     </div>
                   </div>
                 </div>
@@ -1797,17 +1797,21 @@
   }
 
   function updateDashboardCounters(data) {
-    // Colleges & total students
+    // Colleges & total students & staff
     animateCount($("#colleges_num"), data.total_colleges);
     animateCount($("#students_num"), data.total_students);
+    animateCount($("#staff_num"),0)
 
-    // washrooms
-
-
+    // STUDENT RECORDS UPDATER
     // gender
     animateCount($("#gender_stu_male"), data.total_stu_male);
     animateCount($("#gender_stu_female"), data.total_stu_female);
     animateCount($("#gender_stu_others"), data.total_stu_others);
+
+    // washrooms
+    animateCount($("#total_stu_washrooms"), data.total_stu_washrooms);
+    animateCount($("#male_stu_washrooms"), data.male_stu_washrooms);
+    animateCount($("#female_stu_washrooms"), data.female_stu_washrooms);
 
     // category — Open
     animateCount($("#open_stu_male"), data.open_stu_male);
@@ -1913,6 +1917,8 @@
     animateCount($("#other_disability_stu_male"), data.other_disability_stu_male);
     animateCount($("#other_disability_stu_female"), data.other_disability_stu_female);
     animateCount($("#other_disability_stu_others"), data.other_disability_stu_others);
+
+    // STAFF RECORD UPDATER
   }
 
   function gatherSelectedFilters() {
