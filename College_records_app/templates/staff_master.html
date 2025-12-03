@@ -54,7 +54,6 @@
       height: 100%;
       overflow-x: hidden;
       overflow-y: auto;
-      /* IMPORTANT */
     }
 
     /* =========================================================
@@ -74,7 +73,6 @@
       caret-color: auto;
       overflow-y: auto;
       max-height: calc(95vh - 120px);
-      /* Fix overflow */
       padding-right: 15px;
     }
 
@@ -92,10 +90,8 @@
       padding: 2.5rem 1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       position: relative;
-      /* for header-actions positioning */
     }
 
-    /* Right-side header actions (Create / Logout / Export / Year) */
     .header-banner .header-actions {
       position: absolute;
       right: 1rem;
@@ -122,7 +118,6 @@
       max-width: 100%;
     }
 
-    /* Responsive header actions */
     @media (max-width: 720px) {
       .header-banner .header-actions {
         position: static;
@@ -151,14 +146,34 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
+    /* Staff table (matches student table visuals) */
+    table#staff_records_table.dataTable thead,
     table.dataTable thead {
       background: #0d6efd;
       color: white;
     }
 
+    table#staff_records_table.dataTable thead th,
     table.dataTable thead th {
       text-align: left;
       vertical-align: middle;
+    }
+
+    /* Buttons in header — staff variants (same look as student) */
+    #ExportStaffExcelButton,
+    #ExportStudentExcelButton {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    #AddStaffButton,
+    #AddRecordButton {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Submit button inside modal (staff) */
+    #submitStaffRecordForm,
+    #submitRecordForm {
+      min-width: 140px;
     }
 
     /* =========================================================
@@ -241,13 +256,11 @@
     /* =========================================================
      DATATABLE CHILD / ACCORDION WIDTH FIXES
   ========================================================= */
-    /* kill extra side margins in DataTables child rows */
     .dt-child-scroll .row {
       margin-left: 0 !important;
       margin-right: 0 !important;
     }
 
-    /* Ensure accordion inside DataTable row uses full width */
     .dt-child-scroll .accordion-item,
     .dt-child-scroll .accordion-button,
     .dt-child-scroll .accordion-body,
@@ -275,6 +288,8 @@
       color: #0d6efd;
       text-align: left;
       display: inline-block;
+      /* Slightly less bold for better tone */
+      font-weight: 600;
     }
 
     .discipline-divider {
@@ -305,21 +320,37 @@
       padding-left: 0 !important;
       padding-right: 0 !important;
       --bs-gutter-x: 0;
-      /* kill Bootstrap gutters */
     }
 
+    /* each metric column gets exactly 25% and stretches to fill */
     .metric-col {
       flex: 0 0 25% !important;
-      /* exactly 1/4 each */
       max-width: 25% !important;
       min-width: 0 !important;
       padding: 0 0.5rem !important;
-      /* small internal gap */
       box-sizing: border-box !important;
     }
 
     .metric-col .card {
       width: 100%;
+    }
+
+    /* ensure the stacked washroom card fits inside column & doesn't break flow */
+    .metric-col .card+.card {
+      margin-top: 0.75rem;
+    }
+
+    /* small responsive fallback: allow wrapping at tiny widths */
+    @media (max-width: 900px) {
+      .program-content-row {
+        flex-wrap: wrap !important;
+        gap: 1rem;
+      }
+
+      .metric-col {
+        flex: 1 1 45% !important;
+        max-width: 100% !important;
+      }
     }
 
     /* =========================================================
@@ -408,6 +439,29 @@
     }
 
     /* =========================================================
+     FORM-SPECIFIC HELPERS (STAFF VARIANTS)
+  ========================================================= */
+
+    /* total-staff input class mirrors total-students */
+    .total-staff,
+    .total-students {
+      min-width: 160px;
+    }
+
+    /* placeholders lighter text */
+    input::placeholder {
+      color: rgba(0, 0, 0, 0.45);
+    }
+
+    /* label + small text adjustments for staff pages */
+    .discipline-header-text,
+    .program-title,
+    .program-section h6 {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* =========================================================
      MODAL HEADER – MATCH PAGE GRADIENT
   ========================================================= */
     #collegeModal .modal-header {
@@ -440,13 +494,11 @@
       border-top-left-radius: 0 !important;
       border-top-right-radius: 0 !important;
       overflow: visible !important;
-      /* allow header to round properly */
     }
 
     #collegeModal .modal-dialog {
       border-radius: 1rem !important;
       overflow: hidden;
-      /* clips corners cleanly */
     }
 
     #collegeModal .modal-content {
@@ -463,7 +515,7 @@
 </head>
 
 <body>
-  <!-- Student Records -->
+  <!-- Staff Records -->
   <div class="container-fluid">
     <div class="row">
       <div class="col-lg-12 mx-auto">
@@ -486,7 +538,7 @@
                 </button>
 
                 <!-- Export Excel (small button) -->
-                <button type="button" class="btn btn-warning btn-sm shadow-sm" id="ExportStudentExcelButton">
+                <button type="button" class="btn btn-warning btn-sm shadow-sm" id="ExportStaffExcelButton">
                   <i class="bi bi-file-earmark-excel"></i>
                   Export to Excel
                 </button>
@@ -509,9 +561,9 @@
             </div>
 
 
-            <h1 class="fw-bold">Student Records</h1>
-            <p>Add your student record here</p>
-            <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton">
+            <h1 class="fw-bold">Staff Records</h1>
+            <p>Add your staff record here</p>
+            <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddStaffButton">
               <i class="bi bi-plus-lg"></i> Add Record
             </button>
 
@@ -529,14 +581,14 @@
 
 
         <div class="table-container" id="datatable_wrapper">
-          <table id="records_table" class="table table-hover align-middle" width="100%">
+          <table id="staff_records_table" class="table table-hover align-middle" width="100%">
             <thead>
               <tr>
                 <th>Action</th>
                 <th>College Code</th>
                 <th>College Name</th>
                 <th>Academic Year</th>
-                <th>Total Students</th>
+                <th>Total Staff</th>
                 <th>Edit/Delete</th>
               </tr>
             </thead>
@@ -547,7 +599,7 @@
     </div>
 
 
-    <!-- Add Student Records Modal -->
+    <!-- Add Staff Records Modal -->
     <div class="modal fade" id="collegeModal" tabindex="-1">
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -579,7 +631,7 @@
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-success" id="submitRecordForm">Submit Records</button>
+            <button class="btn btn-success" id="submitStaffRecordForm">Submit Records</button>
           </div>
 
         </div>
@@ -609,11 +661,11 @@
 
         <h4 class="fw-bold text-dark program-title mb-3"></h4>
 
-        <!-- TOTAL STUDENTS -->
-        <h6 class="fw-bold text-secondary border-bottom pb-1">Total Students</h6>
+        <!-- TOTAL STAFF -->
+        <h6 class="fw-bold text-secondary border-bottom pb-1">Total Staff</h6>
         <div class="row mt-2">
           <div class="col-md-4">
-            <input type="number" class="form-control total-students" placeholder="Enter total students" min="0">
+            <input type="number" class="form-control total-staff" placeholder="Enter total staff" min="0">
           </div>
         </div>
 
@@ -626,8 +678,7 @@
           </div>
           <div class="col-md-3">
             <label>Female</label>
-            <input type="number
-               " class="form-control gender-female" min="0" placeholder="F">
+            <input type="number" class="form-control gender-female" min="0" placeholder="F">
           </div>
           <div class="col-md-3">
             <label>Others</label>
@@ -1093,6 +1144,7 @@
 </body>
 
 <script>
+
   // function to get CSRF cookie
   function getCookie(name) {
     var cookieValue = null;
@@ -1185,12 +1237,12 @@
       return Number.isFinite(v) ? v : 0;
     };
 
-    const total = parseVal(section.find(".total-students"));
+    const total = parseVal(section.find(".total-staff"));
 
     if (!total || total <= 0) {
       return {
         valid: false,
-        message: `${programName}: Total Students is required and must be greater than 0.`
+        message: `${programName}: Total Staff is required and must be greater than 0.`
       };
     }
 
@@ -1215,7 +1267,7 @@
     if (genderSum !== total) {
       return {
         valid: false,
-        message: `${programName}: Gender total (${genderSum}) does not match Total Students (${total}).`
+        message: `${programName}: Gender total (${genderSum}) does not match Total Staff (${total}).`
       };
     }
 
@@ -1270,7 +1322,7 @@
     if (categorySum !== total) {
       return {
         valid: false,
-        message: `${programName}: Category total (${categorySum}) does not match Total Students (${total}).`
+        message: `${programName}: Category total (${categorySum}) does not match Total Staff (${total}).`
       };
     }
 
@@ -1295,7 +1347,7 @@
     if (religionSum !== total) {
       return {
         valid: false,
-        message: `${programName}: Religion total (${religionSum}) does not match Total Students (${total}).`
+        message: `${programName}: Religion total (${religionSum}) does not match Total Staff (${total}).`
       };
     }
 
@@ -1312,7 +1364,7 @@
     if (disabilitySum !== total) {
       return {
         valid: false,
-        message: `${programName}: Disability total (${disabilitySum}) does not match Total Students (${total}).`
+        message: `${programName}: Disability total (${disabilitySum}) does not match Total Staff (${total}).`
       };
     }
 
@@ -1371,8 +1423,8 @@
 
         const saved = savedRecords[programName] || {};
 
-        // total students
-        const totalEl = progFrag.querySelector(".total-students");
+        // total staff
+        const totalEl = progFrag.querySelector(".total-staff") || progFrag.querySelector(".total-students");
         if (totalEl) totalEl.value = saved.total_students !== undefined ? saved.total_students : "";
 
         // GENDER
@@ -1444,12 +1496,12 @@
   }
 
 
-  function initStudentTable() {
-    const table = $("#records_table").DataTable({
+  function initStaffTable() {
+    const table = $("#staff_records_table").DataTable({
       serverSide: true,
       processing: true,
       ajax: {
-        url: "/get_student_records/",
+        url: "/get_staff_records/",
         type: "GET",
         data: function (d) {
           // always take latest selected year
@@ -1457,27 +1509,21 @@
         }
       },
       pageLength: 10,
-
-      // normal layout, no DataTables Buttons
       dom: "lfrtip",
-
       columns: [
         {
           data: null,
           orderable: false,
           searchable: false,
           render: function () {
-            return `
-            <button class="btn btn-sm btn-outline-primary toggle-programs">
-              <i class="bi bi-plus-lg"></i>
-            </button>`;
+            return `\n            <button class="btn btn-sm btn-outline-primary toggle-programs">\n              <i class="bi bi-plus-lg"></i>\n            </button>`;
           }
         },
         { data: "college_code" },
         { data: "college_name" },
         { data: "academic_year" },
         {
-          data: "total_students",
+          data: "total_staff",
           render: function (d) {
             return d ?? "-";
           }
@@ -1485,7 +1531,6 @@
         {
           data: null,
           render: function (data, type, row) {
-            // use jQuery instead of document.querySelector/template clone
             const $clone = $($("#actionButtonsTemplate").html().trim());
 
             $clone
@@ -1505,8 +1550,8 @@
       order: [[2, "asc"]]
     });
 
-    // External export button (like Page 1)
-    $("#ExportStudentExcelButton").on("click", function () {
+    // External export button
+    $("#ExportStaffExcelButton").on("click", function () {
       const dt = table;
       const year = $("#globalAcademicYear").val();
 
@@ -1522,20 +1567,17 @@
       };
 
       $.ajax({
-        url: "/export-student-excel/",
+        url: "/export-staff-excel/",
         method: "POST",
         data: JSON.stringify(payload),
         contentType: "application/json",
-        // headers: {
-        //   "X-CSRFToken": (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || ""
-        // },
         xhr: function () {
           const xhr = new window.XMLHttpRequest();
           xhr.responseType = "blob";
           return xhr;
         },
         success: function (blob, status, xhr) {
-          let filename = "Student_Report_" + year + ".xlsx";
+          let filename = "Staff_Report_" + year + ".xlsx";
           const disp = xhr.getResponseHeader("Content-Disposition");
 
           if (disp && disp.indexOf("filename=") !== -1) {
@@ -1551,7 +1593,6 @@
           $a.attr("href", url).attr("download", filename);
           $("body").append($a);
 
-          // trigger download
           $a[0].click();
 
           setTimeout(function () {
@@ -1581,20 +1622,17 @@
       });
     });
 
-    //  YEAR CHANGE → RELOAD TABLE
+    // YEAR CHANGE → RELOAD TABLE
     $("#globalAcademicYear").on("change", function () {
       selectedYear = $(this).val();
       table.ajax.reload();
     });
 
-    //  LABEL MAP FOR FULL DESCRIPTIONS
+    // LABEL MAP (same)
     const LABEL_MAP = {
-      // Gender
       male: "Male",
       female: "Female",
       others: "Others",
-
-      // Category
       open: "Open",
       obc: "OBC",
       sc: "SC",
@@ -1602,8 +1640,6 @@
       nt: "NT",
       vjnt: "VJNT",
       ews: "EWS",
-
-      // Religion
       hindu: "Hindu",
       muslim: "Muslim",
       sikh: "Sikh",
@@ -1611,8 +1647,6 @@
       jain: "Jain",
       buddhist: "Buddhist",
       other: "Other Religions",
-
-      // Disability
       no_disability: "No Disability",
       lowvision: "Low Vision",
       blindness: "Blindness",
@@ -1622,7 +1656,7 @@
       other_disability: "Other Disabilities"
     };
 
-    // BUILD FULL PROGRAM ACCORDION USING TEMPLATES
+    // The formatPrograms function is identical to student variant but references staff field names where needed
     function formatPrograms(row) {
       const wrapper = document.createElement("div");
       wrapper.className = "dt-child-scroll";
@@ -1633,16 +1667,11 @@
       const inner = document.createElement("div");
       inner.className = "py-3";
 
-      // Main accordion container
       const accordion = document.createElement("div");
       accordion.className = "accordion";
       accordion.id = `acc-${row.college_code}`;
 
-      // row.programs = [{ discipline: "", programs: [ ... ] }]
       row.programs.forEach((group, groupIndex) => {
-        // ---------------------------
-        // Discipline Header (inside accordion)
-        // ---------------------------
         const discHeader = document.createElement("div");
         discHeader.className = "discipline-header-row";
 
@@ -1653,21 +1682,16 @@
         discHeader.appendChild(discText);
         accordion.appendChild(discHeader);
 
-        // Divider for proper top border before first program
         const divider = document.createElement("div");
         divider.className = "discipline-divider";
         accordion.appendChild(divider);
 
-        // ---------------------------
-        // Programs inside this discipline
-        // ---------------------------
         group.programs.forEach((p, i) => {
           const tplItem = document.querySelector("#programAccordionTemplate");
           const acc = tplItem.content.cloneNode(true);
 
           const btn = acc.querySelector(".accordion-button");
-          // Header text: show total students here
-          btn.textContent = `${p.name} (Total Students: ${p.total_students})`;
+          btn.textContent = `${p.name} (Total Staff: ${p.total_students})`;
           btn.setAttribute("data-bs-toggle", "collapse");
           btn.setAttribute("data-bs-target", `#collapse-${row.college_code}-${groupIndex}-${i}`);
 
@@ -1677,14 +1701,8 @@
 
           const rowContainer = acc.querySelector(".program-content-row");
 
-          // Washroom data for this program (used with Gender column)
-          const wash = p.washrooms || {
-            total_washrooms: 0,
-            male_washrooms: 0,
-            female_washrooms: 0
-          };
+          const wash = p.washrooms || { total_washrooms: 0, male_washrooms: 0, female_washrooms: 0 };
 
-          // ---- METRICS: 4 columns -> Gender(+Washrooms), Category, Religion, Disability
           const metricGroups = {
             "Gender": { color: "bg-primary", data: p.gender },
             "Category (M/F/O)": { color: "bg-success", data: p.category },
@@ -1702,7 +1720,6 @@
 
             const tbody = clone.querySelector(".metric-body");
 
-            // handle nested {male,female,others} objects
             Object.entries(meta.data).forEach(([label, value]) => {
               const tr = document.createElement("tr");
 
@@ -1724,7 +1741,6 @@
               tbody.appendChild(tr);
             });
 
-            // For Gender column only, add a second card (Washrooms) stacked below
             if (title === "Gender") {
               const colDiv = clone.querySelector(".metric-col") || clone.firstElementChild;
 
@@ -1732,31 +1748,8 @@
                 const washCard = document.createElement("div");
                 washCard.className = "card shadow-sm mt-2";
 
-                washCard.innerHTML = `
-              <div class="card-header bg-info text-white py-2 text-center fw-bold">
-                Washrooms
-              </div>
-              <div class="card-body p-2">
-                <table class="table table-sm mb-0">
-                  <tbody>
-                    <tr>
-                      <td>Total</td>
-                      <td class="text-end">${wash.total_washrooms ?? 0}</td>
-                    </tr>
-                    <tr>
-                      <td>Male</td>
-                      <td class="text-end">${wash.male_washrooms ?? 0}</td>
-                    </tr>
-                    <tr>
-                      <td>Female</td>
-                      <td class="text-end">${wash.female_washrooms ?? 0}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            `;
+                washCard.innerHTML = `\n              <div class="card-header bg-info text-white py-2 text-center fw-bold">\n                Washrooms\n              </div>\n              <div class="card-body p-2">\n                <table class="table table-sm mb-0">\n                  <tbody>\n                    <tr>\n                      <td>Total</td>\n                      <td class="text-end">${wash.total_washrooms ?? 0}</td>\n                    </tr>\n                    <tr>\n                      <td>Male</td>\n                      <td class="text-end">${wash.male_washrooms ?? 0}</td>\n                    </tr>\n                    <tr>\n                      <td>Female</td>\n                      <td class="text-end">${wash.female_washrooms ?? 0}</td>\n                    </tr>\n                  </tbody>\n                </table>\n              </div>\n            `;
 
-                // stack below Gender in the same col-md-3
                 colDiv.appendChild(washCard);
               }
             }
@@ -1775,9 +1768,8 @@
       return wrapper.outerHTML;
     }
 
-    //  EXPAND / COLLAPSE CHILD ROWS
-    $("#records_table tbody").on("click", ".toggle-programs", function () {
-
+    // EXPAND/COLLAPSE child rows
+    $("#staff_records_table tbody").on("click", ".toggle-programs", function () {
       const tr = $(this).closest("tr");
       const row = table.row(tr);
       const btn = $(this);
@@ -1804,25 +1796,24 @@
 
     setTimeout(function () {
       notification.addClass('show-notification');
-    }, 10); // slight delay to ensure the element is in the DOM
+    }, 10);
 
     setTimeout(function () {
       notification.removeClass('show-notification');
       setTimeout(function () {
         notification.remove();
-      }, 500); // additional delay to allow transition effect
+      }, 500);
     }, 3000);
   }
 
 
-  $('document').ready(function () {
-
+  $(document).ready(function () {
     $.ajax({
-      url: "{% url 'user_status' %}", // backend endpoint for checking auth
+      url: "{% url 'user_status' %}",
       type: "GET",
       success: function (response) {
         if (response.status === 200) {
-          initStudentTable()
+          initStaffTable();
         } else {
           window.location.href = "/home/";
         }
@@ -1832,36 +1823,28 @@
       }
     });
 
-
-    // Toggle the cassette
-    $("#AddRecordButton").on("click", function (e) {
+    // Toggle the cassette — note: add button id in HTML should be #AddStaffButton
+    $(document).on('click', '#AddStaffButton', function (e) {
       e.stopPropagation();
 
       const cassette = $("#collegeCodeCassette");
       cassette.toggleClass("show");
 
       if (cassette.hasClass("show")) {
-        // Opening → focus but DO NOT clear
         $("#collegeCodeInput").focus();
       } else {
-        // Closing → clear input
         $("#collegeCodeInput").val("");
       }
     });
 
-    // Click outside closes cassette
     $(document).on("click", function (e) {
-      if (!$(e.target).closest("#collegeCodeCassette, #AddRecordButton").length) {
+      if (!$(e.target).closest("#collegeCodeCassette, #AddStaffButton").length) {
         $("#collegeCodeCassette").removeClass("show");
-        // Clear input when closed
         $("#collegeCodeInput").val("");
       }
     });
 
-    // Prevent inner clicks from closing it
-    $("#collegeCodeCassette").on("click", function (e) {
-      e.stopPropagation();
-    });
+    $("#collegeCodeCassette").on("click", function (e) { e.stopPropagation(); });
 
     // toggle collapsible discipline
     $(document).on("click", ".toggle-discipline", function () {
@@ -1873,7 +1856,7 @@
     });
 
     // ADD MODE - When user enters college code to add new records
-    $("#submitCollegeCode").on("click", function () {
+    $(document).on("click", "#submitCollegeCode", function () {
       const collegeCode = $("#collegeCodeInput").val().trim();
 
       if (!collegeCode) {
@@ -1907,8 +1890,8 @@
       });
     });
 
-
-    $("#submitRecordForm").on("click", function () {
+    // Submit handler — staff variant
+    $(document).on('click', '#submitStaffRecordForm', function () {
       const collegeCode = $("#collegeModal").data("college-code");
       const academicYear = $("#academicYear").val();
       const mode = $("#collegeModal").data("mode");
@@ -1918,7 +1901,6 @@
         return;
       }
 
-      // safe integer parser: returns 0 for empty/invalid
       function toInt(v) {
         const n = parseInt(v, 10);
         return Number.isFinite(n) ? n : 0;
@@ -1930,34 +1912,28 @@
       $(".program-section").each(function () {
         let section = $(this);
 
-        // VALIDATE THIS PROGRAM FIRST
         let check = validateProgramSection(section);
         if (!check.valid) {
           failedValidation = check.message;
-          return false; // stop loop
+          return false;
         }
 
-        let program =
-          section.data("program") ||
-          section.find(".program-title").text().trim() ||
-          "program";
+        let program = section.data("program") || section.find(".program-title").text().trim() || "program";
 
-        // top-level totals/gender
-        const total_students = toInt(section.find(".total-students").val());
+        // top-level totals/gender (note: total-staff class)
+        const total_staff = toInt(section.find(".total-staff").val() || section.find('.total-students').val());
         const gender = {
           male: toInt(section.find(".gender-male").val()),
           female: toInt(section.find(".gender-female").val()),
           others: toInt(section.find(".gender-others").val())
         };
 
-        // washroom counts (per program section)
         const washrooms = {
           total: toInt(section.find(".wash-total").val()),
           male: toInt(section.find(".wash-male").val()),
           female: toInt(section.find(".wash-female").val())
         };
 
-        // categories (each with male/female/others)
         const catKeys = ["open", "obc", "sc", "st", "nt", "vjnt", "ews"];
         const category = {};
         catKeys.forEach(key => {
@@ -1968,7 +1944,6 @@
           };
         });
 
-        // religion
         const relKeys = ["hindu", "muslim", "sikh", "christian", "jain", "buddhist", "other_religion"];
         const religion = {};
         relKeys.forEach(key => {
@@ -1979,7 +1954,6 @@
           };
         });
 
-        // disability
         const disKeys = ["no_disability", "lowvision", "blindness", "hearing", "locomotor", "autism", "other_disability"];
         const disability = {};
         disKeys.forEach(key => {
@@ -1990,9 +1964,8 @@
           };
         });
 
-        // assign
         records[program] = {
-          total_students: total_students,
+          total_staff: total_staff,
           gender: gender,
           washrooms: washrooms,
           category: category,
@@ -2001,7 +1974,6 @@
         };
       });
 
-      // IF ANY PROGRAM FAILED → STOP SUBMISSION
       if (failedValidation) {
         showNotification(failedValidation, "danger");
         return;
@@ -2012,30 +1984,21 @@
         academic_year: academicYear,
         records: records
       };
-      console.log(records);
 
-      // send (URLs unchanged)
       if (mode === "add") {
         $.ajax({
-          url: "/add_student/",
+          url: "/add_staff/",
           type: "POST",
           data: JSON.stringify(payload),
           contentType: "application/json",
           success: function (response) {
             if (response.status === 200) {
-              showNotification("Student records saved successfully!", "success");
+              showNotification("Staff records saved successfully!", "success");
               $("#collegeModal").modal("hide");
-              table.ajax.reload(null, false);
-            }
-            else if (response.status === 400) {
-              alert(
-                `${response.message}
-                 ${response.type}
-                College Total Washrooms: ${response.college_total_washrooms}
-                Sum of Program Washrooms: ${response.sum_of_program_washrooms_in_payload}`
-              );
-            }
-            else {
+              $("#staff_records_table").DataTable().ajax.reload(null, false);
+            } else if (response.status === 400) {
+              alert(`${response.message}\nCollege Total Washrooms: ${response.college_total_washrooms}\nSum of Program Washrooms: ${response.sum_of_program_washrooms_in_payload}`);
+            } else {
               showNotification(response.message || "Something went wrong", "danger");
             }
           },
@@ -2046,26 +2009,18 @@
       } else {
         // EDIT MODE
         $.ajax({
-          url: "/edit_student/",
+          url: "/edit_staff/",
           type: "POST",
           data: JSON.stringify(payload),
           contentType: "application/json",
           success: function (response) {
             if (response.status === 200) {
-              showNotification("Student records updated successfully!", "success");
+              showNotification("Staff records updated successfully!", "success");
               $("#collegeModal").modal("hide");
-              table.ajax.reload(null, false);
-
-            }
-            else if (response.status === 400) {
-              alert(
-                `${response.message}
-                 ${response.type}
-                College Total Washrooms: ${response.college_total_washrooms}
-                Sum of Program Washrooms: ${response.sum_of_program_washrooms_in_payload}`
-              );
-            }
-            else {
+              $("#staff_records_table").DataTable().ajax.reload(null, false);
+            } else if (response.status === 400) {
+              alert(`${response.message}\nCollege Total Washrooms: ${response.college_total_washrooms}\nSum of Program Washrooms: ${response.sum_of_program_washrooms_in_payload}`);
+            } else {
               showNotification(response.message || "Something went wrong", "danger");
             }
           },
@@ -2075,7 +2030,6 @@
         });
       }
     });
-
 
     // EDIT MODE - When user clicks on "Edit"
     $(document).on("click", ".btn-edit", function (e) {
@@ -2126,8 +2080,7 @@
       });
     });
 
-
-    // DELETE RECORD HANDLER 
+    // DELETE RECORD HANDLER (staff)
     $(document).on("click", ".btn-delete", function () {
       const college = $(this).data("college");
       const year = $(this).data("year");
@@ -2137,13 +2090,12 @@
         return;
       }
 
-      // Confirm deletion
       if (!confirm(`Delete records for ${college} (${year})?`)) {
         return;
       }
 
       $.ajax({
-        url: "/delete-student-record/",
+        url: "/delete-staff-record/",
         type: "POST",
         data: {
           college_code: college,
@@ -2152,7 +2104,7 @@
         success: function (response) {
           if (response.status === 204) {
             showNotification("Record deleted successfully.", "success");
-            $("#records_table").DataTable().ajax.reload(null, false);
+            $("#staff_records_table").DataTable().ajax.reload(null, false);
           } else {
             showNotification(response.message || "Delete failed", "danger");
           }
@@ -2163,8 +2115,8 @@
       });
     });
 
-
-    $("#logout_btn").on("click", function (e) {
+    // Logout handler (unchanged)
+    $(document).on('click', '#logout_btn', function (e) {
       e.preventDefault();
       $.ajax({
         url: "{% url 'logout' %}",
@@ -2180,7 +2132,7 @@
       });
     });
 
-  })
+  });
 
 </script>
 

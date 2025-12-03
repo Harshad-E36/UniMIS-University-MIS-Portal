@@ -224,58 +224,6 @@
       transform: translateY(-2px);
     }
 
-    /* Washrooms stat card (4th card) */
-    .stat-card-washrooms .card-body {
-      /* still use flex column, just a bit more breathing room */
-      gap: 0.5rem;
-    }
-
-    /* Slightly tighter title so it doesn't fight the row */
-    .stat-card-washrooms .card-title {
-      font-size: 1.1rem !important;
-      margin-bottom: 0.25rem;
-    }
-
-    /* Single row: Total (count) | Female (count) | Male (count) */
-    .stat-card-washrooms .washroom-row {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #4b5563;
-      /* similar tone to other labels */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      /* safe for smaller widths */
-      column-gap: 0.75rem;
-      row-gap: 0.1rem;
-      text-align: center;
-    }
-
-    /* The numbers inside the row */
-    .stat-card-washrooms .washroom-count {
-      margin-left: 4px;
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--brand-blue);
-      /* ties into existing hero color */
-      font-variant-numeric: tabular-nums;
-      /* keeps digits aligned */
-    }
-
-    /* Separators | between parts */
-    .stat-card-washrooms .wr-sep {
-      color: #d1d5db;
-      font-weight: 600;
-    }
-
-    /* Echo the hover "lift" on numbers a tiny bit */
-    .stat-card-washrooms:hover .washroom-count {
-      transform: translateY(-1px);
-      transition: transform .18s ease, color .18s ease;
-      color: var(--brand-blue-dark);
-    }
-
     /* Filter Navbar (cleaned) */
     .filter-navbar {
       background: linear-gradient(90deg, var(--brand-blue), var(--brand-green));
@@ -515,29 +463,41 @@
       transform: translateX(-50%) translateY(20px);
     }
 
-    /* Base card */
+    /* ---------- Student Records layout & behavior ---------- */
+
+    #sr-cards-row {
+      align-items: stretch;
+    }
+
+    /* Base sr-card: remove forced min-heights so layout can be driven by content */
     .sr-card {
       background: #fff;
       border-radius: 12px;
       padding: 14px;
       box-shadow: var(--card-shadow);
       transition: transform .22s cubic-bezier(.2, .9, .2, 1), box-shadow .22s ease, opacity .25s ease;
-      height: 100%;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      box-sizing: border-box;
+      overflow: hidden;
+      /* contain internal scrolling */
     }
 
+    /* Hover */
     .sr-card:hover {
       transform: translateY(-6px);
       box-shadow: var(--card-shadow-hover);
     }
 
+    /* Header */
     .sr-card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
+      flex: 0 0 auto;
+      /* header not flexible */
     }
 
     .sr-card-title {
@@ -555,20 +515,32 @@
       font-size: 0.82rem;
     }
 
+    /* Card body: flexible area; will expand to available card height on the stretched cards */
     .sr-card-body {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      flex: 1 1 auto;
+      /* take remaining vertical space in the card */
+      min-height: 0;
+      /* allow children to overflow properly */
+      box-sizing: border-box;
+      overflow: hidden;
+      /* hide overflow; inner list will scroll if needed */
+      padding-right: 6px;
     }
 
-    /* Gender rows (simple, larger numbers) */
-    .sr-gender-row {
+    /* Rows that show a label + a number (gender / washrooms lines) */
+    .sr-gender-row,
+    .sr-list-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px 6px;
       border-radius: 8px;
       background: linear-gradient(180deg, rgba(13, 110, 253, 0.03), transparent);
+      flex: 0 0 auto;
+      /* keep intrinsic height */
     }
 
     .sr-key {
@@ -583,63 +555,90 @@
       align-items: center;
       justify-content: flex-end;
       gap: 6px;
+      white-space: nowrap;
     }
 
     .sr-num {
       font-weight: 500;
       font-size: 1.15rem;
       color: #6b7280;
-      display: inline-block;
       line-height: 1;
       opacity: 0.85;
       letter-spacing: 0.2px;
     }
 
-    /* List style for category/religion/disability */
+    /* List containers (Category / Religion / Disability) */
     .sr-list-body {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 220px;
-      overflow: auto;
+
+      /* critical: allow this inner list to grow and scroll if the card is constrained */
+      flex: 1 1 auto;
+      min-height: 0;
+      /* important for proper overflow handling inside flex items */
+      overflow-y: auto;
       padding-right: 6px;
+      box-sizing: border-box;
     }
 
-    .sr-list-row {
+    /* If you have a small list-style body for the two stacked cards, same behavior:
+   - for the left column (two stacked cards) we want them to use natural height (no scroll).
+   - so their .sr-card-body should NOT force scrolling unless content exceeds viewport.
+*/
+    .sr-gender-scroll {
+      /* allow content to size naturally; only scroll if overflowing (rare) */
+      flex: 0 0 auto;
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
+    }
+
+    /* Make left-column stacked cards size to their content (no internal scroll).
+   Your markup used: <div class="col-lg-3 col-md-6 col-sm-12 d-flex flex-column gap-3">,
+   so target that pattern:
+*/
+    .col-lg-3.d-flex.flex-column>.sr-card {
+      /* don't force these to fill column; let them take their natural height */
+      flex: 0 0 auto;
+      min-height: 0;
+      overflow: visible;
+    }
+
+    .col-lg-3.d-flex.flex-column {
+      /* ensure parent column itself stretches in the row (so it becomes the tallest if content is large) */
+      align-self: stretch;
+    }
+
+    /* For the other columns’ cards, make them stretch to match the tallest column (left column)
+   and let their internal list scroll if needed. */
+    .col-lg-3:not(.d-flex)>.sr-card,
+    .col-lg-3:not(.d-flex) .sr-card {
+      /* make the card take full height available from the row/column */
+      height: 100%;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 6px;
-      border-radius: 6px;
-      transition: background .18s ease;
+      flex-direction: column;
     }
 
+    /* small visual tweaks to keep rows looking consistent */
     .sr-list-row:hover {
       background: rgba(13, 110, 253, 0.03);
-    }
-
-    .sr-key {
-      color: #2b3a4a;
-      font-weight: 600;
     }
 
     .sr-values {
       font-weight: 800;
       color: #1f2937;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      justify-content: flex-end;
       min-width: 130px;
       font-variant-numeric: tabular-nums;
     }
 
+    /* separator */
     .sr-sep {
       color: #6c757d;
       font-weight: 700;
     }
 
-    /* small number pulse animation when updated (JS can toggle .pulse) */
+    /* small number pulse animation */
     @keyframes sr-pulse {
       0% {
         transform: scale(1);
@@ -661,7 +660,7 @@
       animation: sr-pulse .5s ease-in-out;
     }
 
-    /* responsive tweaks */
+    /* Responsive: keep behavior but relax widths */
     @media (max-width: 991px) {
       .sr-values {
         min-width: 90px;
@@ -916,7 +915,7 @@
       <div class="row g-3 m-0">
 
         <!-- Colleges -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
               <h6 class="card-title">Colleges</h6>
@@ -927,7 +926,7 @@
         </div>
 
         <!-- Students -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
           <div class="card stat-card text-center" data-url="{% url 'student_master' %}">
             <div class="card-body">
               <h6 class="card-title">Students</h6>
@@ -938,31 +937,12 @@
         </div>
 
         <!-- Staff -->
-        <div class="col-12 col-md-3">
-          <div class="card stat-card text-center" data-url="#">
+        <div class="col-12 col-md-4">
+          <div class="card stat-card text-center" data-url="{% url 'staff_master' %}">
             <div class="card-body">
               <h6 class="card-title">Staff</h6>
               <p class="stat-number mb-0" id="staff_num">0</p>
               <small class="stat-hint">Click to view Staff Records →</small>
-            </div>
-          </div>
-        </div>
-
-        <!-- Washrooms -->
-        <div class="col-12 col-md-3">
-          <div class="card stat-card stat-card-washrooms text-center">
-            <div class="card-body">
-              <h6 class="card-title mb-3">Washrooms</h6>
-
-              <!-- Single row: labels + counts -->
-              <div class="d-flex justify-content-center align-items-center gap-3 washroom-row">
-                <span>Total <span class="washroom-count" id="total_washrooms">0</span></span>
-                <span class="wr-sep">|</span>
-                <span>Female <span class="washroom-count" id="female_washrooms">0</span></span>
-                <span class="wr-sep">|</span>
-                <span>Male <span class="washroom-count" id="male_washrooms">0</span></span>
-              </div>
-
             </div>
           </div>
         </div>
@@ -983,36 +963,69 @@
           </div>
 
           <div class="row g-3" id="sr-cards-row">
-            <!-- Gender card (only genders) -->
-            <div class="col-lg-3 col-md-6 col-sm-12">
+            <!-- Column: Gender Card + Washrooms Card -->
+            <div class="col-lg-3 col-md-6 col-sm-12 d-flex flex-column gap-3">
+
+              <!-- Gender Card -->
               <div class="sr-card sr-card-gender" role="region" aria-label="Gender counts">
                 <div class="sr-card-header">
                   <span class="sr-card-title">Gender</span>
                 </div>
 
-                <div class="sr-card-body">
+                <div class="sr-card-body sr-gender-scroll">
                   <div class="sr-gender-row">
                     <div class="sr-key">Male</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="gender_stu_male" data-key="gender-male">0</span>
+                      <span class="sr-num" id="gender_stu_male">0</span>
                     </div>
                   </div>
 
                   <div class="sr-gender-row">
                     <div class="sr-key">Female</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="gender_stu_female" data-key="gender-female">0</span>
+                      <span class="sr-num" id="gender_stu_female">0</span>
                     </div>
                   </div>
 
                   <div class="sr-gender-row">
                     <div class="sr-key">Others</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="gender_stu_others" data-key="gender-others">0</span>
+                      <span class="sr-num" id="gender_stu_others">0</span>
                     </div>
                   </div>
                 </div>
               </div>
+
+              <!-- Washrooms Card -->
+              <div class="sr-card sr-card-washrooms" role="region" aria-label="Washroom counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Washrooms</span>
+                </div>
+
+                <div class="sr-card-body sr-gender-scroll">
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Total</div>
+                    <div class="sr-values">
+                      <span class="sr-num" id="wash_stu_total">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Male</div>
+                    <div class="sr-values">
+                      <span class="sr-num" id="wash_stu_male">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Female</div>
+                    <div class="sr-values">
+                      <span class="sr-num" id="wash_stu_female">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
             <!-- Category card -->
@@ -1296,36 +1309,69 @@
           </div>
 
           <div class="row g-3" id="staff-cards-row">
-            <!-- Gender card (only genders) -->
-            <div class="col-lg-3 col-md-6 col-sm-12">
-              <div class="sr-card sr-card-gender" role="region" aria-label="Staff gender counts">
+            <!-- Column: Gender Card + Washrooms Card -->
+            <div class="col-lg-3 col-md-6 col-sm-12 d-flex flex-column gap-3">
+
+              <!-- Gender Card -->
+              <div class="sr-card sr-card-gender" role="region" aria-label="Gender counts">
                 <div class="sr-card-header">
                   <span class="sr-card-title">Gender</span>
                 </div>
 
-                <div class="sr-card-body">
+                <div class="sr-card-body sr-gender-scroll">
                   <div class="sr-gender-row">
                     <div class="sr-key">Male</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="gender_stf_male" data-key="staff-gender-male">0</span>
+                      <span class="sr-num" id="gender_stf_male">0</span>
                     </div>
                   </div>
 
                   <div class="sr-gender-row">
                     <div class="sr-key">Female</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="gender_stf_female" data-key="staff-gender-female">0</span>
+                      <span class="sr-num" id="gender_stf_female">0</span>
                     </div>
                   </div>
 
                   <div class="sr-gender-row">
                     <div class="sr-key">Others</div>
                     <div class="sr-values">
-                      <span class="sr-num" id="gender_stf_others" data-key="staff-gender-others">0</span>
+                      <span class="sr-num" id="gender_stf_others">0</span>
                     </div>
                   </div>
                 </div>
               </div>
+
+              <!-- Washrooms Card -->
+              <div class="sr-card sr-card-washrooms" role="region" aria-label="Washroom counts">
+                <div class="sr-card-header">
+                  <span class="sr-card-title">Washrooms</span>
+                </div>
+
+                <div class="sr-card-body sr-gender-scroll">
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Total</div>
+                    <div class="sr-values">
+                      <span class="sr-num" id="wash_stf_total">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Male</div>
+                    <div class="sr-values">
+                      <span class="sr-num" id="wash_stf_male">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sr-gender-row">
+                    <div class="sr-key">Female</div>
+                    <div class="sr-values">
+                      <span class="sr-num" id="wash_stf_female">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
             <!-- Category card -->
@@ -1756,9 +1802,7 @@
     animateCount($("#students_num"), data.total_students);
 
     // washrooms
-    animateCount($("#total_washrooms"), data.total_stu_washrooms);
-    animateCount($("#male_washrooms"), data.total_stu_male_washrooms);
-    animateCount($("#female_washrooms"), data.total_stu_female_washrooms);
+
 
     // gender
     animateCount($("#gender_stu_male"), data.total_stu_male);
@@ -2091,7 +2135,10 @@
       console.log("Selected Filters:", selectedFilters);
 
       // Check if at least one filter is selected
-      let hasSelection = Object.values(selectedFilters).some(arr => arr.length > 0);
+      let hasSelection = Object.entries(selectedFilters)
+        .filter(([key]) => key !== "year")        // ignore year
+        .some(([_, arr]) => Array.isArray(arr) && arr.length > 0);
+
       if (!hasSelection) {
         showNotification("Please select at least one filter", "danger");
         return;
@@ -2135,7 +2182,7 @@
         url: "{% url 'get_dashboard_data' %}",
         type: "GET",
         data: {
-          year:$("#globalAcademicYear").val()
+          year: $("#globalAcademicYear").val()
         },
         success: function (response) {
           if (response.status === 200) {
@@ -2262,9 +2309,8 @@
         }
       });
     });
+
   });
-
-
 
 </script>
 

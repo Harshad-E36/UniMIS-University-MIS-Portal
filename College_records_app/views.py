@@ -73,7 +73,98 @@ def student_master(request):
         return redirect('login')
     return render(request, 'student_master.html', {"academic_year": academic_year.objects.all()})
 
+def staff_master(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    return render(request, 'staff_master.html', {"academic_year": academic_year.objects.all()})
 
+
+def user_status(request):
+    if request.user.is_authenticated:
+        response_data = {
+            'is_authenticated' : True,
+            'username' : request.user.username,
+            'status' : 200,
+        }
+    else:
+        response_data = {
+            'is_authenticated' : False,
+            'status' : 401
+        }
+    return JsonResponse(response_data)  
+
+
+def signup(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        if User.objects.filter(username = username).exists():
+            response_data = {
+                'message' : 'Username already exists',
+                'status' : 400
+            }
+            return JsonResponse(response_data)
+        
+        if User.objects.filter(email = email).exists():
+            response_data = {
+                'message' : 'Email already exists',
+                'status' : 400
+            }
+            return JsonResponse(response_data)
+        
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
+
+        response_data = {
+            'message' : 'User created successfully',
+            'status' : 201
+        }
+        return JsonResponse(response_data)
+    
+
+def user_login(request):
+    # If already logged in → go home
+    if request.user.is_authenticated:
+        return redirect('home')
+
+    # If form is POST (login attempt)
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me',0)  # '1' if checked, 0 if not
+
+        try:
+            username = User.objects.get(email=email).username
+        except User.DoesNotExist:
+            return JsonResponse({'status': 401, 'message': 'Invalid email or password'})
+
+        user = authenticate(request, username=username, password=password)
+
+
+        if user:
+            login(request, user)
+            # Set session expiry based on "Remember Me"
+            if remember_me == '1':
+                request.session.set_expiry(21600)  # 2 weeks
+            return JsonResponse({'status': 200, 'message': 'Login successful'})
+
+        return JsonResponse({'status': 401, 'message': 'Invalid email or password'})
+
+    # Show login page
+    return render(request, 'login_page.html')
+        
+        
+def user_logout(request):
+    if request.method == 'POST':
+        logout(request)
+        response_data = {
+            'message' : 'logout successful',
+            'status' : 200
+        }
+        return JsonResponse(response_data)
+    
 
 @ajax_login_required
 def add_edit_record(request):
@@ -255,8 +346,6 @@ def add_edit_record(request):
     return JsonResponse({"status": 201, "message": "Record added successfully"})
 
 
-
-
 @ajax_login_required
 def delete_record(request):
     if request.method == 'POST':
@@ -270,22 +359,6 @@ def delete_record(request):
             'status' : 204
         }
         return JsonResponse(response_data)
-    
-
-def user_status(request):
-    if request.user.is_authenticated:
-        response_data = {
-            'is_authenticated' : True,
-            'username' : request.user.username,
-            'status' : 200,
-        }
-    else:
-        response_data = {
-            'is_authenticated' : False,
-            'status' : 401
-        }
-    return JsonResponse(response_data)  
-
 
 
 def get_dashboard_data(request):
@@ -413,82 +486,7 @@ def get_dashboard_data(request):
 
             'status': 200
         }
-
     return JsonResponse(response_data)
-
-
-def signup(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-
-        if User.objects.filter(username = username).exists():
-            response_data = {
-                'message' : 'Username already exists',
-                'status' : 400
-            }
-            return JsonResponse(response_data)
-        
-        if User.objects.filter(email = email).exists():
-            response_data = {
-                'message' : 'Email already exists',
-                'status' : 400
-            }
-            return JsonResponse(response_data)
-        
-        user = User.objects.create_user(username=username, email=email, password=password)
-        user.save()
-
-        response_data = {
-            'message' : 'User created successfully',
-            'status' : 201
-        }
-        return JsonResponse(response_data)
-    
-
-def user_login(request):
-    # If already logged in → go home
-    if request.user.is_authenticated:
-        return redirect('home')
-
-    # If form is POST (login attempt)
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        remember_me = request.POST.get('remember_me',0)  # '1' if checked, 0 if not
-
-        try:
-            username = User.objects.get(email=email).username
-        except User.DoesNotExist:
-            return JsonResponse({'status': 401, 'message': 'Invalid email or password'})
-
-        user = authenticate(request, username=username, password=password)
-
-
-        if user:
-            login(request, user)
-            # Set session expiry based on "Remember Me"
-            if remember_me == '1':
-                request.session.set_expiry(21600)  # 2 weeks
-            return JsonResponse({'status': 200, 'message': 'Login successful'})
-
-        return JsonResponse({'status': 401, 'message': 'Invalid email or password'})
-
-    # Show login page
-    return render(request, 'login_page.html')
-        
-        
-def user_logout(request):
-    if request.method == 'POST':
-        logout(request)
-        response_data = {
-            'message' : 'logout successful',
-            'status' : 200
-        }
-        return JsonResponse(response_data)
-    
-
 
 
 @ajax_login_required
@@ -940,6 +938,7 @@ def get_programs_for_discipline(request):
 
     return JsonResponse(response_data)
 
+
 @ajax_login_required
 def get_college_data_for_student_modal(request):
     if request.method != "GET":
@@ -1158,8 +1157,6 @@ def get_college_data_for_student_modal(request):
         })
 
     return JsonResponse({"status": 400, "message": "Invalid mode"})
-
-
 
 
 @ajax_login_required
@@ -1428,7 +1425,7 @@ def add_student_aggregate(request):
                 try:
                     client_ip = get_client_ip(request)
 
-                    # ✅ Check only ACTIVE record (is_deleted = False)
+                    # Check only ACTIVE record (is_deleted = False)
                     existing = student_aggregate_master.objects.filter(
                         College=college,
                         Program=program_obj,
@@ -1470,8 +1467,7 @@ def add_student_aggregate(request):
                 "failed": len(errors)
             }
         }
-        return JsonResponse(resp)
-    
+        return JsonResponse(resp)   
 
 
 @ajax_login_required
@@ -1654,7 +1650,7 @@ def update_student_aggregate(request):
 
                     
                     if existing:
-                        # 🔁 Update fields
+                        # Update fields
                         existing.total_students = total_students
                         existing.total_male = male
                         existing.total_female = female
@@ -1755,7 +1751,7 @@ def update_student_aggregate(request):
 
                         updated.append({"program": program_name, "id": existing.pk, "updated": True})
                     else:
-                         # 🆕 No existing row → CREATE a new one (for new program/year combo)
+                         # No existing row → CREATE a new one (for new program/year combo)
                         obj = student_aggregate_master.objects.create(
                             College=college,
                             Program=program_obj,
@@ -2130,7 +2126,6 @@ def get_student_records(request):
     })
 
 
-
 @ajax_login_required
 def delete_student_record(request):
     if request.method == 'POST':
@@ -2149,7 +2144,8 @@ def delete_student_record(request):
             'status': 204
         }
         return JsonResponse(response_data)
-    
+
+
 def get_college_records(request):
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -3062,3 +3058,28 @@ def export_filtered_excel(request):
     )
     resp["Content-Disposition"] = f'attachment; filename="{filename}"'
     return resp
+
+
+def get_staff_records(request):
+    #datatable backend for staff master page, keep same format as get_student_records
+    pass
+
+
+def add_staff_aggregate(request):
+    #backend for adding record to staff aggregate master database
+    pass
+
+
+def update_staff_aggregate(request):
+    #backedn for updating to staff aggregate master database
+    pass
+
+
+def delete_staff_record(request):
+    #soft delete staff aggregate same as students
+    pass
+
+
+def export_staff_excel(requenst):
+    #backend for exporting excel with datatable search sort filters same as student export
+    pass
