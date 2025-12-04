@@ -366,7 +366,6 @@ def get_dashboard_data(request):
 
         # get academic year from request
         academic_year = request.GET.get('year', None)
-        print(academic_year)
 
         # base queryset for students (filtered by academic_year if provided)
         student_qs = student_aggregate_master.objects.filter(is_deleted=False)
@@ -388,9 +387,8 @@ def get_dashboard_data(request):
             return staff_qs.aggregate(total = Sum(field))['total'] or 0
         
         def stu_washrooms_agg(field):
-            s = student_qs.aggregate(total=Sum(field))['total'] or 0
-            print(s)
-            return s
+            return student_qs.aggregate(total=Sum(field))['total'] or 0
+            
         def stf_washrooms_agg(field):
             return staff_qs.aggregate(total = Sum(field))['total'] or 0
 
@@ -1815,7 +1813,6 @@ def update_student_aggregate(request):
                 others = _to_int(gender.get("others") or gender.get("other"), 0)
 
                 washrooms = data.get("washrooms", {}) or {}
-                print(washrooms)
                 total_washrooms = _to_int(washrooms.get("total"), 0)
                 male_washrooms = _to_int(washrooms.get("male"), 0)
                 female_washrooms = _to_int(washrooms.get("female"), 0)

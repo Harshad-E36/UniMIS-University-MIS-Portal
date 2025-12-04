@@ -2252,7 +2252,6 @@
     $("#applyFilter").click(function () {
 
       let selectedFilters = gatherSelectedFilters();
-      console.log("Selected Filters:", selectedFilters);
 
       // Check if at least one filter is selected
       let hasSelection = Object.entries(selectedFilters)
@@ -2334,7 +2333,6 @@
     $("#export_filtered_excel").click(function () {
       // Initialize an object to hold all selected filters
       let selectedFilters = gatherSelectedFilters();
-      console.log("Selected Filters:", selectedFilters);
 
       // Send AJAX request
       $.ajax({
