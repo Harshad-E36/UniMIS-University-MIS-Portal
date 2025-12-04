@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo, academic_year, student_aggregate_master
+from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo, academic_year, student_aggregate_master, staff_master_aggregate
 from django.db.models import Prefetch
 from django.db.models import Q, Sum
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
@@ -370,120 +370,222 @@ def get_dashboard_data(request):
 
         # base queryset for students (filtered by academic_year if provided)
         student_qs = student_aggregate_master.objects.filter(is_deleted=False)
+        staff_qs = staff_master_aggregate.objects.filter(is_deleted=False)
         if academic_year:
             student_qs = student_qs.filter(Academic_Year=academic_year)
 
         # colleges aggregates
         total_colleges = College.objects.filter(is_deleted=False).count()
         total_students = student_qs.aggregate(total=Sum('total_students'))['total'] or 0
+        total_staff = staff_qs.aggregate(total=Sum('total_staff'))['total'] or 0
 
 
         # helper function
-        def agg(field):
+        def stu_agg(field):
             return student_qs.aggregate(total= Sum(field))['total'] or 0
         
-        def washroom_agg(field):
+        def stf_agg(field):
+            return staff_qs.aggregate(total = Sum(field))['total'] or 0
+        
+        def stu_washrooms_agg(field):
             s = student_qs.aggregate(total=Sum(field))['total'] or 0
             print(s)
             return s
+        def stf_washrooms_agg(field):
+            return staff_qs.aggregate(total = Sum(field))['total'] or 0
 
-        # student aggregates
+        # student and staff aggregates
         response_data = {
             'total_colleges': total_colleges,
             'total_students': total_students,
-            # send total staff num here
+            'total_staff' : total_staff,
 
-            'total_stu_washrooms': washroom_agg('total_washrooms'),
-            'male_stu_washrooms': washroom_agg('male_washrooms'),
-            'female_stu_washrooms': washroom_agg('female_washrooms'),
 
-            'total_stu_male': agg('total_male'),
-            'total_stu_female': agg('total_female'),
-            'total_stu_others': agg('total_others'),
+            # students data
+            'total_stu_washrooms': stu_washrooms_agg('total_washrooms'),
+            'male_stu_washrooms': stu_washrooms_agg('male_washrooms'),
+            'female_stu_washrooms': stu_washrooms_agg('female_washrooms'),
 
-            'open_stu_male': agg('open_male'),
-            'open_stu_female': agg('open_female'),
-            'open_stu_others': agg('open_others'),
+            'total_stu_male': stu_agg('total_male'),
+            'total_stu_female': stu_agg('total_female'),
+            'total_stu_others': stu_agg('total_others'),
 
-            'obc_stu_male': agg('obc_male'),
-            'obc_stu_female': agg('obc_female'),
-            'obc_stu_others': agg('obc_others'),
+            'open_stu_male': stu_agg('open_male'),
+            'open_stu_female': stu_agg('open_female'),
+            'open_stu_others': stu_agg('open_others'),
 
-            'sc_stu_male': agg('sc_male'),
-            'sc_stu_female': agg('sc_female'),
-            'sc_stu_others': agg('sc_others'),
+            'obc_stu_male': stu_agg('obc_male'),
+            'obc_stu_female': stu_agg('obc_female'),
+            'obc_stu_others': stu_agg('obc_others'),
 
-            'st_stu_male': agg('st_male'),
-            'st_stu_female': agg('st_female'),
-            'st_stu_others': agg('st_others'),
+            'sc_stu_male': stu_agg('sc_male'),
+            'sc_stu_female': stu_agg('sc_female'),
+            'sc_stu_others': stu_agg('sc_others'),
 
-            'nt_stu_male': agg('nt_male'),
-            'nt_stu_female': agg('nt_female'),
-            'nt_stu_others': agg('nt_others'),
+            'st_stu_male': stu_agg('st_male'),
+            'st_stu_female': stu_agg('st_female'),
+            'st_stu_others': stu_agg('st_others'),
 
-            'vjnt_stu_male': agg('vjnt_male'),
-            'vjnt_stu_female': agg('vjnt_female'),
-            'vjnt_stu_others': agg('vjnt_others'),
+            'nt_stu_male': stu_agg('nt_male'),
+            'nt_stu_female': stu_agg('nt_female'),
+            'nt_stu_others': stu_agg('nt_others'),
 
-            'ews_stu_male': agg('ews_male'),
-            'ews_stu_female': agg('ews_female'),
-            'ews_stu_others': agg('ews_others'),
+            'vjnt_stu_male': stu_agg('vjnt_male'),
+            'vjnt_stu_female': stu_agg('vjnt_female'),
+            'vjnt_stu_others': stu_agg('vjnt_others'),
 
-            'hindu_stu_male': agg('hindu_male'),
-            'hindu_stu_female': agg('hindu_female'),
-            'hindu_stu_others': agg('hindu_others'),
+            'ews_stu_male': stu_agg('ews_male'),
+            'ews_stu_female': stu_agg('ews_female'),
+            'ews_stu_others': stu_agg('ews_others'),
 
-            'muslim_stu_male': agg('muslim_male'),
-            'muslim_stu_female': agg('muslim_female'),
-            'muslim_stu_others': agg('muslim_others'),
+            'hindu_stu_male': stu_agg('hindu_male'),
+            'hindu_stu_female': stu_agg('hindu_female'),
+            'hindu_stu_others': stu_agg('hindu_others'),
 
-            'sikh_stu_male': agg('sikh_male'),
-            'sikh_stu_female': agg('sikh_female'),
-            'sikh_stu_others': agg('sikh_others'),
+            'muslim_stu_male': stu_agg('muslim_male'),
+            'muslim_stu_female': stu_agg('muslim_female'),
+            'muslim_stu_others': stu_agg('muslim_others'),
 
-            'christian_stu_male': agg('christian_male'),
-            'christian_stu_female': agg('christian_female'),
-            'christian_stu_others': agg('christian_others'),
+            'sikh_stu_male': stu_agg('sikh_male'),
+            'sikh_stu_female': stu_agg('sikh_female'),
+            'sikh_stu_others': stu_agg('sikh_others'),
 
-            'jain_stu_male': agg('jain_male'),
-            'jain_stu_female': agg('jain_female'),
-            'jain_stu_others': agg('jain_others'),
+            'christian_stu_male': stu_agg('christian_male'),
+            'christian_stu_female': stu_agg('christian_female'),
+            'christian_stu_others': stu_agg('christian_others'),
 
-            'buddhist_stu_male': agg('buddhist_male'),
-            'buddhist_stu_female': agg('buddhist_female'),
-            'buddhist_stu_others': agg('buddhist_others'),
+            'jain_stu_male': stu_agg('jain_male'),
+            'jain_stu_female': stu_agg('jain_female'),
+            'jain_stu_others': stu_agg('jain_others'),
 
-            'other_religion_stu_male': agg('other_religion_male'),
-            'other_religion_stu_female': agg('other_religion_female'),
-            'other_religion_stu_others': agg('other_religion_others'),
+            'buddhist_stu_male': stu_agg('buddhist_male'),
+            'buddhist_stu_female': stu_agg('buddhist_female'),
+            'buddhist_stu_others': stu_agg('buddhist_others'),
 
-            'no_disability_stu_male': agg('no_disability_male'),
-            'no_disability_stu_female': agg('no_disability_female'),
-            'no_disability_stu_others': agg('no_disability_others'),
+            'other_religion_stu_male': stu_agg('other_religion_male'),
+            'other_religion_stu_female': stu_agg('other_religion_female'),
+            'other_religion_stu_others': stu_agg('other_religion_others'),
 
-            'low_vision_stu_male': agg('low_vision_male'),
-            'low_vision_stu_female': agg('low_vision_female'),
-            'low_vision_stu_others': agg('low_vision_others'),
+            'no_disability_stu_male': stu_agg('no_disability_male'),
+            'no_disability_stu_female': stu_agg('no_disability_female'),
+            'no_disability_stu_others': stu_agg('no_disability_others'),
 
-            'blindness_stu_male': agg('blindness_male'),
-            'blindness_stu_female': agg('blindness_female'),
-            'blindness_stu_others': agg('blindness_others'),
+            'low_vision_stu_male': stu_agg('low_vision_male'),
+            'low_vision_stu_female': stu_agg('low_vision_female'),
+            'low_vision_stu_others': stu_agg('low_vision_others'),
 
-            'hearing_stu_male': agg('hearing_male'),
-            'hearing_stu_female': agg('hearing_female'),
-            'hearing_stu_others': agg('hearing_others'),
+            'blindness_stu_male': stu_agg('blindness_male'),
+            'blindness_stu_female': stu_agg('blindness_female'),
+            'blindness_stu_others': stu_agg('blindness_others'),
 
-            'locomotor_stu_male': agg('locomotor_male'),
-            'locomotor_stu_female': agg('locomotor_female'),
-            'locomotor_stu_others': agg('locomotor_others'),
+            'hearing_stu_male': stu_agg('hearing_male'),
+            'hearing_stu_female': stu_agg('hearing_female'),
+            'hearing_stu_others': stu_agg('hearing_others'),
 
-            'autism_stu_male': agg('autism_male'),
-            'autism_stu_female': agg('autism_female'),
-            'autism_stu_others': agg('autism_others'),
+            'locomotor_stu_male': stu_agg('locomotor_male'),
+            'locomotor_stu_female': stu_agg('locomotor_female'),
+            'locomotor_stu_others': stu_agg('locomotor_others'),
 
-            'other_disability_stu_male': agg('other_disability_male'),
-            'other_disability_stu_female': agg('other_disability_female'),
-            'other_disability_stu_others': agg('other_disability_others'),
+            'autism_stu_male': stu_agg('autism_male'),
+            'autism_stu_female': stu_agg('autism_female'),
+            'autism_stu_others': stu_agg('autism_others'),
+
+            'other_disability_stu_male': stu_agg('other_disability_male'),
+            'other_disability_stu_female': stu_agg('other_disability_female'),
+            'other_disability_stu_others': stu_agg('other_disability_others'),
+
+            # staff data
+            'total_stf_washrooms': stf_washrooms_agg('total_washrooms'),
+            'male_stf_washrooms': stf_washrooms_agg('male_washrooms'),
+            'female_stf_washrooms': stf_washrooms_agg('female_washrooms'),
+
+            'total_stf_male': stf_agg('total_male'),
+            'total_stf_female': stf_agg('total_female'),
+            'total_stf_others': stf_agg('total_others'),
+
+            'open_stf_male': stf_agg('open_male'),
+            'open_stf_female': stf_agg('open_female'),
+            'open_stf_others': stf_agg('open_others'),
+
+            'obc_stf_male': stf_agg('obc_male'),
+            'obc_stf_female': stf_agg('obc_female'),
+            'obc_stf_others': stf_agg('obc_others'),
+
+            'sc_stf_male': stf_agg('sc_male'),
+            'sc_stf_female': stf_agg('sc_female'),
+            'sc_stf_others': stf_agg('sc_others'),
+
+            'st_stf_male': stf_agg('st_male'),
+            'st_stf_female': stf_agg('st_female'),
+            'st_stf_others': stf_agg('st_others'),
+
+            'nt_stf_male': stf_agg('nt_male'),
+            'nt_stf_female': stf_agg('nt_female'),
+            'nt_stf_others': stf_agg('nt_others'),
+
+            'vjnt_stf_male': stf_agg('vjnt_male'),
+            'vjnt_stf_female': stf_agg('vjnt_female'),
+            'vjnt_stf_others': stf_agg('vjnt_others'),
+
+            'ews_stf_male': stf_agg('ews_male'),
+            'ews_stf_female': stf_agg('ews_female'),
+            'ews_stf_others': stf_agg('ews_others'),
+
+            'hindu_stf_male': stf_agg('hindu_male'),
+            'hindu_stf_female': stf_agg('hindu_female'),
+            'hindu_stf_others': stf_agg('hindu_others'),
+
+            'muslim_stf_male': stf_agg('muslim_male'),
+            'muslim_stf_female': stf_agg('muslim_female'),
+            'muslim_stf_others': stf_agg('muslim_others'),
+
+            'sikh_stf_male': stf_agg('sikh_male'),
+            'sikh_stf_female': stf_agg('sikh_female'),
+            'sikh_stf_others': stf_agg('sikh_others'),
+
+            'christian_stf_male': stf_agg('christian_male'),
+            'christian_stf_female': stf_agg('christian_female'),
+            'christian_stf_others': stf_agg('christian_others'),
+
+            'jain_stf_male': stf_agg('jain_male'),
+            'jain_stf_female': stf_agg('jain_female'),
+            'jain_stf_others': stf_agg('jain_others'),
+
+            'buddhist_stf_male': stf_agg('buddhist_male'),
+            'buddhist_stf_female': stf_agg('buddhist_female'),
+            'buddhist_stf_others': stf_agg('buddhist_others'),
+
+            'other_religion_stf_male': stf_agg('other_religion_male'),
+            'other_religion_stf_female': stf_agg('other_religion_female'),
+            'other_religion_stf_others': stf_agg('other_religion_others'),
+
+            'no_disability_stf_male': stf_agg('no_disability_male'),
+            'no_disability_stf_female': stf_agg('no_disability_female'),
+            'no_disability_stf_others': stf_agg('no_disability_others'),
+
+            'low_vision_stf_male': stf_agg('low_vision_male'),
+            'low_vision_stf_female': stf_agg('low_vision_female'),
+            'low_vision_stf_others': stf_agg('low_vision_others'),
+
+            'blindness_stf_male': stf_agg('blindness_male'),
+            'blindness_stf_female': stf_agg('blindness_female'),
+            'blindness_stf_others': stf_agg('blindness_others'),
+
+            'hearing_stf_male': stf_agg('hearing_male'),
+            'hearing_stf_female': stf_agg('hearing_female'),
+            'hearing_stf_others': stf_agg('hearing_others'),
+
+            'locomotor_stf_male': stf_agg('locomotor_male'),
+            'locomotor_stf_female': stf_agg('locomotor_female'),
+            'locomotor_stf_others': stf_agg('locomotor_others'),
+
+            'autism_stf_male': stf_agg('autism_male'),
+            'autism_stf_female': stf_agg('autism_female'),
+            'autism_stf_others': stf_agg('autism_others'),
+
+            'other_disability_stf_male': stf_agg('other_disability_male'),
+            'other_disability_stf_female': stf_agg('other_disability_female'),
+            'other_disability_stf_others': stf_agg('other_disability_others'),
 
             'status': 200
         }
@@ -676,14 +778,23 @@ def apply_filters(request):
         College_id__in=filtered_college_ids,
         is_deleted=False
     )
+    
+    staff_qs = staff_master_aggregate.objects.filter(
+        College_id__in=filtered_college_ids,
+        is_deleted=False
+    )
     if academic_year:
         students_qs = students_qs.filter(Academic_Year=academic_year)
+        staff_qs = staff_qs.filter(Academic_Year=academic_year)
 
     # Narrow student rows by Program/Discipline for sums (this does NOT affect which colleges are counted)
     if disciplines:
         students_qs = students_qs.filter(Program__Discipline__in=disciplines)
+        staff_qs = staff_qs.filter(Program__Discipline__in=disciplines)
+
     if programs:
         students_qs = students_qs.filter(Program__ProgramName__in=programs)
+        staff_qs = staff_qs.filter(Program__ProgramName__in=programs)
 
     # Determine colleges that actually have student rows (for this filtered set & year)
     colleges_with_student_rows = set(
@@ -696,112 +807,41 @@ def apply_filters(request):
         .distinct()
     )
 
+    # Determine colleges that actually have staff rows (for this filtered set & year)
+    colleges_with_staff_rows = set(
+        staff_master_aggregate.objects.filter(
+            College_id__in=filtered_college_ids,
+            is_deleted=False,
+            **({"Academic_Year": academic_year} if academic_year else {})
+        )
+        .values_list("College_id", flat=True)
+        .distinct()
+    )
+
     colleges_without_student_data = list(set(filtered_college_ids) - colleges_with_student_rows)
+    colleges_without_staff_data = list(set(filtered_college_ids) - colleges_with_staff_rows)
+
 
     # helper aggregator
-    def agg(field_name):
-        return students_qs.aggregate(total=Sum(field_name))['total'] or 0
+    def stu_agg(field):
+        return students_qs.aggregate(total= Sum(field))['total'] or 0
+        
+    def stf_agg(field):
+        return staff_qs.aggregate(total = Sum(field))['total'] or 0
+        
+    def stu_washrooms_agg(field):
+        return students_qs.aggregate(total=Sum(field))['total'] or 0
     
-    def washroom_agg(field_name):
-        return students_qs.aggregate(total=Sum(field_name))['total'] or 0
+    def stf_washrooms_agg(field):
+        return staff_qs.aggregate(total = Sum(field))['total'] or 0
+    
+
+
          
 
     # ============================================================
     # Aggregations
-    # ============================================================
-    total_students_sum = agg("total_students")
-    total_stu_male_sum = agg("total_male")
-    total_stu_female_sum = agg("total_female")
-    total_stu_others_sum = agg("total_others")
-
-    total_stu_washroom_sum = washroom_agg("total_washrooms")
-    male_stu_washroom_sum = washroom_agg("male_washrooms")
-    female_stu_washroom_sum = washroom_agg("female_washrooms") 
-
-    open_stu_male_sum = agg("open_male")
-    open_stu_female_sum = agg("open_female")
-    open_stu_others_sum = agg("open_others")
-
-    obc_stu_male_sum = agg("obc_male")
-    obc_stu_female_sum = agg("obc_female")
-    obc_stu_others_sum = agg("obc_others")
-
-    sc_stu_male_sum = agg("sc_male")
-    sc_stu_female_sum = agg("sc_female")
-    sc_stu_others_sum = agg("sc_others")
-
-    st_stu_male_sum = agg("st_male")
-    st_stu_female_sum = agg("st_female")
-    st_stu_others_sum = agg("st_others")
-
-    nt_stu_male_sum = agg("nt_male")
-    nt_stu_female_sum = agg("nt_female")
-    nt_stu_others_sum = agg("nt_others")
-
-    vjnt_stu_male_sum = agg("vjnt_male")
-    vjnt_stu_female_sum = agg("vjnt_female")
-    vjnt_stu_others_sum = agg("vjnt_others")
-
-    ews_stu_male_sum = agg("ews_male")
-    ews_stu_female_sum = agg("ews_female")
-    ews_stu_others_sum = agg("ews_others")
-
-    hindu_stu_male_sum = agg("hindu_male")
-    hindu_stu_female_sum = agg("hindu_female")
-    hindu_stu_others_sum = agg("hindu_others")
-
-    muslim_stu_male_sum = agg("muslim_male")
-    muslim_stu_female_sum = agg("muslim_female")
-    muslim_stu_others_sum = agg("muslim_others")
-
-    sikh_stu_male_sum = agg("sikh_male")
-    sikh_stu_female_sum = agg("sikh_female")
-    sikh_stu_others_sum = agg("sikh_others")
-
-    christian_stu_male_sum = agg("christian_male")
-    christian_stu_female_sum = agg("christian_female")
-    christian_stu_others_sum = agg("christian_others")
-
-    jain_stu_male_sum = agg("jain_male")
-    jain_stu_female_sum = agg("jain_female")
-    jain_stu_others_sum = agg("jain_others")
-
-    buddhist_stu_male_sum = agg("buddhist_male")
-    buddhist_stu_female_sum = agg("buddhist_female")
-    buddhist_stu_others_sum = agg("buddhist_others")
-
-    other_religion_stu_male_sum = agg("other_religion_male")
-    other_religion_stu_female_sum = agg("other_religion_female")
-    other_religion_stu_others_sum = agg("other_religion_others")
-
-    no_disability_stu_male_sum = agg("no_disability_male")
-    no_disability_stu_female_sum = agg("no_disability_female")
-    no_disability_stu_others_sum = agg("no_disability_others")
-
-    low_vision_stu_male_sum = agg("low_vision_male")
-    low_vision_stu_female_sum = agg("low_vision_female")
-    low_vision_stu_others_sum = agg("low_vision_others")
-
-    blindness_stu_male_sum = agg("blindness_male")
-    blindness_stu_female_sum = agg("blindness_female")
-    blindness_stu_others_sum = agg("blindness_others")
-
-    hearing_stu_male_sum = agg("hearing_male")
-    hearing_stu_female_sum = agg("hearing_female")
-    hearing_stu_others_sum = agg("hearing_others")
-
-    locomotor_stu_male_sum = agg("locomotor_male")
-    locomotor_stu_female_sum = agg("locomotor_female")
-    locomotor_stu_others_sum = agg("locomotor_others")
-
-    autism_stu_male_sum = agg("autism_male")
-    autism_stu_female_sum = agg("autism_female")
-    autism_stu_others_sum = agg("autism_others")
-
-    other_disability_stu_male_sum = agg("other_disability_male")
-    other_disability_stu_female_sum = agg("other_disability_female")
-    other_disability_stu_others_sum = agg("other_disability_others")
-
+    # ===========================================================
     # ============================================================
     # FINAL RESPONSE (includes colleges_without_student_data list)
     # ============================================================
@@ -810,99 +850,195 @@ def apply_filters(request):
         "message": "Filters applied successfully",
         "academic_year": academic_year,
         "total_colleges": len(filtered_college_ids),
-        "total_students": total_students_sum,
+        'total_students': stu_agg('total_students'),
+        'total_staff' : stf_agg('total_staff'),
 
-        "total_stu_washrooms" : total_stu_washroom_sum,
-        "male_stu_washrooms": male_stu_washroom_sum,
-        "female_stu_washrooms" : female_stu_washroom_sum,
 
-        "total_stu_male": total_stu_male_sum,
-        "total_stu_female": total_stu_female_sum,
-        "total_stu_others": total_stu_others_sum,
+        # students data
+        'total_stu_washrooms': stu_washrooms_agg('total_washrooms'),
+        'male_stu_washrooms': stu_washrooms_agg('male_washrooms'),
+        'female_stu_washrooms': stu_washrooms_agg('female_washrooms'),
 
-        "open_stu_male": open_stu_male_sum,
-        "open_stu_female": open_stu_female_sum,
-        "open_stu_others": open_stu_others_sum,
+        'total_stu_male': stu_agg('total_male'),
+        'total_stu_female': stu_agg('total_female'),
+        'total_stu_others': stu_agg('total_others'),
 
-        "obc_stu_male": obc_stu_male_sum,
-        "obc_stu_female": obc_stu_female_sum,
-        "obc_stu_others": obc_stu_others_sum,
+        'open_stu_male': stu_agg('open_male'),
+        'open_stu_female': stu_agg('open_female'),
+        'open_stu_others': stu_agg('open_others'),
 
-        "sc_stu_male": sc_stu_male_sum,
-        "sc_stu_female": sc_stu_female_sum,
-        "sc_stu_others": sc_stu_others_sum,
+        'obc_stu_male': stu_agg('obc_male'),
+        'obc_stu_female': stu_agg('obc_female'),
+        'obc_stu_others': stu_agg('obc_others'),
 
-        "st_stu_male": st_stu_male_sum,
-        "st_stu_female": st_stu_female_sum,
-        "st_stu_others": st_stu_others_sum,
+        'sc_stu_male': stu_agg('sc_male'),
+        'sc_stu_female': stu_agg('sc_female'),
+        'sc_stu_others': stu_agg('sc_others'),
 
-        "nt_stu_male": nt_stu_male_sum,
-        "nt_stu_female": nt_stu_female_sum,
-        "nt_stu_others": nt_stu_others_sum,
+        'st_stu_male': stu_agg('st_male'),
+        'st_stu_female': stu_agg('st_female'),
+        'st_stu_others': stu_agg('st_others'),
 
-        "vjnt_stu_male": vjnt_stu_male_sum,
-        "vjnt_stu_female": vjnt_stu_female_sum,
-        "vjnt_stu_others": vjnt_stu_others_sum,
+        'nt_stu_male': stu_agg('nt_male'),
+        'nt_stu_female': stu_agg('nt_female'),
+        'nt_stu_others': stu_agg('nt_others'),
 
-        "ews_stu_male": ews_stu_male_sum,
-        "ews_stu_female": ews_stu_female_sum,
-        "ews_stu_others": ews_stu_others_sum,
+        'vjnt_stu_male': stu_agg('vjnt_male'),
+        'vjnt_stu_female': stu_agg('vjnt_female'),
+        'vjnt_stu_others': stu_agg('vjnt_others'),
 
-        "hindu_stu_male": hindu_stu_male_sum,
-        "hindu_stu_female": hindu_stu_female_sum,
-        "hindu_stu_others": hindu_stu_others_sum,
+        'ews_stu_male': stu_agg('ews_male'),
+        'ews_stu_female': stu_agg('ews_female'),
+        'ews_stu_others': stu_agg('ews_others'),
 
-        "muslim_stu_male": muslim_stu_male_sum,
-        "muslim_stu_female": muslim_stu_female_sum,
-        "muslim_stu_others": muslim_stu_others_sum,
+        'hindu_stu_male': stu_agg('hindu_male'),
+        'hindu_stu_female': stu_agg('hindu_female'),
+        'hindu_stu_others': stu_agg('hindu_others'),
 
-        "sikh_stu_male": sikh_stu_male_sum,
-        "sikh_stu_female": sikh_stu_female_sum,
-        "sikh_stu_others": sikh_stu_others_sum,
+        'muslim_stu_male': stu_agg('muslim_male'),
+        'muslim_stu_female': stu_agg('muslim_female'),
+        'muslim_stu_others': stu_agg('muslim_others'),
 
-        "christian_stu_male": christian_stu_male_sum,
-        "christian_stu_female": christian_stu_female_sum,
-        "christian_stu_others": christian_stu_others_sum,
+        'sikh_stu_male': stu_agg('sikh_male'),
+        'sikh_stu_female': stu_agg('sikh_female'),
+        'sikh_stu_others': stu_agg('sikh_others'),
 
-        "jain_stu_male": jain_stu_male_sum,
-        "jain_stu_female": jain_stu_female_sum,
-        "jain_stu_others": jain_stu_others_sum,
+        'christian_stu_male': stu_agg('christian_male'),
+        'christian_stu_female': stu_agg('christian_female'),
+        'christian_stu_others': stu_agg('christian_others'),
 
-        "buddhist_stu_male": buddhist_stu_male_sum,
-        "buddhist_stu_female": buddhist_stu_female_sum,
-        "buddhist_stu_others": buddhist_stu_others_sum,
+        'jain_stu_male': stu_agg('jain_male'),
+        'jain_stu_female': stu_agg('jain_female'),
+        'jain_stu_others': stu_agg('jain_others'),
 
-        "other_religion_stu_male": other_religion_stu_male_sum,
-        "other_religion_stu_female": other_religion_stu_female_sum,
-        "other_religion_stu_others": other_religion_stu_others_sum,
+        'buddhist_stu_male': stu_agg('buddhist_male'),
+        'buddhist_stu_female': stu_agg('buddhist_female'),
+        'buddhist_stu_others': stu_agg('buddhist_others'),
 
-        "no_disability_stu_male": no_disability_stu_male_sum,
-        "no_disability_stu_female": no_disability_stu_female_sum,
-        "no_disability_stu_others": no_disability_stu_others_sum,
+        'other_religion_stu_male': stu_agg('other_religion_male'),
+        'other_religion_stu_female': stu_agg('other_religion_female'),
+        'other_religion_stu_others': stu_agg('other_religion_others'),
 
-        "low_vision_stu_male": low_vision_stu_male_sum,
-        "low_vision_stu_female": low_vision_stu_female_sum,
-        "low_vision_stu_others": low_vision_stu_others_sum,
+        'no_disability_stu_male': stu_agg('no_disability_male'),
+        'no_disability_stu_female': stu_agg('no_disability_female'),
+        'no_disability_stu_others': stu_agg('no_disability_others'),
 
-        "blindness_stu_male": blindness_stu_male_sum,
-        "blindness_stu_female": blindness_stu_female_sum,
-        "blindness_stu_others": blindness_stu_others_sum,
+        'low_vision_stu_male': stu_agg('low_vision_male'),
+        'low_vision_stu_female': stu_agg('low_vision_female'),
+        'low_vision_stu_others': stu_agg('low_vision_others'),
 
-        "hearing_stu_male": hearing_stu_male_sum,
-        "hearing_stu_female": hearing_stu_female_sum,
-        "hearing_stu_others": hearing_stu_others_sum,
+        'blindness_stu_male': stu_agg('blindness_male'),
+        'blindness_stu_female': stu_agg('blindness_female'),
+        'blindness_stu_others': stu_agg('blindness_others'),
 
-        "locomotor_stu_male": locomotor_stu_male_sum,
-        "locomotor_stu_female": locomotor_stu_female_sum,
-        "locomotor_stu_others": locomotor_stu_others_sum,
+        'hearing_stu_male': stu_agg('hearing_male'),
+        'hearing_stu_female': stu_agg('hearing_female'),
+        'hearing_stu_others': stu_agg('hearing_others'),
 
-        "autism_stu_male": autism_stu_male_sum,
-        "autism_stu_female": autism_stu_female_sum,
-        "autism_stu_others": autism_stu_others_sum,
+        'locomotor_stu_male': stu_agg('locomotor_male'),
+        'locomotor_stu_female': stu_agg('locomotor_female'),
+        'locomotor_stu_others': stu_agg('locomotor_others'),
 
-        "other_disability_stu_male": other_disability_stu_male_sum,
-        "other_disability_stu_female": other_disability_stu_female_sum,
-        "other_disability_stu_others": other_disability_stu_others_sum,
+        'autism_stu_male': stu_agg('autism_male'),
+        'autism_stu_female': stu_agg('autism_female'),
+        'autism_stu_others': stu_agg('autism_others'),
+
+        'other_disability_stu_male': stu_agg('other_disability_male'),
+        'other_disability_stu_female': stu_agg('other_disability_female'),
+        'other_disability_stu_others': stu_agg('other_disability_others'),
+
+        # staff data
+        'total_stf_washrooms': stf_washrooms_agg('total_washrooms'),
+        'male_stf_washrooms': stf_washrooms_agg('male_washrooms'),
+        'female_stf_washrooms': stf_washrooms_agg('female_washrooms'),
+
+        'total_stf_male': stf_agg('total_male'),
+        'total_stf_female': stf_agg('total_female'),
+        'total_stf_others': stf_agg('total_others'),
+
+        'open_stf_male': stf_agg('open_male'),
+        'open_stf_female': stf_agg('open_female'),
+        'open_stf_others': stf_agg('open_others'),
+
+        'obc_stf_male': stf_agg('obc_male'),
+        'obc_stf_female': stf_agg('obc_female'),
+        'obc_stf_others': stf_agg('obc_others'),
+
+        'sc_stf_male': stf_agg('sc_male'),
+        'sc_stf_female': stf_agg('sc_female'),
+        'sc_stf_others': stf_agg('sc_others'),
+
+        'st_stf_male': stf_agg('st_male'),
+        'st_stf_female': stf_agg('st_female'),
+        'st_stf_others': stf_agg('st_others'),
+
+        'nt_stf_male': stf_agg('nt_male'),
+        'nt_stf_female': stf_agg('nt_female'),
+        'nt_stf_others': stf_agg('nt_others'),
+
+        'vjnt_stf_male': stf_agg('vjnt_male'),
+        'vjnt_stf_female': stf_agg('vjnt_female'),
+        'vjnt_stf_others': stf_agg('vjnt_others'),
+
+        'ews_stf_male': stf_agg('ews_male'),
+        'ews_stf_female': stf_agg('ews_female'),
+        'ews_stf_others': stf_agg('ews_others'),
+
+        'hindu_stf_male': stf_agg('hindu_male'),
+        'hindu_stf_female': stf_agg('hindu_female'),
+        'hindu_stf_others': stf_agg('hindu_others'),
+
+        'muslim_stf_male': stf_agg('muslim_male'),
+        'muslim_stf_female': stf_agg('muslim_female'),
+        'muslim_stf_others': stf_agg('muslim_others'),
+
+        'sikh_stf_male': stf_agg('sikh_male'),
+        'sikh_stf_female': stf_agg('sikh_female'),
+        'sikh_stf_others': stf_agg('sikh_others'),
+
+        'christian_stf_male': stf_agg('christian_male'),
+        'christian_stf_female': stf_agg('christian_female'),
+        'christian_stf_others': stf_agg('christian_others'),
+
+        'jain_stf_male': stf_agg('jain_male'),
+        'jain_stf_female': stf_agg('jain_female'),
+        'jain_stf_others': stf_agg('jain_others'),
+
+        'buddhist_stf_male': stf_agg('buddhist_male'),
+        'buddhist_stf_female': stf_agg('buddhist_female'),
+        'buddhist_stf_others': stf_agg('buddhist_others'),
+
+        'other_religion_stf_male': stf_agg('other_religion_male'),
+        'other_religion_stf_female': stf_agg('other_religion_female'),
+        'other_religion_stf_others': stf_agg('other_religion_others'),
+
+        'no_disability_stf_male': stf_agg('no_disability_male'),
+        'no_disability_stf_female': stf_agg('no_disability_female'),
+        'no_disability_stf_others': stf_agg('no_disability_others'),
+
+        'low_vision_stf_male': stf_agg('low_vision_male'),
+        'low_vision_stf_female': stf_agg('low_vision_female'),
+        'low_vision_stf_others': stf_agg('low_vision_others'),
+
+        'blindness_stf_male': stf_agg('blindness_male'),
+        'blindness_stf_female': stf_agg('blindness_female'),
+        'blindness_stf_others': stf_agg('blindness_others'),
+
+        'hearing_stf_male': stf_agg('hearing_male'),
+        'hearing_stf_female': stf_agg('hearing_female'),
+        'hearing_stf_others': stf_agg('hearing_others'),
+
+        'locomotor_stf_male': stf_agg('locomotor_male'),
+        'locomotor_stf_female': stf_agg('locomotor_female'),
+        'locomotor_stf_others': stf_agg('locomotor_others'),
+
+        'autism_stf_male': stf_agg('autism_male'),
+        'autism_stf_female': stf_agg('autism_female'),
+        'autism_stf_others': stf_agg('autism_others'),
+
+        'other_disability_stf_male': stf_agg('other_disability_male'),
+        'other_disability_stf_female': stf_agg('other_disability_female'),
+        'other_disability_stf_others': stf_agg('other_disability_others'),
 
         # new fields to help UI flag missing student data per-college
         "colleges_without_student_data": colleges_without_student_data,
@@ -941,13 +1077,14 @@ def get_programs_for_discipline(request):
 
 
 @ajax_login_required
-def get_college_data_for_student_modal(request):
+def get_college_data_for_student_and_staff_modal(request):
     if request.method != "GET":
         return JsonResponse({'status': 400, 'message': 'Invalid request'})
 
     college_code = request.GET.get('college_code')
     academic_year = request.GET.get('academic_year')
     mode = request.GET.get('mode', 'add')
+    page = request.GET.get('page')
 
     if not college_code:
         return JsonResponse({'status': 400, 'message': 'Missing college_code'})
@@ -993,7 +1130,7 @@ def get_college_data_for_student_modal(request):
     }
 
     # ADD MODE
-    if mode == "add":
+    if mode == "add" and (page =="student" or page == "staff"):
         return JsonResponse({
             "status": 200,
             "mode": "add",
@@ -1004,158 +1141,314 @@ def get_college_data_for_student_modal(request):
 
     # EDIT MODE
     if mode == "edit":
-        if not academic_year:
-            return JsonResponse({'status': 400, 'message': 'Missing academic_year'})
+        if page == "student":
 
-        aggregates = student_aggregate_master.objects.filter(
-            College=college,
-            Academic_Year=academic_year,
-            is_deleted=False
-        ).select_related("Program")
+            if not academic_year:
+                return JsonResponse({'status': 400, 'message': 'Missing academic_year'})
 
-        if not aggregates.exists():
-            return JsonResponse({
-                "status": 404,
-                "message": "No records found for this year"
-            })
+            aggregates = student_aggregate_master.objects.filter(
+                College=college,
+                Academic_Year=academic_year,
+                is_deleted=False
+            ).select_related("Program")
 
-        filled_records = {}
+            if not aggregates.exists():
+                return JsonResponse({
+                    "status": 404,
+                    "message": "No records found for this year"
+                })
 
-        for agg in aggregates:
-            prog_name = agg.Program.ProgramName if agg.Program else f"program_{agg.pk}"
+            filled_records = {}
 
-            filled_records[prog_name] = {
-                "total_students": agg.total_students,
-                "gender": {
-                    "male": agg.total_male,
-                    "female": agg.total_female,
-                    "others": agg.total_others,
-                },
-                "washrooms": {
-                    "total_washrooms":agg.total_washrooms or 0,
-                    "male_washrooms": agg.male_washrooms or 0,
-                    "female_washrooms" : agg.female_washrooms or 0,
-                },
-                "category": {
-                    "open": {
-                        "male": agg.open_male,
-                        "female": agg.open_female,
-                        "others": agg.open_others,
+            for agg in aggregates:
+                prog_name = agg.Program.ProgramName if agg.Program else f"program_{agg.pk}"
+
+                filled_records[prog_name] = {
+                    "total_students": agg.total_students,
+                    "gender": {
+                        "male": agg.total_male,
+                        "female": agg.total_female,
+                        "others": agg.total_others,
                     },
-                    "obc": {
-                        "male": agg.obc_male,
-                        "female": agg.obc_female,
-                        "others": agg.obc_others,
+                    "washrooms": {
+                        "total_washrooms":agg.total_washrooms or 0,
+                        "male_washrooms": agg.male_washrooms or 0,
+                        "female_washrooms" : agg.female_washrooms or 0,
                     },
-                    "sc": {
-                        "male": agg.sc_male,
-                        "female": agg.sc_female,
-                        "others": agg.sc_others,
+                    "category": {
+                        "open": {
+                            "male": agg.open_male,
+                            "female": agg.open_female,
+                            "others": agg.open_others,
+                        },
+                        "obc": {
+                            "male": agg.obc_male,
+                            "female": agg.obc_female,
+                            "others": agg.obc_others,
+                        },
+                        "sc": {
+                            "male": agg.sc_male,
+                            "female": agg.sc_female,
+                            "others": agg.sc_others,
+                        },
+                        "st": {
+                            "male": agg.st_male,
+                            "female": agg.st_female,
+                            "others": agg.st_others,
+                        },
+                        "nt": {
+                            "male": agg.nt_male,
+                            "female": agg.nt_female,
+                            "others": agg.nt_others,
+                        },
+                        "vjnt": {
+                            "male": agg.vjnt_male,
+                            "female": agg.vjnt_female,
+                            "others": agg.vjnt_others,
+                        },
+                        "ews": {
+                            "male": agg.ews_male,
+                            "female": agg.ews_female,
+                            "others": agg.ews_others,
+                        },
                     },
-                    "st": {
-                        "male": agg.st_male,
-                        "female": agg.st_female,
-                        "others": agg.st_others,
+                    "religion": {
+                        "hindu": {
+                            "male": agg.hindu_male,
+                            "female": agg.hindu_female,
+                            "others": agg.hindu_others,
+                        },
+                        "muslim": {
+                            "male": agg.muslim_male,
+                            "female": agg.muslim_female,
+                            "others": agg.muslim_others,
+                        },
+                        "sikh": {
+                            "male": agg.sikh_male,
+                            "female": agg.sikh_female,
+                            "others": agg.sikh_others,
+                        },
+                        "christian": {
+                            "male": agg.christian_male,
+                            "female": agg.christian_female,
+                            "others": agg.christian_others,
+                        },
+                        "jain": {
+                            "male": agg.jain_male,
+                            "female": agg.jain_female,
+                            "others": agg.jain_others,
+                        },
+                        "buddhist": {
+                            "male": agg.buddhist_male,
+                            "female": agg.buddhist_female,
+                            "others": agg.buddhist_others,
+                        },
+                        "other_religion": {
+                            "male": agg.other_religion_male,
+                            "female": agg.other_religion_female,
+                            "others": agg.other_religion_others,
+                        },
                     },
-                    "nt": {
-                        "male": agg.nt_male,
-                        "female": agg.nt_female,
-                        "others": agg.nt_others,
-                    },
-                    "vjnt": {
-                        "male": agg.vjnt_male,
-                        "female": agg.vjnt_female,
-                        "others": agg.vjnt_others,
-                    },
-                    "ews": {
-                        "male": agg.ews_male,
-                        "female": agg.ews_female,
-                        "others": agg.ews_others,
-                    },
-                },
-                "religion": {
-                    "hindu": {
-                        "male": agg.hindu_male,
-                        "female": agg.hindu_female,
-                        "others": agg.hindu_others,
-                    },
-                    "muslim": {
-                        "male": agg.muslim_male,
-                        "female": agg.muslim_female,
-                        "others": agg.muslim_others,
-                    },
-                    "sikh": {
-                        "male": agg.sikh_male,
-                        "female": agg.sikh_female,
-                        "others": agg.sikh_others,
-                    },
-                    "christian": {
-                        "male": agg.christian_male,
-                        "female": agg.christian_female,
-                        "others": agg.christian_others,
-                    },
-                    "jain": {
-                        "male": agg.jain_male,
-                        "female": agg.jain_female,
-                        "others": agg.jain_others,
-                    },
-                    "buddhist": {
-                        "male": agg.buddhist_male,
-                        "female": agg.buddhist_female,
-                        "others": agg.buddhist_others,
-                    },
-                    "other_religion": {
-                        "male": agg.other_religion_male,
-                        "female": agg.other_religion_female,
-                        "others": agg.other_religion_others,
-                    },
-                },
-                "disability": {
-                    "no_disability": {
-                        "male": agg.no_disability_male,
-                        "female": agg.no_disability_female,
-                        "others": agg.no_disability_others,
-                    },
-                    "lowvision": {
-                        "male": agg.low_vision_male,
-                        "female": agg.low_vision_female,
-                        "others": agg.low_vision_others,
-                    },
-                    "blindness": {
-                        "male": agg.blindness_male,
-                        "female": agg.blindness_female,
-                        "others": agg.blindness_others,
-                    },
-                    "hearing": {
-                        "male": agg.hearing_male,
-                        "female": agg.hearing_female,
-                        "others": agg.hearing_others,
-                    },
-                    "locomotor": {
-                        "male": agg.locomotor_male,
-                        "female": agg.locomotor_female,
-                        "others": agg.locomotor_others,
-                    },
-                    "autism": {
-                        "male": agg.autism_male,
-                        "female": agg.autism_female,
-                        "others": agg.autism_others,
-                    },
-                    "other_disability": {
-                        "male": agg.other_disability_male,
-                        "female": agg.other_disability_female,
-                        "others": agg.other_disability_others,
-                    },
+                    "disability": {
+                        "no_disability": {
+                            "male": agg.no_disability_male,
+                            "female": agg.no_disability_female,
+                            "others": agg.no_disability_others,
+                        },
+                        "lowvision": {
+                            "male": agg.low_vision_male,
+                            "female": agg.low_vision_female,
+                            "others": agg.low_vision_others,
+                        },
+                        "blindness": {
+                            "male": agg.blindness_male,
+                            "female": agg.blindness_female,
+                            "others": agg.blindness_others,
+                        },
+                        "hearing": {
+                            "male": agg.hearing_male,
+                            "female": agg.hearing_female,
+                            "others": agg.hearing_others,
+                        },
+                        "locomotor": {
+                            "male": agg.locomotor_male,
+                            "female": agg.locomotor_female,
+                            "others": agg.locomotor_others,
+                        },
+                        "autism": {
+                            "male": agg.autism_male,
+                            "female": agg.autism_female,
+                            "others": agg.autism_others,
+                        },
+                        "other_disability": {
+                            "male": agg.other_disability_male,
+                            "female": agg.other_disability_female,
+                            "others": agg.other_disability_others,
+                        },
+                    }
                 }
-            }
 
-        return JsonResponse({
-            "status": 200,
-            "mode": "edit",
-            "academic_year": academic_year,
-            "college_data": base_college_data,
-            "records": filled_records
-        })
+            return JsonResponse({
+                "status": 200,
+                "mode": "edit",
+                "academic_year": academic_year,
+                "college_data": base_college_data,
+                "records": filled_records
+            })
+        
+        elif page == "staff":
+            if not academic_year:
+                return JsonResponse({'status': 400, 'message': 'Missing academic_year'})
+
+            aggregates = staff_master_aggregate.objects.filter(
+                College=college,
+                Academic_Year=academic_year,
+                is_deleted=False
+            ).select_related("Program")
+
+            if not aggregates.exists():
+                return JsonResponse({
+                    "status": 404,
+                    "message": "No records found for this year"
+                })
+
+            filled_records = {}
+
+            for agg in aggregates:
+                prog_name = agg.Program.ProgramName if agg.Program else f"program_{agg.pk}"
+
+                filled_records[prog_name] = {
+                    "total_students": agg.total_staff,
+                    "gender": {
+                        "male": agg.total_male,
+                        "female": agg.total_female,
+                        "others": agg.total_others,
+                    },
+                    "washrooms": {
+                        "total_washrooms":agg.total_washrooms or 0,
+                        "male_washrooms": agg.male_washrooms or 0,
+                        "female_washrooms" : agg.female_washrooms or 0,
+                    },
+                    "category": {
+                        "open": {
+                            "male": agg.open_male,
+                            "female": agg.open_female,
+                            "others": agg.open_others,
+                        },
+                        "obc": {
+                            "male": agg.obc_male,
+                            "female": agg.obc_female,
+                            "others": agg.obc_others,
+                        },
+                        "sc": {
+                            "male": agg.sc_male,
+                            "female": agg.sc_female,
+                            "others": agg.sc_others,
+                        },
+                        "st": {
+                            "male": agg.st_male,
+                            "female": agg.st_female,
+                            "others": agg.st_others,
+                        },
+                        "nt": {
+                            "male": agg.nt_male,
+                            "female": agg.nt_female,
+                            "others": agg.nt_others,
+                        },
+                        "vjnt": {
+                            "male": agg.vjnt_male,
+                            "female": agg.vjnt_female,
+                            "others": agg.vjnt_others,
+                        },
+                        "ews": {
+                            "male": agg.ews_male,
+                            "female": agg.ews_female,
+                            "others": agg.ews_others,
+                        },
+                    },
+                    "religion": {
+                        "hindu": {
+                            "male": agg.hindu_male,
+                            "female": agg.hindu_female,
+                            "others": agg.hindu_others,
+                        },
+                        "muslim": {
+                            "male": agg.muslim_male,
+                            "female": agg.muslim_female,
+                            "others": agg.muslim_others,
+                        },
+                        "sikh": {
+                            "male": agg.sikh_male,
+                            "female": agg.sikh_female,
+                            "others": agg.sikh_others,
+                        },
+                        "christian": {
+                            "male": agg.christian_male,
+                            "female": agg.christian_female,
+                            "others": agg.christian_others,
+                        },
+                        "jain": {
+                            "male": agg.jain_male,
+                            "female": agg.jain_female,
+                            "others": agg.jain_others,
+                        },
+                        "buddhist": {
+                            "male": agg.buddhist_male,
+                            "female": agg.buddhist_female,
+                            "others": agg.buddhist_others,
+                        },
+                        "other_religion": {
+                            "male": agg.other_religion_male,
+                            "female": agg.other_religion_female,
+                            "others": agg.other_religion_others,
+                        },
+                    },
+                    "disability": {
+                        "no_disability": {
+                            "male": agg.no_disability_male,
+                            "female": agg.no_disability_female,
+                            "others": agg.no_disability_others,
+                        },
+                        "lowvision": {
+                            "male": agg.low_vision_male,
+                            "female": agg.low_vision_female,
+                            "others": agg.low_vision_others,
+                        },
+                        "blindness": {
+                            "male": agg.blindness_male,
+                            "female": agg.blindness_female,
+                            "others": agg.blindness_others,
+                        },
+                        "hearing": {
+                            "male": agg.hearing_male,
+                            "female": agg.hearing_female,
+                            "others": agg.hearing_others,
+                        },
+                        "locomotor": {
+                            "male": agg.locomotor_male,
+                            "female": agg.locomotor_female,
+                            "others": agg.locomotor_others,
+                        },
+                        "autism": {
+                            "male": agg.autism_male,
+                            "female": agg.autism_female,
+                            "others": agg.autism_others,
+                        },
+                        "other_disability": {
+                            "male": agg.other_disability_male,
+                            "female": agg.other_disability_female,
+                            "others": agg.other_disability_others,
+                        },
+                    }
+                }
+
+            return JsonResponse({
+                "status": 200,
+                "mode": "edit",
+                "academic_year": academic_year,
+                "college_data": base_college_data,
+                "records": filled_records
+            })
 
     return JsonResponse({"status": 400, "message": "Invalid mode"})
 
@@ -1939,8 +2232,8 @@ def get_student_records(request):
         # order by total students (aggregated per college)
         colleges_qs = colleges_qs.annotate(
             agg_total=Sum(
-                "student_aggregates__total_students",
-                filter=Q(student_aggregates__Academic_Year=year),
+                "staff_aggregates__total_students",
+                filter=Q(staff_aggregates__Academic_Year=year),
             )
         )
         field = "agg_total"
@@ -2771,16 +3064,26 @@ def export_student_excel(request):
 
 
 @ajax_login_required
-def export_filtered_excel(request):
+def export_dashboard_excel(request):
+    """
+    Export Excel with two sheets: 'Students' and 'Staff'.
+    Assumes these imports are present in the module:
+      import json, datetime
+      from io import BytesIO
+      from openpyxl import Workbook
+      from openpyxl.styles import PatternFill, Font, Alignment
+      from openpyxl.utils import get_column_letter
+      from django.http import HttpResponse, HttpResponseBadRequest
+      from django.db.models import Q, Sum
+    """
     if request.method != "POST":
         return HttpResponseBadRequest("Only POST allowed")
 
-    # --- Academic year: REQUIRED from POST --- (still required)
+    # --- Academic year: REQUIRED from POST ---
     year = (request.POST.get("year") or "").strip()
     if not year:
         return HttpResponseBadRequest("Missing academic year")
 
-    # --- Gather filters from POST (exact keys from JS) ---
     def non_empty_list(key):
         return [v for v in request.POST.getlist(key) if v]
 
@@ -2793,35 +3096,22 @@ def export_filtered_excel(request):
     disciplines     = non_empty_list("Discipline[]")
     programs        = non_empty_list("Programs[]")
 
-    # ------------------------------------------------------------------
-    # Build base queryset from College master (DO NOT require student rows)
-    # This ensures colleges with NO student rows for 'year' are still exported.
-    # ------------------------------------------------------------------
     qs = College.objects.filter(is_deleted=False).prefetch_related(
-        "college_programs", "student_aggregates"
+        "college_programs", "student_aggregates", "staff_aggregates"
     )
 
-    # Apply master filters (these filter master College rows; they do NOT
-    # require student rows to exist for the chosen academic year).
     if college_codes:
         qs = qs.filter(College_Code__in=college_codes)
-
     if college_names:
         qs = qs.filter(College_Name__in=college_names)
-
     if districts:
         qs = qs.filter(District__in=districts)
-
     if talukas:
         qs = qs.filter(taluka__in=talukas)
-
     if college_types:
         qs = qs.filter(college_type__in=college_types)
-
     if belongs_to_list:
         qs = qs.filter(belongs_to__in=belongs_to_list)
-
-    # Discipline/Program filters applied on master CollegeProgram
     if disciplines:
         qs = qs.filter(college_programs__Discipline__in=disciplines)
     if programs:
@@ -2829,74 +3119,104 @@ def export_filtered_excel(request):
 
     qs = qs.distinct().order_by("College_Name")
 
-    # -----------------------
-    # Build XLSX (updated layout like export_student_excel)
-    # -----------------------
+    # ---------- Build workbook with two sheets ----------
     wb = Workbook()
-    ws = wb.active
-    ws.title = "Student Records"
+    # default active sheet -> students
+    ws_students = wb.active
+    ws_students.title = "Students"
 
-    headers = [
+    # create staff sheet
+    ws_staff = wb.create_sheet(title="Staff")
+
+    # Common meta headers
+    meta_headers = [
         "College Code", "College Name", "Address", "Pincode", "Country",
         "State", "District", "Taluka", "City",
         "College Type", "Belongs To", "Affiliated To",
-
         "Discipline", "Program",
-
-        # Student census columns (student-area starts at column 15)
-        # washrooms first (renamed first header)
-        "Total Students Washrooms",   # student.total_washrooms
-        "Male Students washrooms",             # student.male_washrooms
-        "Female Stduents washrooms",           # student.female_washrooms
-
-        "Total Students",             # student.total_students
-        "Total Male", "Total Female", "Total Others",
-
-        # Caste-wise (gender split)
-        "OPEN Male", "OPEN Female", "OPEN Others",
-        "OBC Male", "OBC Female", "OBC Others",
-        "SC Male", "SC Female", "SC Others",
-        "ST Male", "ST Female", "ST Others",
-        "NT Male", "NT Female", "NT Others",
-        "VJNT Male", "VJNT Female", "VJNT Others",
-        "EWS Male", "EWS Female", "EWS Others",
-
-        # Religion-wise (gender split)
-        "Hindu Male", "Hindu Female", "Hindu Others",
-        "Muslim Male", "Muslim Female", "Muslim Others",
-        "Sikh Male", "Sikh Female", "Sikh Others",
-        "Christian Male", "Christian Female", "Christian Others",
-        "Jain Male", "Jain Female", "Jain Others",
-        "Buddhist Male", "Buddhist Female", "Buddhist Others",
-        "Other Religion Male", "Other Religion Female", "Other Religion Others",
-
-        # Disability-wise (gender split)
-        "No Disability Male", "No Disability Female", "No Disability Others",
-        "Low Vision Male", "Low Vision Female", "Low Vision Others",
-        "Blindness Male", "Blindness Female", "Blindness Others",
-        "Hearing Impaired Male", "Hearing Impaired Female", "Hearing Impaired Others",
-        "Locomotor Disability Male", "Locomotor Disability Female", "Locomotor Disability Others",
-        "Autism Male", "Autism Female", "Autism Others",
-        "Other Disability Male", "Other Disability Female", "Other Disability Others",
     ]
-    ws.append(headers)
 
+    # STUDENT headers (with "(Students)" style)
+    student_headers = [
+        "Total Students Washrooms", "Male Students Washrooms", "Female Students Washrooms",
+        "Total Students", "Total Male (Students)", "Total Female (Students)", "Total Others (Students)",
+        # caste
+        "OPEN Male (Students)", "OPEN Female (Students)", "OPEN Others (Students)",
+        "OBC Male (Students)", "OBC Female (Students)", "OBC Others (Students)",
+        "SC Male (Students)", "SC Female (Students)", "SC Others (Students)",
+        "ST Male (Students)", "ST Female (Students)", "ST Others (Students)",
+        "NT Male (Students)", "NT Female (Students)", "NT Others (Students)",
+        "VJNT Male (Students)", "VJNT Female (Students)", "VJNT Others (Students)",
+        "EWS Male (Students)", "EWS Female (Students)", "EWS Others (Students)",
+        # religion
+        "Hindu Male (Students)", "Hindu Female (Students)", "Hindu Others (Students)",
+        "Muslim Male (Students)", "Muslim Female (Students)", "Muslim Others (Students)",
+        "Sikh Male (Students)", "Sikh Female (Students)", "Sikh Others (Students)",
+        "Christian Male (Students)", "Christian Female (Students)", "Christian Others (Students)",
+        "Jain Male (Students)", "Jain Female (Students)", "Jain Others (Students)",
+        "Buddhist Male (Students)", "Buddhist Female (Students)", "Buddhist Others (Students)",
+        "Other Religion Male (Students)", "Other Religion Female (Students)", "Other Religion Others (Students)",
+        # disability
+        "No Disability Male (Students)", "No Disability Female (Students)", "No Disability Others (Students)",
+        "Low Vision Male (Students)", "Low Vision Female (Students)", "Low Vision Others (Students)",
+        "Blindness Male (Students)", "Blindness Female (Students)", "Blindness Others (Students)",
+        "Hearing Impaired Male (Students)", "Hearing Impaired Female (Students)", "Hearing Impaired Others (Students)",
+        "Locomotor Disability Male (Students)", "Locomotor Disability Female (Students)", "Locomotor Disability Others (Students)",
+        "Autism Male (Students)", "Autism Female (Students)", "Autism Others (Students)",
+        "Other Disability Male (Students)", "Other Disability Female (Students)", "Other Disability Others (Students)",
+    ]
+
+    # STAFF headers (parallel style)
+    staff_headers = [
+        "Total Staff Washrooms", "Male Staff Washrooms", "Female Staff Washrooms",
+        "Total Staff", "Total Male (Staff)", "Total Female (Staff)", "Total Others (Staff)",
+        # caste
+        "OPEN Male (Staff)", "OPEN Female (Staff)", "OPEN Others (Staff)",
+        "OBC Male (Staff)", "OBC Female (Staff)", "OBC Others (Staff)",
+        "SC Male (Staff)", "SC Female (Staff)", "SC Others (Staff)",
+        "ST Male (Staff)", "ST Female (Staff)", "ST Others (Staff)",
+        "NT Male (Staff)", "NT Female (Staff)", "NT Others (Staff)",
+        "VJNT Male (Staff)", "VJNT Female (Staff)", "VJNT Others (Staff)",
+        "EWS Male (Staff)", "EWS Female (Staff)", "EWS Others (Staff)",
+        # religion
+        "Hindu Male (Staff)", "Hindu Female (Staff)", "Hindu Others (Staff)",
+        "Muslim Male (Staff)", "Muslim Female (Staff)", "Muslim Others (Staff)",
+        "Sikh Male (Staff)", "Sikh Female (Staff)", "Sikh Others (Staff)",
+        "Christian Male (Staff)", "Christian Female (Staff)", "Christian Others (Staff)",
+        "Jain Male (Staff)", "Jain Female (Staff)", "Jain Others (Staff)",
+        "Buddhist Male (Staff)", "Buddhist Female (Staff)", "Buddhist Others (Staff)",
+        "Other Religion Male (Staff)", "Other Religion Female (Staff)", "Other Religion Others (Staff)",
+        # disability
+        "No Disability Male (Staff)", "No Disability Female (Staff)", "No Disability Others (Staff)",
+        "Low Vision Male (Staff)", "Low Vision Female (Staff)", "Low Vision Others (Staff)",
+        "Blindness Male (Staff)", "Blindness Female (Staff)", "Blindness Others (Staff)",
+        "Hearing Impaired Male (Staff)", "Hearing Impaired Female (Staff)", "Hearing Impaired Others (Staff)",
+        "Locomotor Disability Male (Staff)", "Locomotor Disability Female (Staff)", "Locomotor Disability Others (Staff)",
+        "Autism Male (Staff)", "Autism Female (Staff)", "Autism Others (Staff)",
+        "Other Disability Male (Staff)", "Other Disability Female (Staff)", "Other Disability Others (Staff)",
+    ]
+
+    # Write headers on both sheets
+    headers_students = meta_headers + student_headers
+    headers_staff = meta_headers + staff_headers
+
+    ws_students.append(headers_students)
+    ws_staff.append(headers_staff)
+
+    # style header for both sheets
     header_fill = PatternFill(start_color="006699", fill_type="solid")
-    for col in range(1, len(headers) + 1):
-        c = ws.cell(row=1, column=col)
-        c.font = Font(bold=True, color="FFFFFF")
-        c.fill = header_fill
-        c.alignment = Alignment(horizontal="center", vertical="center")
+    for ws in (ws_students, ws_staff):
+        for col in range(1, len(headers_students) + 1):
+            c = ws.cell(row=1, column=col)
+            c.font = Font(bold=True, color="FFFFFF")
+            c.fill = header_fill
+            c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-    row_num = 2
-
-    # student fields (student-area order): washrooms first then total_students etc.
+    # field lists for reading from model instances
     student_fields = [
         "total_washrooms", "male_washrooms", "female_washrooms",
-        "total_students",
-        "total_male", "total_female", "total_others",
-
-        # caste (gender split)
+        "total_students", "total_male", "total_female", "total_others",
+        # caste
         "open_male", "open_female", "open_others",
         "obc_male", "obc_female", "obc_others",
         "sc_male", "sc_female", "sc_others",
@@ -2904,8 +3224,7 @@ def export_filtered_excel(request):
         "nt_male", "nt_female", "nt_others",
         "vjnt_male", "vjnt_female", "vjnt_others",
         "ews_male", "ews_female", "ews_others",
-
-        # religion (gender split)
+        # religion
         "hindu_male", "hindu_female", "hindu_others",
         "muslim_male", "muslim_female", "muslim_others",
         "sikh_male", "sikh_female", "sikh_others",
@@ -2913,8 +3232,7 @@ def export_filtered_excel(request):
         "jain_male", "jain_female", "jain_others",
         "buddhist_male", "buddhist_female", "buddhist_others",
         "other_religion_male", "other_religion_female", "other_religion_others",
-
-        # disability (gender split)
+        # disability
         "no_disability_male", "no_disability_female", "no_disability_others",
         "low_vision_male", "low_vision_female", "low_vision_others",
         "blindness_male", "blindness_female", "blindness_others",
@@ -2924,21 +3242,55 @@ def export_filtered_excel(request):
         "other_disability_male", "other_disability_female", "other_disability_others",
     ]
 
-    overall_agg = {f: 0 for f in student_fields}
+    staff_fields = [
+        "total_staff_washrooms", "male_staff_washrooms", "female_staff_washrooms",
+        "total_staff", "total_male", "total_female", "total_others",
+        # caste
+        "open_male", "open_female", "open_others",
+        "obc_male", "obc_female", "obc_others",
+        "sc_male", "sc_female", "sc_others",
+        "st_male", "st_female", "st_others",
+        "nt_male", "nt_female", "nt_others",
+        "vjnt_male", "vjnt_female", "vjnt_others",
+        "ews_male", "ews_female", "ews_others",
+        # religion
+        "hindu_male", "hindu_female", "hindu_others",
+        "muslim_male", "muslim_female", "muslim_others",
+        "sikh_male", "sikh_female", "sikh_others",
+        "christian_male", "christian_female", "christian_others",
+        "jain_male", "jain_female", "jain_others",
+        "buddhist_male", "buddhist_female", "buddhist_others",
+        "other_religion_male", "other_religion_female", "other_religion_others",
+        # disability
+        "no_disability_male", "no_disability_female", "no_disability_others",
+        "low_vision_male", "low_vision_female", "low_vision_others",
+        "blindness_male", "blindness_female", "blindness_others",
+        "hearing_male", "hearing_female", "hearing_others",
+        "locomotor_male", "locomotor_female", "locomotor_others",
+        "autism_male", "autism_female", "autism_others",
+        "other_disability_male", "other_disability_female", "other_disability_others",
+    ]
 
-    # iterate colleges (masters; may have no student rows for the chosen year)
+    overall_student_agg = {f: 0 for f in student_fields}
+    overall_staff_agg = {f: 0 for f in staff_fields}
+
+    # Starting row indices for each sheet
+    row_students = 2
+    row_staff = 2
+
+    # iterate colleges
     for college in qs:
-        # remove accumulation of college-level washrooms (we now use student-level washrooms)
-        # student aggregates for THIS year only
-        year_records = {
+        # student & staff year records keyed by Program_id
+        student_year_records = {
             rec.Program_id: rec
-            for rec in college.student_aggregates.filter(
-                Academic_Year=year,
-                is_deleted=False
-            )
+            for rec in college.student_aggregates.filter(Academic_Year=year, is_deleted=False)
+        }
+        staff_year_records = {
+            rec.Program_id: rec
+            for rec in college.staff_aggregates.filter(Academic_Year=year, is_deleted=False)
         }
 
-        # group programs by discipline (master mapping)
+        # group programs by discipline
         discipline_map = {}
         for cp in college.college_programs.filter(is_deleted=False):
             discipline_map.setdefault(cp.Discipline, []).append(cp)
@@ -2948,10 +3300,10 @@ def export_filtered_excel(request):
         total_program_rows = sum(len(plist) if plist else 1 for _, plist in discipline_map.items())
         if total_program_rows <= 0:
             total_program_rows = 1
-        start_row = row_num
-        end_row = row_num + total_program_rows - 1
 
-        # MERGE college info across the rows (college meta fields = 12)
+        # --- STUDENT sheet: merge meta across rows ---
+        start_row = row_students
+        end_row = row_students + total_program_rows - 1
         college_fields = [
             college.College_Code,
             college.College_Name,
@@ -2966,7 +3318,1366 @@ def export_filtered_excel(request):
             college.belongs_to or "",
             college.affiliated or "",
         ]
-        # discipline column = 13, program = 14, student data starts at 15
+        for ci, val in enumerate(college_fields, start=1):
+            ws_students.merge_cells(start_row=start_row, start_column=ci, end_row=end_row, end_column=ci)
+            cell = ws_students.cell(row=start_row, column=ci, value=val)
+            cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+        # --- STAFF sheet: merge meta across rows (same)
+        start_row_s = row_staff
+        end_row_s = row_staff + total_program_rows - 1
+        for ci, val in enumerate(college_fields, start=1):
+            ws_staff.merge_cells(start_row=start_row_s, start_column=ci, end_row=end_row_s, end_column=ci)
+            cell = ws_staff.cell(row=start_row_s, column=ci, value=val)
+            cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+        # write per-program rows for both sheets
+        cur_row_s = row_students
+        cur_row_f = row_staff
+        for discipline, progs in discipline_map.items():
+            progs_list = progs if progs else [None]
+
+            # STUDENT: merge discipline column for block
+            ws_students.merge_cells(
+                start_row=cur_row_s, start_column=13,
+                end_row=cur_row_s + len(progs_list) - 1, end_column=13
+            )
+            ws_students.cell(cur_row_s, 13, discipline).alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+            # STAFF: same discipline merge
+            ws_staff.merge_cells(
+                start_row=cur_row_f, start_column=13,
+                end_row=cur_row_f + len(progs_list) - 1, end_column=13
+            )
+            ws_staff.cell(cur_row_f, 13, discipline).alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+
+            for prog in progs_list:
+                # Program name cell on both sheets
+                if prog:
+                    ws_students.cell(cur_row_s, 14, prog.ProgramName)
+                    ws_staff.cell(cur_row_f, 14, prog.ProgramName)
+                    srec = student_year_records.get(prog.id)
+                    frec = staff_year_records.get(prog.id)
+                else:
+                    ws_students.cell(cur_row_s, 14, "No Program")
+                    ws_staff.cell(cur_row_f, 14, "No Program")
+                    srec = None
+                    frec = None
+
+                # STUDENT: write student_fields starting at col 15
+                for i, field in enumerate(student_fields):
+                    val = 0
+                    if srec:
+                        val = getattr(srec, field, None)
+                        if val is None:
+                            # fallback (kept explicit for clarity)
+                            val = getattr(srec, field, 0) or 0
+                        val = val or 0
+                    ws_students.cell(cur_row_s, 15 + i, val)
+                    overall_student_agg[field] += (val or 0)
+
+                # STAFF: write staff_fields starting at col 15
+                for j, field in enumerate(staff_fields):
+                    val = 0
+                    if frec:
+                        # prefer exact staff field name; fall back to student-style names where appropriate
+                        if hasattr(frec, field):
+                            val = getattr(frec, field, 0) or 0
+                        else:
+                            fallback_map = {
+                                "total_staff_washrooms": "total_washrooms",
+                                "male_staff_washrooms": "male_washrooms",
+                                "female_staff_washrooms": "female_washrooms",
+                                # total_staff fallback to total_staff or total_students
+                                "total_staff": "total_staff" if hasattr(frec, "total_staff") else "total_students",
+                            }
+                            fb = fallback_map.get(field)
+                            if fb and hasattr(frec, fb):
+                                val = getattr(frec, fb, 0) or 0
+                            else:
+                                val = getattr(frec, field, 0) or 0
+                    ws_staff.cell(cur_row_f, 15 + j, val)
+                    overall_staff_agg[field] += (val or 0)
+
+                cur_row_s += 1
+                cur_row_f += 1
+
+        row_students = end_row + 1
+        row_staff = end_row_s + 1
+
+    # --- Aggregate row per sheet ---
+
+    # STUDENT sheet aggregate
+    agg_row = row_students
+    ws_students.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=12)
+    lbl = ws_students.cell(agg_row, 1, f"Aggregate Values - {year}")
+    lbl.font = Font(bold=True)
+    lbl.alignment = Alignment(horizontal="center", vertical="center")
+
+    # write student washrooms & totals explicit
+    ws_students.cell(agg_row, 15, overall_student_agg.get("total_washrooms", 0))
+    ws_students.cell(agg_row, 16, overall_student_agg.get("male_washrooms", 0))
+    ws_students.cell(agg_row, 17, overall_student_agg.get("female_washrooms", 0))
+    ws_students.cell(agg_row, 18, overall_student_agg.get("total_students", 0))
+    for col_idx in (15, 16, 17, 18):
+        c = ws_students.cell(agg_row, col_idx)
+        c.font = Font(bold=True, color="CC6600")
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    for i, field in enumerate(student_fields):
+        tot = overall_student_agg[field]
+        c = ws_students.cell(agg_row, 15 + i, tot)
+        c.font = Font(bold=True, color="CC6600")
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    # STAFF sheet aggregate
+    agg_row_s = row_staff
+    ws_staff.merge_cells(start_row=agg_row_s, start_column=1, end_row=agg_row_s, end_column=12)
+    lbl2 = ws_staff.cell(agg_row_s, 1, f"Aggregate Values - {year}")
+    lbl2.font = Font(bold=True)
+    lbl2.alignment = Alignment(horizontal="center", vertical="center")
+
+    # write staff washrooms & totals explicit
+    ws_staff.cell(agg_row_s, 15, overall_staff_agg.get("total_staff_washrooms", 0))
+    ws_staff.cell(agg_row_s, 16, overall_staff_agg.get("male_staff_washrooms", 0))
+    ws_staff.cell(agg_row_s, 17, overall_staff_agg.get("female_staff_washrooms", 0))
+    ws_staff.cell(agg_row_s, 18, overall_staff_agg.get("total_staff", 0))
+    for col_idx in (15, 16, 17, 18):
+        c = ws_staff.cell(agg_row_s, col_idx)
+        c.font = Font(bold=True, color="CC6600")
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    for j, field in enumerate(staff_fields):
+        tot = overall_staff_agg[field]
+        c = ws_staff.cell(agg_row_s, 15 + j, tot)
+        c.font = Font(bold=True, color="CC6600")
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    # -----------------------
+    # Auto-width (no freeze panes so full horizontal scroll works)
+    # -----------------------
+    # For students sheet: number of columns = meta (14) + len(student_fields)
+    students_cols = 14 + len(student_fields)
+    for col in range(1, students_cols + 1):
+        letter = get_column_letter(col)
+        max_len = 0
+        for cell in ws_students[letter]:
+            if cell.value is not None:
+                l = len(str(cell.value))
+                if l > max_len:
+                    max_len = l
+        ws_students.column_dimensions[letter].width = min(max_len + 5, 60)
+
+    # For staff sheet: number of columns = meta (14) + len(staff_fields)
+    staff_cols = 14 + len(staff_fields)
+    for col in range(1, staff_cols + 1):
+        letter = get_column_letter(col)
+        max_len = 0
+        for cell in ws_staff[letter]:
+            if cell.value is not None:
+                l = len(str(cell.value))
+                if l > max_len:
+                    max_len = l
+        ws_staff.column_dimensions[letter].width = min(max_len + 5, 60)
+
+    # Return XLSX
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"Statistics_data_{year}_{date_str}.xlsx"
+    resp = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp
+
+
+
+def get_staff_records(request):
+    try:
+        draw = int(request.GET.get("draw", 1))
+        start = int(request.GET.get("start", 0))
+        length = int(request.GET.get("length", 10))
+    except ValueError:
+        return HttpResponseBadRequest("Invalid paging parameters")
+
+    search_value = request.GET.get("search[value]", "").strip()
+    order_col_index = request.GET.get("order[0][column]")
+    order_dir = request.GET.get("order[0][dir]", "asc")
+    year = request.GET.get("year")
+
+    if not year:
+        latest = academic_year.objects.order_by("-Academic_Year").first()
+        year = latest.Academic_Year if latest else ""
+
+    # 1) Base queryset: colleges that have staff aggregates in this year
+    base_qs = College.objects.filter(
+        is_deleted=False,
+        staff_aggregates__Academic_Year=year,
+        staff_aggregates__is_deleted=False,
+    ).distinct()
+
+    # 2) Total before search
+    records_total = base_qs.count()
+
+    # 3) Apply global search across College + CollegeProgram
+    if search_value:
+        colleges_qs = base_qs.filter(
+            Q(College_Code__icontains=search_value) |
+            Q(College_Name__icontains=search_value) |
+            Q(address__icontains=search_value) |
+            Q(country__icontains=search_value) |
+            Q(state__icontains=search_value) |
+            Q(District__icontains=search_value) |
+            Q(taluka__icontains=search_value) |
+            Q(city__icontains=search_value) |
+            Q(pincode__icontains=search_value) |
+            Q(college_type__icontains=search_value) |
+            Q(belongs_to__icontains=search_value) |
+            Q(affiliated__icontains=search_value) |
+            # from related CollegeProgram
+            Q(college_programs__Discipline__icontains=search_value) |
+            Q(college_programs__ProgramName__icontains=search_value)
+        ).distinct()
+    else:
+        colleges_qs = base_qs
+
+    # 4) Filtered count after search
+    records_filtered = colleges_qs.count()
+
+    # 5) Ordering
+    order_map = {
+        "1": "College_Code",
+        "2": "College_Name",
+    }
+
+    if order_col_index == "4":
+        # order by total staff (aggregated per college)
+        colleges_qs = colleges_qs.annotate(
+            agg_total=Sum(
+                "staff_aggregates__total_staff",
+                filter=Q(staff_aggregates__Academic_Year=year),
+            )
+        )
+        field = "agg_total"
+        if order_dir == "desc":
+            field = "-" + field
+        colleges_qs = colleges_qs.order_by(field, "College_Name")
+    else:
+        field = order_map.get(order_col_index, "College_Name")
+        if order_dir == "desc":
+            field = "-" + field
+        colleges_qs = colleges_qs.order_by(field)
+
+    # 6) Pagination
+    colleges_page = colleges_qs[start: start + length]
+
+    data = []
+
+    for col in colleges_page:
+        pc_qs = (
+            staff_master_aggregate.objects
+            .filter(College=col, Academic_Year=year, is_deleted=False)
+            .select_related("Program")
+            .order_by("Program__Discipline", "Program__ProgramName")
+        )
+
+        discipline_map = {}
+        total_staff_for_college = 0
+
+        for pc in pc_qs:
+            prog_obj = pc.Program
+            discipline = prog_obj.Discipline if prog_obj else "Unspecified"
+            program_name = prog_obj.ProgramName if prog_obj else str(pc.Program_id)
+
+            total_staff_for_college += (pc.total_staff or 0)
+
+            entry = {
+                "name": program_name,
+                "total_staff": pc.total_staff or 0,
+                "gender": {
+                    "male": pc.total_male or 0,
+                    "female": pc.total_female or 0,
+                    "others": pc.total_others or 0,
+                },
+                "washrooms": {
+                    "total_washrooms": pc.total_washrooms or 0,
+                    "male_washrooms": pc.male_washrooms or 0,
+                    "female_washrooms": pc.female_washrooms or 0,
+                },
+                "category": {
+                    "open": {
+                        "male": pc.open_male or 0,
+                        "female": pc.open_female or 0,
+                        "others": pc.open_others or 0,
+                    },
+                    "obc": {
+                        "male": pc.obc_male or 0,
+                        "female": pc.obc_female or 0,
+                        "others": pc.obc_others or 0,
+                    },
+                    "sc": {
+                        "male": pc.sc_male or 0,
+                        "female": pc.sc_female or 0,
+                        "others": pc.sc_others or 0,
+                    },
+                    "st": {
+                        "male": pc.st_male or 0,
+                        "female": pc.st_female or 0,
+                        "others": pc.st_others or 0,
+                    },
+                    "nt": {
+                        "male": pc.nt_male or 0,
+                        "female": pc.nt_female or 0,
+                        "others": pc.nt_others or 0,
+                    },
+                    "vjnt": {
+                        "male": pc.vjnt_male or 0,
+                        "female": pc.vjnt_female or 0,
+                        "others": pc.vjnt_others or 0,
+                    },
+                    "ews": {
+                        "male": pc.ews_male or 0,
+                        "female": pc.ews_female or 0,
+                        "others": pc.ews_others or 0,
+                    },
+                },
+                "religion": {
+                    "hindu": {
+                        "male": pc.hindu_male or 0,
+                        "female": pc.hindu_female or 0,
+                        "others": pc.hindu_others or 0,
+                    },
+                    "muslim": {
+                        "male": pc.muslim_male or 0,
+                        "female": pc.muslim_female or 0,
+                        "others": pc.muslim_others or 0,
+                    },
+                    "sikh": {
+                        "male": pc.sikh_male or 0,
+                        "female": pc.sikh_female or 0,
+                        "others": pc.sikh_others or 0,
+                    },
+                    "christian": {
+                        "male": pc.christian_male or 0,
+                        "female": pc.christian_female or 0,
+                        "others": pc.christian_others or 0,
+                    },
+                    "jain": {
+                        "male": pc.jain_male or 0,
+                        "female": pc.jain_female or 0,
+                        "others": pc.jain_others or 0,
+                    },
+                    "buddhist": {
+                        "male": pc.buddhist_male or 0,
+                        "female": pc.buddhist_female or 0,
+                        "others": pc.buddhist_others or 0,
+                    },
+                    "other": {
+                        "male": pc.other_religion_male or 0,
+                        "female": pc.other_religion_female or 0,
+                        "others": pc.other_religion_others or 0,
+                    },
+                },
+                "disability": {
+                    "no_disability": {
+                        "male": pc.no_disability_male or 0,
+                        "female": pc.no_disability_female or 0,
+                        "others": pc.no_disability_others or 0,
+                    },
+                    "lowvision": {
+                        "male": pc.low_vision_male or 0,
+                        "female": pc.low_vision_female or 0,
+                        "others": pc.low_vision_others or 0,
+                    },
+                    "blindness": {
+                        "male": pc.blindness_male or 0,
+                        "female": pc.blindness_female or 0,
+                        "others": pc.blindness_others or 0,
+                    },
+                    "hearing": {
+                        "male": pc.hearing_male or 0,
+                        "female": pc.hearing_female or 0,
+                        "others": pc.hearing_others or 0,
+                    },
+                    "locomotor": {
+                        "male": pc.locomotor_male or 0,
+                        "female": pc.locomotor_female or 0,
+                        "others": pc.locomotor_others or 0,
+                    },
+                    "autism": {
+                        "male": pc.autism_male or 0,
+                        "female": pc.autism_female or 0,
+                        "others": pc.autism_others or 0,
+                    },
+                    "other": {
+                        "male": pc.other_disability_male or 0,
+                        "female": pc.other_disability_female or 0,
+                        "others": pc.other_disability_others or 0,
+                    },
+                },
+            }
+
+            discipline_map.setdefault(discipline, []).append(entry)
+
+        grouped_list = []
+        for disc in sorted(discipline_map.keys(), key=str.lower):
+            grouped_list.append({
+                "discipline": disc,
+                "programs": sorted(discipline_map[disc], key=lambda x: x["name"].lower()),
+            })
+
+        data.append({
+            "college_code": col.College_Code,
+            "college_name": col.College_Name,
+            "academic_year": year,
+            "total_staff": total_staff_for_college,
+            "programs": grouped_list,
+        })
+
+    return JsonResponse({
+        "draw": draw,
+        "recordsTotal": records_total,
+        "recordsFiltered": records_filtered,
+        "data": data,
+    })
+
+def add_staff_aggregate(request):
+    #backend for adding record to staff aggregate master database
+    if request.method != "POST":
+        return HttpResponseBadRequest("Only POST allowed")
+
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON")
+
+    college_code = payload.get('college_code')
+    academic_year = payload.get('academic_year')
+    records = payload.get('records', {})
+
+    if not college_code or not academic_year:
+        return JsonResponse({'status': 400, 'message': 'Missing required fields'}, status=400)
+
+    try:
+        college = College.objects.get(College_Code=college_code, is_deleted=False)
+    except College.DoesNotExist:
+        return JsonResponse({'status': 404, 'message': 'College not found'}, status=404)
+
+    if not isinstance(records, dict) or len(records) == 0:
+        return JsonResponse({"status": 400, "message": "No records provided"}, status=400)
+
+    saved = []
+    errors = []
+
+    with transaction.atomic():
+        for program_name, data in records.items():
+            program_obj = CollegeProgram.objects.filter(
+                College=college,
+                ProgramName=program_name,
+                is_deleted=False
+            ).first()
+
+            if not program_obj:
+                errors.append({
+                    "program": program_name,
+                    "error": f"Program '{program_name}' not found for college '{college_code}'"
+                })
+                continue
+
+            # ---- parse numeric fields safely ----
+            total_staff = _to_int(data.get("total_staff") or data.get("total_staffs"), 0)
+
+            gender = data.get("gender", {}) or {}
+            male = _to_int(gender.get("male"), 0)
+            female = _to_int(gender.get("female"), 0)
+            others = _to_int(gender.get("others") or gender.get("other"), 0)
+
+            washrooms = data.get("washrooms", {}) or {}
+            total_washrooms = _to_int(washrooms.get("total") or washrooms.get("total_washrooms"), 0)
+            male_washrooms = _to_int(washrooms.get("male"), 0)
+            female_washrooms = _to_int(washrooms.get("female"), 0)
+
+            category = data.get("category", {}) or {}
+            open_cat = category.get("open", {}) or {}
+            open_male = _to_int(open_cat.get("male"), 0)
+            open_female = _to_int(open_cat.get("female"), 0)
+            open_others = _to_int(open_cat.get("others") or open_cat.get("other"), 0)
+
+            obc = category.get("obc", {}) or {}
+            obc_male = _to_int(obc.get("male"), 0)
+            obc_female = _to_int(obc.get("female"), 0)
+            obc_others = _to_int(obc.get("others") or obc.get("other"), 0)
+
+            sc = category.get("sc", {}) or {}
+            sc_male = _to_int(sc.get("male"), 0)
+            sc_female = _to_int(sc.get("female"), 0)
+            sc_others = _to_int(sc.get("others") or sc.get("other"), 0)
+
+            st = category.get("st", {}) or {}
+            st_male = _to_int(st.get("male"), 0)
+            st_female = _to_int(st.get("female"), 0)
+            st_others = _to_int(st.get("others") or st.get("other"), 0)
+
+            nt = category.get("nt", {}) or {}
+            nt_male = _to_int(nt.get("male"), 0)
+            nt_female = _to_int(nt.get("female"), 0)
+            nt_others = _to_int(nt.get("others") or nt.get("other"), 0)
+
+            vjnt = category.get("vjnt", {}) or {}
+            vjnt_male = _to_int(vjnt.get("male"), 0)
+            vjnt_female = _to_int(vjnt.get("female"), 0)
+            vjnt_others = _to_int(vjnt.get("others") or vjnt.get("other"), 0)
+
+            ews = category.get("ews", {}) or {}
+            ews_male = _to_int(ews.get("male"), 0)
+            ews_female = _to_int(ews.get("female"), 0)
+            ews_others = _to_int(ews.get("others") or ews.get("other"), 0)
+
+            religion = data.get("religion", {}) or {}
+            hindu = religion.get("hindu", {}) or {}
+            hindu_male = _to_int(hindu.get("male"), 0)
+            hindu_female = _to_int(hindu.get("female"), 0)
+            hindu_others = _to_int(hindu.get("others") or hindu.get("other"), 0)
+
+            muslim = religion.get("muslim", {}) or {}
+            muslim_male = _to_int(muslim.get("male"), 0)
+            muslim_female = _to_int(muslim.get("female"), 0)
+            muslim_others = _to_int(muslim.get("others") or muslim.get("other"), 0)
+
+            sikh = religion.get("sikh", {}) or {}
+            sikh_male = _to_int(sikh.get("male"), 0)
+            sikh_female = _to_int(sikh.get("female"), 0)
+            sikh_others = _to_int(sikh.get("others") or sikh.get("other"), 0)
+
+            christian = religion.get("christian", {}) or {}
+            christian_male = _to_int(christian.get("male"), 0)
+            christian_female = _to_int(christian.get("female"), 0)
+            christian_others = _to_int(christian.get("others") or christian.get("other"), 0)
+
+            jain = religion.get("jain", {}) or {}
+            jain_male = _to_int(jain.get("male"), 0)
+            jain_female = _to_int(jain.get("female"), 0)
+            jain_others = _to_int(jain.get("others") or jain.get("other"), 0)
+
+            buddhist = religion.get("buddhist", {}) or {}
+            buddhist_male = _to_int(buddhist.get("male"), 0)
+            buddhist_female = _to_int(buddhist.get("female"), 0)
+            buddhist_others = _to_int(buddhist.get("others") or buddhist.get("other"), 0)
+
+            other_religion = religion.get("other_religion", {}) or {}
+            other_religion_male = _to_int(other_religion.get("male"), 0)
+            other_religion_female = _to_int(other_religion.get("female"), 0)
+            other_religion_others = _to_int(other_religion.get("others") or other_religion.get("other"), 0)
+
+            dis = data.get("disability", {}) or {}
+            no_disability = dis.get("no_disability", {}) or {}
+            no_disability_male = _to_int(no_disability.get("male"), 0)
+            no_disability_female = _to_int(no_disability.get("female"), 0)
+            no_disability_others = _to_int(no_disability.get("others") or no_disability.get("other"), 0)
+
+            low_vision = dis.get("lowvision", {}) or {}
+            low_vision_male = _to_int(low_vision.get("male"), 0)
+            low_vision_female = _to_int(low_vision.get("female"), 0)
+            low_vision_others = _to_int(low_vision.get("others") or low_vision.get("other"), 0)
+
+            blindness = dis.get("blindness", {}) or {}
+            blindness_male = _to_int(blindness.get("male"), 0)
+            blindness_female = _to_int(blindness.get("female"), 0)
+            blindness_others = _to_int(blindness.get("others") or blindness.get("other"), 0)
+
+            hearing = dis.get("hearing", {}) or {}
+            hearing_male = _to_int(hearing.get("male"), 0)
+            hearing_female = _to_int(hearing.get("female"), 0)
+            hearing_others = _to_int(hearing.get("others") or hearing.get("other"), 0)
+
+            locomotor = dis.get("locomotor", {}) or {}
+            locomotor_male = _to_int(locomotor.get("male"), 0)
+            locomotor_female = _to_int(locomotor.get("female"), 0)
+            locomotor_others = _to_int(locomotor.get("others") or locomotor.get("other"), 0)
+
+            autism = dis.get("autism", {}) or {}
+            autism_male = _to_int(autism.get("male"), 0)
+            autism_female = _to_int(autism.get("female"), 0)
+            autism_others = _to_int(autism.get("others") or autism.get("other"), 0)
+
+            other_disability = dis.get("other_disability", {}) or {}
+            other_disability_male = _to_int(other_disability.get("male"), 0)
+            other_disability_female = _to_int(other_disability.get("female"), 0)
+            other_disability_others = _to_int(other_disability.get("others") or other_disability.get("other"), 0)
+
+            defaults = {
+                "total_staff": total_staff,
+                "total_male": male,
+                "total_female": female,
+                "total_others": others,
+
+                "total_washrooms": total_washrooms,
+                "male_washrooms": male_washrooms,
+                "female_washrooms": female_washrooms,
+
+                "open_male": open_male,
+                "open_female": open_female,
+                "open_others": open_others,
+
+                "obc_male": obc_male,
+                "obc_female": obc_female,
+                "obc_others": obc_others,
+
+                "sc_male": sc_male,
+                "sc_female": sc_female,
+                "sc_others": sc_others,
+
+                "st_male": st_male,
+                "st_female": st_female,
+                "st_others": st_others,
+
+                "nt_male": nt_male,
+                "nt_female": nt_female,
+                "nt_others": nt_others,
+
+                "vjnt_male": vjnt_male,
+                "vjnt_female": vjnt_female,
+                "vjnt_others": vjnt_others,
+
+                "ews_male": ews_male,
+                "ews_female": ews_female,
+                "ews_others": ews_others,
+
+                "hindu_male": hindu_male,
+                "hindu_female": hindu_female,
+                "hindu_others": hindu_others,
+
+                "muslim_male": muslim_male,
+                "muslim_female": muslim_female,
+                "muslim_others": muslim_others,
+
+                "sikh_male": sikh_male,
+                "sikh_female": sikh_female,
+                "sikh_others": sikh_others,
+
+                "christian_male": christian_male,
+                "christian_female": christian_female,
+                "christian_others": christian_others,
+
+                "jain_male": jain_male,
+                "jain_female": jain_female,
+                "jain_others": jain_others,
+
+                "buddhist_male": buddhist_male,
+                "buddhist_female": buddhist_female,
+                "buddhist_others": buddhist_others,
+
+                "other_religion_male": other_religion_male,
+                "other_religion_female": other_religion_female,
+                "other_religion_others": other_religion_others,
+
+                "no_disability_male": no_disability_male,
+                "no_disability_female": no_disability_female,
+                "no_disability_others": no_disability_others,
+
+                "low_vision_male": low_vision_male,
+                "low_vision_female": low_vision_female,
+                "low_vision_others": low_vision_others,
+
+                "blindness_male": blindness_male,
+                "blindness_female": blindness_female,
+                "blindness_others": blindness_others,
+
+                "hearing_male": hearing_male,
+                "hearing_female": hearing_female,
+                "hearing_others": hearing_others,
+
+                "locomotor_male": locomotor_male,
+                "locomotor_female": locomotor_female,
+                "locomotor_others": locomotor_others,
+
+                "autism_male": autism_male,
+                "autism_female": autism_female,
+                "autism_others": autism_others,
+
+                "other_disability_male": other_disability_male,
+                "other_disability_female": other_disability_female,
+                "other_disability_others": other_disability_others,
+            }
+
+            try:
+                client_ip = get_client_ip(request)
+
+                # Check only ACTIVE record (is_deleted = False)
+                existing = staff_master_aggregate.objects.filter(
+                    College=college,
+                    Program=program_obj,
+                    Academic_Year=academic_year,
+                    is_deleted=False,
+                ).first()
+
+                if existing:
+                    errors.append({
+                        "program": program_name,
+                        "error": "Record already exists for this college, program and academic year"
+                    })
+                    continue
+
+                # Create a new staff aggregate record
+                obj = staff_master_aggregate.objects.create(
+                    College=college,
+                    Program=program_obj,
+                    Academic_Year=academic_year,
+                    is_deleted=False,
+                    created_by=client_ip,
+                    **defaults,
+                )
+
+                saved.append({"program": program_name, "id": obj.pk, "created": True})
+
+            except Exception as e:
+                errors.append({"program": program_name, "error": f"DB error: {str(e)}"})
+                continue
+
+    response_status = 200 if not errors else 207
+    resp = {
+        "status": response_status,
+        "saved": saved,
+        "errors": errors,
+        "summary": {
+            "created": sum(1 for s in saved if s.get("created")),
+            "updated": 0,
+            "failed": len(errors)
+        }
+    }
+    return JsonResponse(resp)
+
+def update_staff_aggregate(request):
+    #backedn for updating to staff aggregate master database
+    if request.method != "POST":
+        return HttpResponseBadRequest("Only POST allowed")
+
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON")
+
+    college_code = payload.get('college_code')
+    academic_year = payload.get('academic_year')
+    records = payload.get('records', {})
+
+    if not college_code or not academic_year:
+        return JsonResponse({'status': 400, 'message': 'Missing required fields'}, status=400)
+
+    try:
+        college = College.objects.get(College_Code=college_code, is_deleted=False)
+    except College.DoesNotExist:
+        return JsonResponse({'status': 404, 'message': 'College not found'}, status=404)
+
+    if not isinstance(records, dict) or len(records) == 0:
+        return JsonResponse({"status": 400, "message": "No records provided"}, status=400)
+
+    updated = []
+    created = []
+    errors = []
+
+    with transaction.atomic():
+        for program_name, data in records.items():
+            program_obj = CollegeProgram.objects.filter(
+                College=college,
+                ProgramName=program_name,
+                is_deleted=False
+            ).first()
+
+            if not program_obj:
+                errors.append({
+                    "program": program_name,
+                    "error": f"Program '{program_name}' not found for college '{college_code}'"
+                })
+                continue
+
+
+            total_staff = _to_int(data.get("total_staff") or data.get("total_staffs"), 0)
+
+            gender = data.get("gender", {}) or {}
+            male = _to_int(gender.get("male"), 0)
+            female = _to_int(gender.get("female"), 0)
+            others = _to_int(gender.get("others") or gender.get("other"), 0)
+
+            washrooms = data.get("washrooms", {}) or {}
+            total_washrooms = _to_int(washrooms.get("total") or washrooms.get("total_washrooms"), 0)
+            male_washrooms = _to_int(washrooms.get("male"), 0)
+            female_washrooms = _to_int(washrooms.get("female"), 0)
+
+            category = data.get("category", {}) or {}
+            open_cat = category.get("open", {}) or {}
+            open_male = _to_int(open_cat.get("male"), 0)
+            open_female = _to_int(open_cat.get("female"), 0)
+            open_others = _to_int(open_cat.get("others") or open_cat.get("other"), 0)
+
+            obc = category.get("obc", {}) or {}
+            obc_male = _to_int(obc.get("male"), 0)
+            obc_female = _to_int(obc.get("female"), 0)
+            obc_others = _to_int(obc.get("others") or obc.get("other"), 0)
+
+            sc = category.get("sc", {}) or {}
+            sc_male = _to_int(sc.get("male"), 0)
+            sc_female = _to_int(sc.get("female"), 0)
+            sc_others = _to_int(sc.get("others") or sc.get("other"), 0)
+
+            st = category.get("st", {}) or {}
+            st_male = _to_int(st.get("male"), 0)
+            st_female = _to_int(st.get("female"), 0)
+            st_others = _to_int(st.get("others") or st.get("other"), 0)
+
+            nt = category.get("nt", {}) or {}
+            nt_male = _to_int(nt.get("male"), 0)
+            nt_female = _to_int(nt.get("female"), 0)
+            nt_others = _to_int(nt.get("others") or nt.get("other"), 0)
+
+            vjnt = category.get("vjnt", {}) or {}
+            vjnt_male = _to_int(vjnt.get("male"), 0)
+            vjnt_female = _to_int(vjnt.get("female"), 0)
+            vjnt_others = _to_int(vjnt.get("others") or vjnt.get("other"), 0)
+
+            ews = category.get("ews", {}) or {}
+            ews_male = _to_int(ews.get("male"), 0)
+            ews_female = _to_int(ews.get("female"), 0)
+            ews_others = _to_int(ews.get("others") or ews.get("other"), 0)
+
+            religion = data.get("religion", {}) or {}
+            hindu = religion.get("hindu", {}) or {}
+            hindu_male = _to_int(hindu.get("male"), 0)
+            hindu_female = _to_int(hindu.get("female"), 0)
+            hindu_others = _to_int(hindu.get("others") or hindu.get("other"), 0)
+
+            muslim = religion.get("muslim", {}) or {}
+            muslim_male = _to_int(muslim.get("male"), 0)
+            muslim_female = _to_int(muslim.get("female"), 0)
+            muslim_others = _to_int(muslim.get("others") or muslim.get("other"), 0)
+
+            sikh = religion.get("sikh", {}) or {}
+            sikh_male = _to_int(sikh.get("male"), 0)
+            sikh_female = _to_int(sikh.get("female"), 0)
+            sikh_others = _to_int(sikh.get("others") or sikh.get("other"), 0)
+
+            christian = religion.get("christian", {}) or {}
+            christian_male = _to_int(christian.get("male"), 0)
+            christian_female = _to_int(christian.get("female"), 0)
+            christian_others = _to_int(christian.get("others") or christian.get("other"), 0)
+
+            jain = religion.get("jain", {}) or {}
+            jain_male = _to_int(jain.get("male"), 0)
+            jain_female = _to_int(jain.get("female"), 0)
+            jain_others = _to_int(jain.get("others") or jain.get("other"), 0)
+
+            buddhist = religion.get("buddhist", {}) or {}
+            buddhist_male = _to_int(buddhist.get("male"), 0)
+            buddhist_female = _to_int(buddhist.get("female"), 0)
+            buddhist_others = _to_int(buddhist.get("others") or buddhist.get("other"), 0)
+
+            other_religion = religion.get("other_religion", {}) or {}
+            other_religion_male = _to_int(other_religion.get("male"), 0)
+            other_religion_female = _to_int(other_religion.get("female"), 0)
+            other_religion_others = _to_int(other_religion.get("others") or other_religion.get("other"), 0)
+
+            dis = data.get("disability", {}) or {}
+            no_disability = dis.get("no_disability", {}) or {}
+            no_disability_male = _to_int(no_disability.get("male"), 0)
+            no_disability_female = _to_int(no_disability.get("female"), 0)
+            no_disability_others = _to_int(no_disability.get("others") or no_disability.get("other"), 0)
+
+            low_vision = dis.get("lowvision", {}) or {}
+            low_vision_male = _to_int(low_vision.get("male"), 0)
+            low_vision_female = _to_int(low_vision.get("female"), 0)
+            low_vision_others = _to_int(low_vision.get("others") or low_vision.get("other"), 0)
+
+            blindness = dis.get("blindness", {}) or {}
+            blindness_male = _to_int(blindness.get("male"), 0)
+            blindness_female = _to_int(blindness.get("female"), 0)
+            blindness_others = _to_int(blindness.get("others") or blindness.get("other"), 0)
+
+            hearing = dis.get("hearing", {}) or {}
+            hearing_male = _to_int(hearing.get("male"), 0)
+            hearing_female = _to_int(hearing.get("female"), 0)
+            hearing_others = _to_int(hearing.get("others") or hearing.get("other"), 0)
+
+            locomotor = dis.get("locomotor", {}) or {}
+            locomotor_male = _to_int(locomotor.get("male"), 0)
+            locomotor_female = _to_int(locomotor.get("female"), 0)
+            locomotor_others = _to_int(locomotor.get("others") or locomotor.get("other"), 0)
+
+            autism = dis.get("autism", {}) or {}
+            autism_male = _to_int(autism.get("male"), 0)
+            autism_female = _to_int(autism.get("female"), 0)
+            autism_others = _to_int(autism.get("others") or autism.get("other"), 0)
+
+            other_disability = dis.get("other_disability", {}) or {}
+            other_disability_male = _to_int(other_disability.get("male"), 0)
+            other_disability_female = _to_int(other_disability.get("female"), 0)
+            other_disability_others = _to_int(other_disability.get("others") or other_disability.get("other"), 0)
+
+            try:
+                client_ip = get_client_ip(request)
+
+                existing = staff_master_aggregate.objects.filter(
+                    College=college,
+                    Program=program_obj,
+                    Academic_Year=academic_year,
+                    is_deleted=False,
+                ).first()
+
+                if existing:
+                    existing.total_staff = total_staff
+                    existing.total_male = male
+                    existing.total_female = female
+                    existing.total_others = others
+
+                    existing.total_washrooms = total_washrooms
+                    existing.male_washrooms = male_washrooms
+                    existing.female_washrooms = female_washrooms
+
+                    existing.open_male = open_male
+                    existing.open_female = open_female
+                    existing.open_others = open_others
+
+                    existing.obc_male = obc_male
+                    existing.obc_female = obc_female
+                    existing.obc_others = obc_others
+
+                    existing.sc_male = sc_male
+                    existing.sc_female = sc_female
+                    existing.sc_others = sc_others
+
+                    existing.st_male = st_male
+                    existing.st_female = st_female
+                    existing.st_others = st_others
+
+                    existing.nt_male = nt_male
+                    existing.nt_female = nt_female
+                    existing.nt_others = nt_others
+
+                    existing.vjnt_male = vjnt_male
+                    existing.vjnt_female = vjnt_female
+                    existing.vjnt_others = vjnt_others
+
+                    existing.ews_male = ews_male
+                    existing.ews_female = ews_female
+                    existing.ews_others = ews_others
+
+                    existing.hindu_male = hindu_male
+                    existing.hindu_female = hindu_female
+                    existing.hindu_others = hindu_others
+
+                    existing.muslim_male = muslim_male
+                    existing.muslim_female = muslim_female
+                    existing.muslim_others = muslim_others
+
+                    existing.sikh_male = sikh_male
+                    existing.sikh_female = sikh_female
+                    existing.sikh_others = sikh_others
+
+                    existing.christian_male = christian_male
+                    existing.christian_female = christian_female
+                    existing.christian_others = christian_others
+
+                    existing.jain_male = jain_male
+                    existing.jain_female = jain_female
+                    existing.jain_others = jain_others
+
+                    existing.buddhist_male = buddhist_male
+                    existing.buddhist_female = buddhist_female
+                    existing.buddhist_others = buddhist_others
+
+                    existing.other_religion_male = other_religion_male
+                    existing.other_religion_female = other_religion_female
+                    existing.other_religion_others = other_religion_others
+
+                    existing.no_disability_male = no_disability_male
+                    existing.no_disability_female = no_disability_female
+                    existing.no_disability_others = no_disability_others
+
+                    existing.low_vision_male = low_vision_male
+                    existing.low_vision_female = low_vision_female
+                    existing.low_vision_others = low_vision_others
+
+                    existing.blindness_male = blindness_male
+                    existing.blindness_female = blindness_female
+                    existing.blindness_others = blindness_others
+
+                    existing.hearing_male = hearing_male
+                    existing.hearing_female = hearing_female
+                    existing.hearing_others = hearing_others
+
+                    existing.locomotor_male = locomotor_male
+                    existing.locomotor_female = locomotor_female
+                    existing.locomotor_others = locomotor_others
+
+                    existing.autism_male = autism_male
+                    existing.autism_female = autism_female
+                    existing.autism_others = autism_others
+
+                    existing.other_disability_male = other_disability_male
+                    existing.other_disability_female = other_disability_female
+                    existing.other_disability_others = other_disability_others
+
+                    existing.updated_by = client_ip
+                    existing.save()
+
+                    updated.append({"program": program_name, "id": existing.pk, "updated": True})
+                else:
+                    # Create a new staff aggregate record (uses total_staff)
+                    obj = staff_master_aggregate.objects.create(
+                        College=college,
+                        Program=program_obj,
+                        Academic_Year=academic_year,
+                        is_deleted=False,
+                        created_by=client_ip,
+
+                        total_staff=total_staff,
+                        total_male=male,
+                        total_female=female,
+                        total_others=others,
+
+                        total_washrooms=total_washrooms,
+                        male_washrooms=male_washrooms,
+                        female_washrooms=female_washrooms,
+
+                        open_male=open_male,
+                        open_female=open_female,
+                        open_others=open_others,
+
+                        obc_male=obc_male,
+                        obc_female=obc_female,
+                        obc_others=obc_others,
+
+                        sc_male=sc_male,
+                        sc_female=sc_female,
+                        sc_others=sc_others,
+
+                        st_male=st_male,
+                        st_female=st_female,
+                        st_others=st_others,
+
+                        nt_male=nt_male,
+                        nt_female=nt_female,
+                        nt_others=nt_others,
+
+                        vjnt_male=vjnt_male,
+                        vjnt_female=vjnt_female,
+                        vjnt_others=vjnt_others,
+
+                        ews_male=ews_male,
+                        ews_female=ews_female,
+                        ews_others=ews_others,
+
+                        hindu_male=hindu_male,
+                        hindu_female=hindu_female,
+                        hindu_others=hindu_others,
+
+                        muslim_male=muslim_male,
+                        muslim_female=muslim_female,
+                        muslim_others=muslim_others,
+
+                        sikh_male=sikh_male,
+                        sikh_female=sikh_female,
+                        sikh_others=sikh_others,
+
+                        christian_male=christian_male,
+                        christian_female=christian_female,
+                        christian_others=christian_others,
+
+                        jain_male=jain_male,
+                        jain_female=jain_female,
+                        jain_others=jain_others,
+
+                        buddhist_male=buddhist_male,
+                        buddhist_female=buddhist_female,
+                        buddhist_others=buddhist_others,
+
+                        other_religion_male=other_religion_male,
+                        other_religion_female=other_religion_female,
+                        other_religion_others=other_religion_others,
+
+                        no_disability_male=no_disability_male,
+                        no_disability_female=no_disability_female,
+                        no_disability_others=no_disability_others,
+
+                        low_vision_male=low_vision_male,
+                        low_vision_female=low_vision_female,
+                        low_vision_others=low_vision_others,
+
+                        blindness_male=blindness_male,
+                        blindness_female=blindness_female,
+                        blindness_others=blindness_others,
+
+                        hearing_male=hearing_male,
+                        hearing_female=hearing_female,
+                        hearing_others=hearing_others,
+
+                        locomotor_male=locomotor_male,
+                        locomotor_female=locomotor_female,
+                        locomotor_others=locomotor_others,
+
+                        autism_male=autism_male,
+                        autism_female=autism_female,
+                        autism_others=autism_others,
+
+                        other_disability_male=other_disability_male,
+                        other_disability_female=other_disability_female,
+                        other_disability_others=other_disability_others,
+                    )
+                    created.append({"program": program_name, "id": obj.pk, "created": True})
+
+            except Exception as e:
+                errors.append({"program": program_name, "error": f"DB error: {str(e)}"})
+                continue
+
+    response_status = 200 if not errors else 207
+    resp = {
+        "status": response_status,
+        "created": created,
+        "updated": updated,
+        "errors": errors,
+        "summary": {
+            "created": len(created),
+            "updated": len(updated),
+            "failed": len(errors)
+        }
+    }
+    return JsonResponse(resp, status=response_status)
+
+
+
+def delete_staff_record(request):
+    #soft delete staff aggregate same as students
+    if request.method == 'POST':
+        college_code = request.POST.get('college_code')
+        academic_year = request.POST.get('academic_year')
+
+        try:
+            college = College.objects.get(College_Code=college_code, is_deleted=False)
+        except College.DoesNotExist:
+            return JsonResponse({'status': 404, 'message': 'College not found'})
+
+        staff_master_aggregate.objects.filter(College=college, Academic_Year=academic_year, is_deleted=False).update(is_deleted=True)
+
+        response_data = {
+            'message': 'Staff records deleted successfully',
+            'status': 204
+        }
+        return JsonResponse(response_data)
+
+
+def export_staff_excel(request):
+    if request.method != "POST":
+        return HttpResponseBadRequest("Only POST allowed")
+
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        return HttpResponseBadRequest("Invalid JSON payload")
+
+    year = payload.get("year")
+    if not year:
+        return HttpResponseBadRequest("Missing academic year")
+
+    global_search = (payload.get("search") or "").strip()
+    order_instructions = payload.get("order", []) or []
+
+    # -----------------------
+    # Base queryset (staff aggregates)
+    # -----------------------
+    qs = College.objects.filter(
+        is_deleted=False,
+        staff_aggregates__Academic_Year=year,
+        staff_aggregates__is_deleted=False
+    ).prefetch_related("college_programs", "staff_aggregates").distinct()
+
+    # -----------------------
+    # Global Search
+    # -----------------------
+    if global_search:
+        qs = qs.filter(
+            Q(College_Name__icontains=global_search)
+            | Q(College_Code__icontains=global_search)
+            | Q(address__icontains=global_search)
+            | Q(country__icontains=global_search)
+            | Q(state__icontains=global_search)
+            | Q(District__icontains=global_search)
+            | Q(taluka__icontains=global_search)
+            | Q(city__icontains=global_search)
+            | Q(pincode__icontains=global_search)
+            | Q(college_programs__ProgramName__icontains=global_search)
+            | Q(college_programs__Discipline__icontains=global_search)
+        ).distinct()
+
+    # -----------------------
+    # Ordering support (optional)
+    # -----------------------
+    COLUMN_INDEX_TO_FIELD = {
+        1: "College_Code",
+        2: "College_Name",
+        3: "staff_aggregates__Academic_Year",
+        4: "staff_aggregates__total_staff",
+    }
+    order_by = []
+    try:
+        for pair in order_instructions:
+            if isinstance(pair, (list, tuple)) and len(pair) >= 2:
+                cidx = int(pair[0])
+                direction = (pair[1] or "asc").lower()
+            elif isinstance(pair, dict):
+                cidx = int(pair.get("column") or pair.get("col") or pair.get("0", 0))
+                direction = (pair.get("dir") or "asc").lower()
+            else:
+                continue
+            field = COLUMN_INDEX_TO_FIELD.get(cidx)
+            if field:
+                order_by.append(("-" if direction == "desc" else "") + field)
+    except Exception:
+        order_by = []
+
+    if order_by:
+        qs = qs.order_by(*order_by)
+
+    # -----------------------
+    # Build XLSX
+    # -----------------------
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Staff Records"
+
+    # ---------- HEADERS ----------
+    headers = [
+        "College Code", "College Name", "Address", "Pincode", "Country",
+        "State", "District", "Taluka", "City",
+        "College Type", "Belongs To", "Affiliated To",
+
+        "Discipline", "Program",
+
+        # Staff census columns (staff-area starts at column 15)
+        # Washrooms first (renamed to staff washrooms)
+        "Total Staff Washrooms",   # staff.total_staff_washrooms (or model field mapped below)
+        "Male Staff Washrooms",    # staff.male_staff_washrooms
+        "Female Staff Washrooms",  # staff.female_staff_washrooms
+
+        "Total Staff",             # staff.total_staff
+        "Total Male", "Total Female", "Total Others",
+
+        # caste
+        "OPEN Male", "OPEN Female", "OPEN Others",
+        "OBC Male", "OBC Female", "OBC Others",
+        "SC Male", "SC Female", "SC Others",
+        "ST Male", "ST Female", "ST Others",
+        "NT Male", "NT Female", "NT Others",
+        "VJNT Male", "VJNT Female", "VJNT Others",
+        "EWS Male", "EWS Female", "EWS Others",
+
+        # religion
+        "Hindu Male", "Hindu Female", "Hindu Others",
+        "Muslim Male", "Muslim Female", "Muslim Others",
+        "Sikh Male", "Sikh Female", "Sikh Others",
+        "Christian Male", "Christian Female", "Christian Others",
+        "Jain Male", "Jain Female", "Jain Others",
+        "Buddhist Male", "Buddhist Female", "Buddhist Others",
+        "Other Religion Male", "Other Religion Female", "Other Religion Others",
+
+        # disability
+        "No Disability Male", "No Disability Female", "No Disability Others",
+        "Low Vision Male", "Low Vision Female", "Low Vision Others",
+        "Blindness Male", "Blindness Female", "Blindness Others",
+        "Hearing Impaired Male", "Hearing Impaired Female", "Hearing Impaired Others",
+        "Locomotor Disability Male", "Locomotor Disability Female", "Locomotor Disability Others",
+        "Autism Male", "Autism Female", "Autism Others",
+        "Other Disability Male", "Other Disability Female", "Other Disability Others",
+    ]
+    ws.append(headers)
+
+    # style header
+    header_fill = PatternFill(start_color="006699", fill_type="solid")
+    for col in range(1, len(headers) + 1):
+        c = ws.cell(row=1, column=col)
+        c.font = Font(bold=True, color="FFFFFF")
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    row_num = 2
+
+    # ---------- staff fields (staff-area order) ----------
+    # order: washrooms (3) -> total_staff -> gender totals -> caste/religion/disability...
+    staff_fields = [
+        "total_staff_washrooms", "male_staff_washrooms", "female_staff_washrooms",
+        "total_staff",
+        "total_male", "total_female", "total_others",
+
+        # caste (gender split)
+        "open_male", "open_female", "open_others",
+        "obc_male", "obc_female", "obc_others",
+        "sc_male", "sc_female", "sc_others",
+        "st_male", "st_female", "st_others",
+        "nt_male", "nt_female", "nt_others",
+        "vjnt_male", "vjnt_female", "vjnt_others",
+        "ews_male", "ews_female", "ews_others",
+
+        # religion
+        "hindu_male", "hindu_female", "hindu_others",
+        "muslim_male", "muslim_female", "muslim_others",
+        "sikh_male", "sikh_female", "sikh_others",
+        "christian_male", "christian_female", "christian_others",
+        "jain_male", "jain_female", "jain_others",
+        "buddhist_male", "buddhist_female", "buddhist_others",
+        "other_religion_male", "other_religion_female", "other_religion_others",
+
+        # disability
+        "no_disability_male", "no_disability_female", "no_disability_others",
+        "low_vision_male", "low_vision_female", "low_vision_others",
+        "blindness_male", "blindness_female", "blindness_others",
+        "hearing_male", "hearing_female", "hearing_others",
+        "locomotor_male", "locomotor_female", "locomotor_others",
+        "autism_male", "autism_female", "autism_others",
+        "other_disability_male", "other_disability_female", "other_disability_others",
+    ]
+
+    overall_agg = {f: 0 for f in staff_fields}
+
+    # -----------------------
+    # Iterate colleges and write rows (reading from staff_aggregates)
+    # -----------------------
+    for college in qs:
+        # map program_id -> staff_aggregate record for this year (may be empty)
+        year_records = {
+            r.Program_id: r
+            for r in college.staff_aggregates.filter(Academic_Year=year, is_deleted=False)
+        }
+
+        # group programs by discipline (master)
+        discipline_map = {}
+        for cp in college.college_programs.filter(is_deleted=False):
+            discipline_map.setdefault(cp.Discipline, []).append(cp)
+        if not discipline_map:
+            discipline_map = {"No Discipline": []}
+
+        total_program_rows = sum(len(plist) if plist else 1 for _, plist in discipline_map.items())
+        if total_program_rows <= 0:
+            total_program_rows = 1
+        start_row = row_num
+        end_row = row_num + total_program_rows - 1
+
+        # MERGE college info across the rows (12 meta fields)
+        college_fields = [
+            college.College_Code,
+            college.College_Name,
+            college.address or "",
+            college.pincode or "",
+            college.country or "",
+            college.state or "",
+            college.District or "",
+            college.taluka or "",
+            college.city or "",
+            college.college_type or "",
+            college.belongs_to or "",
+            college.affiliated or "",
+        ]
+        # discipline column = 13, program = 14, staff data starts at 15
         for ci, val in enumerate(college_fields, start=1):
             ws.merge_cells(start_row=start_row, start_column=ci, end_row=end_row, end_column=ci)
             cell = ws.cell(row=start_row, column=ci, value=val)
@@ -2994,43 +4705,64 @@ def export_filtered_excel(request):
                     ws.cell(current_row, 14, "No Program")
                     rec = None
 
-                # write student fields starting at column 15 — if rec is None write zeros
+                # write staff fields starting at column 15
                 if rec:
-                    for i, field in enumerate(student_fields):
-                        v = getattr(rec, field, 0) or 0
+                    for i, field in enumerate(staff_fields):
+                        # try to read field directly; fall back to legacy names if necessary
+                        # support models that still use total_washrooms / total_washrooms names
+                        v = None
+                        # preference to new staff-named fields
+                        if hasattr(rec, field):
+                            v = getattr(rec, field) or 0
+                        else:
+                            # fallback mapping for common legacy names
+                            fallback_map = {
+                                "total_staff_washrooms": "total_washrooms",
+                                "male_staff_washrooms": "male_washrooms",
+                                "female_staff_washrooms": "female_washrooms",
+                                "total_staff": "total_students",
+                            }
+                            fb = fallback_map.get(field)
+                            if fb and hasattr(rec, fb):
+                                v = getattr(rec, fb) or 0
+                            else:
+                                v = getattr(rec, field, 0) or 0
                         ws.cell(current_row, 15 + i, v)
                         overall_agg[field] += v
                 else:
-                    for i, field in enumerate(student_fields):
+                    for i, field in enumerate(staff_fields):
                         ws.cell(current_row, 15 + i, 0)
                 current_row += 1
 
         row_num = end_row + 1
 
+    # -----------------------
     # FINAL AGGREGATE ROW
+    # -----------------------
     agg_row = row_num
     ws.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=12)
     label_cell = ws.cell(agg_row, 1, f"Aggregate Values - {year}")
     label_cell.font = Font(bold=True)
     label_cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Write student-level washroom totals inside the student area:
-    # student columns start at 15:
-    # 15 -> total_washrooms (header "Total Students Washrooms")
-    # 16 -> male_washrooms
-    # 17 -> female_washrooms
-    # 18 -> total_students
-    ws.cell(agg_row, 15, overall_agg.get("total_washrooms", 0))
-    ws.cell(agg_row, 16, overall_agg.get("male_washrooms", 0))
-    ws.cell(agg_row, 17, overall_agg.get("female_washrooms", 0))
-    ws.cell(agg_row, 18, overall_agg.get("total_students", 0))
+    # staff area starts at 15. Because we reordered staff_fields:
+    # 15 -> total_staff_washrooms
+    # 16 -> male_staff_washrooms
+    # 17 -> female_staff_washrooms
+    # 18 -> total_staff
+    ws.cell(agg_row, 15, overall_agg.get("total_staff_washrooms", 0))
+    ws.cell(agg_row, 16, overall_agg.get("male_staff_washrooms", 0))
+    ws.cell(agg_row, 17, overall_agg.get("female_staff_washrooms", 0))
+    ws.cell(agg_row, 18, overall_agg.get("total_staff", 0))
+
+    # style the key staff washroom/total cells
     for col_idx in (15, 16, 17, 18):
         c = ws.cell(agg_row, col_idx)
         c.font = Font(bold=True, color="CC6600")
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # overall student census aggregates starting at column 15
-    for i, field in enumerate(student_fields):
+    # overall staff census aggregates starting at column 15
+    for i, field in enumerate(staff_fields):
         tot = overall_agg[field]
         cell = ws.cell(agg_row, 15 + i, tot)
         cell.font = Font(bold=True, color="CC6600")
@@ -3052,35 +4784,10 @@ def export_filtered_excel(request):
     wb.save(output)
     output.seek(0)
     date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"Statistics_data_{year}_{date_str}.xlsx"
+    filename = f"Staff_Report_{year}_{date_str}.xlsx"
     resp = HttpResponse(
         output.getvalue(),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
     resp["Content-Disposition"] = f'attachment; filename="{filename}"'
     return resp
-
-
-def get_staff_records(request):
-    #datatable backend for staff master page, keep same format as get_student_records
-    pass
-
-
-def add_staff_aggregate(request):
-    #backend for adding record to staff aggregate master database
-    pass
-
-
-def update_staff_aggregate(request):
-    #backedn for updating to staff aggregate master database
-    pass
-
-
-def delete_staff_record(request):
-    #soft delete staff aggregate same as students
-    pass
-
-
-def export_staff_excel(requenst):
-    #backend for exporting excel with datatable search sort filters same as student export
-    pass
