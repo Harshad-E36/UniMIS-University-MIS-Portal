@@ -5,7 +5,7 @@ from django.db.models import Prefetch
 from django.db.models import Q, Sum
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from functools import wraps
 from django.db import transaction
 import json
@@ -100,6 +100,7 @@ def signup(request):
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
+        account_type = request.POST.get('account_type')
 
         if User.objects.filter(username = username).exists():
             response_data = {
@@ -116,6 +117,9 @@ def signup(request):
             return JsonResponse(response_data)
         
         user = User.objects.create_user(username=username, email=email, password=password)
+        if account_type == "admin":
+            user.is_staff = True
+            user.is_superuser = True
         user.save()
 
         response_data = {
@@ -4874,3 +4878,39 @@ def unassigned_users_json(request):
 
 
     return JsonResponse({"users": result})
+    pass
+
+def change_password(request):
+    """
+    Simple change-password view (POST).
+    Expects form-encoded POST fields:
+      - old_password
+      - new_password
+
+    Responses:
+      200: {"success": True}
+      400: {"error": "..."}  (bad input)
+      403: {"error": "..."}  (old password incorrect)
+    """
+    user = request.user
+
+    old = request.POST.get("old_password", "").strip()
+    new = request.POST.get("new_password", "").strip()
+
+    if not old or not new:
+        return JsonResponse({"error": "Both old and new passwords are required."}, status=400)
+
+    # verify current password
+    if not user.check_password(old):
+        return JsonResponse({"error": "Old password is incorrect."}, status=403)
+
+    # set new password and save
+    user.set_password(new)
+    user.save()
+
+    # Note: by default Django does not force logout on password change.
+    # If you WANT to keep the user logged-in you can call:
+    #   update_session_auth_hash(request, user)
+    # But per your instruction, leaving default behavior is fine.
+
+    return JsonResponse({"success": True})
