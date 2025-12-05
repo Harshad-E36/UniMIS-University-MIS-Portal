@@ -39,6 +39,15 @@ def get_client_ip(request):
     
     return ip
 
+ # helper: determine user's college (None => admin / superuser)
+def _get_user_college(user):
+    if user.is_superuser:
+        return None
+    profile = getattr(user, "college_profile", None)
+    if not profile:
+        return None
+    return profile.college
+
 
 # Helper function to safely convert values to int
 def _to_int(value, default=0):
@@ -423,9 +432,28 @@ def delete_record(request):
         }
         return JsonResponse(response_data)
 
-
+@ajax_login_required
 def get_dashboard_data(request):
     if request.method == 'GET':
+
+         # helper: determine user's college (None => admin / superuser)
+        def _get_user_college(user):
+            if user.is_superuser:
+                return None
+            profile = UserCollege.objects.filter(user=user).first()
+            if not profile:
+                return None
+            return profile.college
+
+        user_college = _get_user_college(request.user)
+
+
+        # If not superuser and no college assigned -> forbid
+        if not request.user.is_superuser and not user_college:
+            return JsonResponse(
+                {"detail": "No college assigned to this user. Contact admin."},
+                status=403
+            )
 
         # get academic year from request
         academic_year = request.GET.get('year', None)
@@ -437,8 +465,17 @@ def get_dashboard_data(request):
             student_qs = student_qs.filter(Academic_Year=academic_year)
             staff_qs = staff_qs.filter(Academic_Year=academic_year)
 
+         # apply college restriction for normal user
+        if user_college:
+            student_qs = student_qs.filter(College=user_college)
+            staff_qs = staff_qs.filter(College=user_college)
+
         # colleges aggregates
-        total_colleges = College.objects.filter(is_deleted=False).count()
+        if request.user.is_superuser:
+            total_colleges = College.objects.filter(is_deleted=False).count()
+        else:
+            total_colleges = 1 if (user_college and not user_college.is_deleted) else 0
+
         total_students = student_qs.aggregate(total=Sum('total_students'))['total'] or 0
         total_staff = staff_qs.aggregate(total=Sum('total_staff'))['total'] or 0
 
@@ -4919,6 +4956,11 @@ User = get_user_model()
 def unassigned_users_json(request):
 
     if request.method == "GET":
+
+        mode = request.GET.get("mode", "add")          # "add" or "edit"
+        college_code = request.GET.get("college_code", "").strip()
+
+        print("mode: ", mode, "college_code", college_code)
         # fetch only active users (optional) and exclude superusers
         users = User.objects.filter(is_active=True).exclude(is_superuser=True)
         # left join idea: users without profile.college set
@@ -4933,8 +4975,12 @@ def unassigned_users_json(request):
         for u in qs.order_by("username")[:500]:
             result.append({"id": u.id, "username": u.username})
 
+        
+
 
     return JsonResponse({"users": result})
+
+
 
 
 def change_password(request):
