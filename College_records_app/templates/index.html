@@ -2212,8 +2212,11 @@
               if (response.status === 200) {
                 // keep original counters
                 updateDashboardCounters(response);
-
-              } else {
+              } 
+              else if (response.status === 403){
+                showNotification(response.detail || "No college assigned to this user.", "error");
+              }
+              else {
                 showNotification("Failed to load dashboard data.", "error");
               }
             },
@@ -2495,10 +2498,14 @@
           year: year   // <-- matches backend param name
         },
         success: function (response) {
+          console.log(response.status)
           if (response && response.status === 200) {
             updateDashboardCounters(response);
-
-          } else {
+          }
+          else if (response.status === 403) {
+            showNotification(response.detail || "No college assigned to this user.", "error");
+          }
+          else {
             showNotification("Failed to load dashboard data.", "error");
           }
         },

@@ -1131,29 +1131,59 @@
 
     $('#RecordsModal').on('show.bs.modal', function (e) {
       var $select = $('#assigned_user_id');
-      // prevent refetching if already populated
-      if ($select.data('loaded')) return;
+      var target = $(e.relatedTarget);   // button that opened the modal
 
-      $select.empty().append('<option value="" disabled selected>Loading users...</option>');
+      // In edit mode, your .btn-edit has data-rowid
+      var recordId = target.attr("data-rowid");
+      var isEdit = recordId && recordId !== "0";
+
+      // Always reload list
+      $select.empty().append('<option value="" disabled>Loading users...</option>');
+
+      var ajaxData = {};
+      if (isEdit) {
+        // For edit mode, send the college id so backend can:
+        // - include the currently assigned user
+        // - plus unassigned users
+        ajaxData.college_id = recordId;
+      }
 
       $.ajax({
         url: "{% url 'unassigned_users_json' %}",
         type: "GET",
         dataType: "json",
+        data: ajaxData,
         success: function (resp) {
           $select.empty();
           var users = resp.users || [];
+          var currentUserId = resp.current_user_id || null;
+
           if (!users.length) {
-            $select.append('<option value="" disabled selected>No unassigned users</option>');
-            $select.data('loaded', true);
+            $select.append('<option value="" disabled selected>No users available</option>');
             return;
           }
-          $select.append('<option value="" disabled selected>Select user</option>');
+
+          // Add placeholder
+          var $placeholder = $('<option>', {
+            value: '',
+            text: 'Select user',
+            disabled: true
+          });
+          $select.append($placeholder);
+
+          // Add all users (unassigned + current)
           users.forEach(function (u) {
             var label = u.username;
             $select.append($('<option>', { value: u.id, text: label }));
           });
-          $select.data('loaded', true);
+
+          if (isEdit && currentUserId) {
+            // EDIT MODE → preselect the already assigned user
+            $select.val(String(currentUserId));
+          } else {
+            // ADD MODE → keep placeholder selected so user has to choose
+            $placeholder.prop('selected', true);
+          }
         },
         error: function (xhr) {
           console.error('Failed to load users', xhr);
@@ -1161,6 +1191,7 @@
         }
       });
     });
+
 
 
     //EDIT BUTTON
@@ -1173,17 +1204,23 @@
 
 
 
-    // LOAD DATA INTO MODAL
+    // ===========================
+    // LOAD EXISTING DATA INTO MODAL (EDIT MODE)
+    // ===========================
     $('#RecordsModal').on('show.bs.modal', function (e) {
 
       const $modal = $(this);
-      const target = $(e.relatedTarget);   // <-- the clicked edit button
+      const target = $(e.relatedTarget);   // The clicked edit button
 
-      const id = Number(target.attr("data-rowid"));
+      // If modal opened by ADD button → do nothing here
+      const id = Number(target.attr("data-rowid") || 0);
+      if (!id) return;  // Add mode → skip this entire block
+
       const code = target.attr("data-code");
 
       const table = $('#records_table').DataTable();
 
+      // Find the data row from DataTable
       const row = table
         .rows()
         .data()
@@ -1192,19 +1229,22 @@
 
       if (!row) return;
 
-      // === Fill modal ===
+      // === SET MODAL STATE FOR EDIT MODE ===
       $modal.find('.modal-title').text('Edit Record');
       $modal.find('#submit_button').text('Edit');
       $modal.find('#record_id').val(id);
 
+      // === POPULATE BASIC FIELDS ===
       $modal.find('#college_code').val(row.college_code);
       $modal.find('#college_name').val(row.college_name);
       $modal.find('#address').val(row.address);
       $modal.find('#country').val(row.country);
       $modal.find('#state').val(row.state);
 
+      // District → triggers taluka/city load
       $modal.find('#district').val(row.district).trigger('change');
 
+      // Taluka & City must wait for dependent AJAX
       setTimeout(() => {
         $modal.find('#taluka').val(row.taluka);
         $modal.find('#city').val(row.city);
@@ -1215,23 +1255,30 @@
       $modal.find('#belongs_to').val(row.belongs_to);
       $modal.find('#affiliated_to').val(row.affiliated);
 
-      // === Discipline & Courses ===
+      // ================================
+      // POPULATE DISCIPLINES & PROGRAMS
+      // ================================
       const programsMap = row.programs || {};
       const disciplines = Object.keys(programsMap);
 
+      // Reset all checkboxes
       $modal.find('.discipline-checkbox').prop('checked', false);
 
+      // Re-check disciplines
       disciplines.forEach(d => {
         $modal.find(`.discipline-checkbox[value="${d}"]`).prop('checked', true);
       });
 
+      // Prepare courses data
       const coursesByDiscipline = {};
       Object.entries(programsMap).forEach(([disc, list]) => {
         coursesByDiscipline[disc] = [...list];
       });
 
+      // Render dropdowns
       createCourseDropdowns(disciplines, coursesByDiscipline);
     });
+
 
     // ================= RESET =================
     $('#RecordsModal').on('hidden.bs.modal', function () {

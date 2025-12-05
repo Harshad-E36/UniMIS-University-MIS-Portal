@@ -437,6 +437,7 @@ def get_dashboard_data(request):
     if request.method == 'GET':
 
          # helper: determine user's college (None => admin / superuser)
+        
         def _get_user_college(user):
             if user.is_superuser:
                 return None
@@ -450,10 +451,13 @@ def get_dashboard_data(request):
 
         # If not superuser and no college assigned -> forbid
         if not request.user.is_superuser and not user_college:
-            return JsonResponse(
-                {"detail": "No college assigned to this user. Contact admin."},
-                status=403
-            )
+            print("inside")
+            response_data = {
+                "detail": "No college assigned to this user. Contact admin.",
+                 'status' :403
+            }
+            return JsonResponse(response_data)
+                
 
         # get academic year from request
         academic_year = request.GET.get('year', None)
@@ -4957,23 +4961,58 @@ def unassigned_users_json(request):
 
     if request.method == "GET":
 
-        mode = request.GET.get("mode", "add")          # "add" or "edit"
-        college_code = request.GET.get("college_code", "").strip()
+         college_id = request.GET.get("college_id")
 
-        print("mode: ", mode, "college_code", college_code)
-        # fetch only active users (optional) and exclude superusers
-        users = User.objects.filter(is_active=True).exclude(is_superuser=True)
-        # left join idea: users without profile.college set
-        # If some users don't have a profile, treat them as unassigned (we will create profile when assigning)
-        # Use filtering with reverse lookup on UserCollege (if you used related_name 'college_profile', adapt accordingly)
+    current_user = None
+    current_user_id = None
 
-        assigned_user_ids = UserCollege.objects.filter(college__isnull=False).values_list("user_id", flat=True)
-        qs = users.exclude(id__in=list(assigned_user_ids))
+    # 1) In edit mode, find current user assigned to this college (if any)
+    if college_id:
+        profile = (
+            UserCollege.objects
+            .filter(college_id=college_id)
+            .select_related("user")
+            .first()
+        )
+        if profile and profile.user:
+            current_user = profile.user
+            current_user_id = current_user.id
 
-        result = []
+    # 2) Base: all active, non-superuser users
+    base_users = User.objects.filter(is_active=True, is_superuser=False)
 
-        for u in qs.order_by("username")[:500]:
-            result.append({"id": u.id, "username": u.username})
+    # 3) Users already assigned to some college
+    assigned_user_ids = list(
+        UserCollege.objects
+        .filter(college__isnull=False)
+        .values_list("user_id", flat=True)
+    )
+
+    # 4) Unassigned = base - assigned
+    unassigned_users_qs = base_users.exclude(id__in=assigned_user_ids)
+
+    result = []
+
+    # 5) If we're editing and the college already has a user, include that user first
+    if current_user:
+        result.append({
+            "id": current_user.id,
+            "username": current_user.username,
+            "is_current": True,
+        })
+
+    # 6) Add all unassigned users
+    for u in unassigned_users_qs.order_by("username"):
+        result.append({
+            "id": u.id,
+            "username": u.username,
+            "is_current": False,
+        })
+
+    return JsonResponse({
+        "users": result,
+        "current_user_id": current_user_id,
+    })
 
         
 
