@@ -180,6 +180,7 @@ def add_edit_record(request):
 
     college_code = request.POST.get('college_code')
     college_name = request.POST.get('college_name')
+
     address = request.POST.get('address')
     country = request.POST.get('country')
     state = request.POST.get('state')
@@ -372,6 +373,7 @@ def get_dashboard_data(request):
         staff_qs = staff_master_aggregate.objects.filter(is_deleted=False)
         if academic_year:
             student_qs = student_qs.filter(Academic_Year=academic_year)
+            staff_qs = staff_qs.filter(Academic_Year=academic_year)
 
         # colleges aggregates
         total_colleges = College.objects.filter(is_deleted=False).count()
@@ -4848,3 +4850,7 @@ def export_staff_excel(request):
     )
     resp["Content-Disposition"] = f'attachment; filename=\"{filename}\"'
     return resp
+
+
+def unassigned_users_json(request):
+    pass
