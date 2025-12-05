@@ -4878,7 +4878,7 @@ def unassigned_users_json(request):
 
 
     return JsonResponse({"users": result})
-    pass
+
 
 def change_password(request):
     """
