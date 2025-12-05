@@ -185,7 +185,6 @@ def add_edit_record(request):
 
     college_code = request.POST.get('college_code')
     college_name = request.POST.get('college_name')
-
     address = request.POST.get('address')
     country = request.POST.get('country')
     state = request.POST.get('state')
@@ -196,6 +195,20 @@ def add_edit_record(request):
     college_type = request.POST.get('college_type')
     belongs_to = request.POST.get('belongs_to')
     affiliated = request.POST.get('affiliated_to')
+
+    assigned_user = request.POST.get('assigned_user_id')
+
+    if not assigned_user:
+        return JsonResponse({"error": "Please select a user to assign."}, status=400)
+    
+    if not college_code or not college_name:
+        return JsonResponse({"error": "Missing college code or name."}, status=400)
+    
+    # get user
+    try:
+        user = User.objects.get(id=int(assigned_user))
+    except (User.DoesNotExist, ValueError):
+        return JsonResponse({"error": "Selected user does not exist."}, status=400)
 
     # Parse JSON safely
     programs_json = request.POST.get('disciplines_programs', '[]')
@@ -213,6 +226,35 @@ def add_edit_record(request):
             return JsonResponse({"status": 404, "message": "Record not found"}, status=404)
 
         with transaction.atomic():
+
+             # ---------- USER REASSIGNMENT LOGIC ----------
+            # 1) Find any profiles currently pointing to this college
+            existing_profiles = list(UserCollege.objects.filter(college=college))
+
+            # 2) Get (or later create) profile for the selected user
+            target_profile = UserCollege.objects.filter(user=user).first()
+
+            # If this user is already assigned to a DIFFERENT college, block
+            if target_profile and target_profile.college and target_profile.college != college:
+                return JsonResponse(
+                    {"error": "Selected user is already assigned to another college."},
+                    status=409
+                )
+
+            # 3) Clear previous owners of this college (if any), except the selected user
+            for p in existing_profiles:
+                if p.user_id != user.id:
+                    p.college = None
+                    p.save(update_fields=['college'])
+
+            # 4) Ensure selected user now owns this college
+            if not target_profile:
+                UserCollege.objects.create(user=user, college=college)
+            else:
+                target_profile.college = college
+                target_profile.save(update_fields=['college'])
+
+
             # ---- Update college basic data ----
             college.College_Code = college_code
             college.College_Name = college_name
@@ -318,6 +360,12 @@ def add_edit_record(request):
         return JsonResponse({"status": 200, "message": "Record updated successfully"})
 
     # =============== ADD MODE =============== 
+
+    # Check if this user is already assigned to some college
+    UserExist = UserCollege.objects.filter(user=user).first()
+    if UserExist and UserExist.college:
+        return JsonResponse({"error": "User already assigned to a college."}, status=409)
+
     with transaction.atomic():
         college = College.objects.create(
             College_Code=college_code,
@@ -348,6 +396,15 @@ def add_edit_record(request):
                 ProgramName=program_name
             )
         # (Usually no student_aggregate_master rows yet in ADD mode)
+       
+        # ---- Assign this college to the selected user ----
+        if UserExist:
+            # Profile exists but had no college assigned
+            UserExist.college = college
+            UserExist.save(update_fields=['college'])
+        else:
+            # No profile yet → create it
+            UserCollege.objects.create(user=user, college=college)
 
     return JsonResponse({"status": 201, "message": "Record added successfully"})
 
