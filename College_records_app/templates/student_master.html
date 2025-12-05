@@ -1875,7 +1875,6 @@
     // ADD MODE - When user enters college code to add new records
     $("#submitCollegeCode").on("click", function () {
       const collegeCode = $("#collegeCodeInput").val().trim();
-      console.log("clicked")
 
       if (!collegeCode) {
         showNotification("Please enter a college code", "danger");
@@ -1892,7 +1891,6 @@
         },
         success: function (response) {
           if (response.status === 200 && response.mode === "add") {
-            console.log(response)
             populateAddModal(response);
             $("#collegeModal").data("mode", "add");
             $("#collegeModal").modal("show");
@@ -2015,7 +2013,6 @@
         academic_year: academicYear,
         records: records
       };
-      console.log(records);
 
       // send (URLs unchanged)
       if (mode === "add") {

@@ -33,7 +33,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
 
-  <title>staff Records</title>
+  <title>Staff Records</title>
 
   <style>
     /* =========================================================
@@ -1691,7 +1691,7 @@
           const acc = tplItem.content.cloneNode(true);
 
           const btn = acc.querySelector(".accordion-button");
-          btn.textContent = `${p.name} (Total Staff: ${p.total_students})`;
+          btn.textContent = `${p.name} (Total Staff: ${p.total_staff})`;
           btn.setAttribute("data-bs-toggle", "collapse");
           btn.setAttribute("data-bs-target", `#collapse-${row.college_code}-${groupIndex}-${i}`);
 
@@ -1855,10 +1855,9 @@
       icon.toggleClass("bi-chevron-down bi-chevron-up");
     });
 
-    // ADD MODE - When user enters college code to add new records
-    $(document).on("click", "#submitCollegeCode", function () {
+     // ADD MODE - When user enters college code to add new records
+    $("#submitCollegeCode").on("click", function () {
       const collegeCode = $("#collegeCodeInput").val().trim();
-      console.log("clicked")
 
       if (!collegeCode) {
         showNotification("Please enter a college code", "danger");
@@ -1871,11 +1870,10 @@
         data: {
           college_code: collegeCode,
           mode: "add",
-          page:"staff"
+          page: "student"
         },
         success: function (response) {
           if (response.status === 200 && response.mode === "add") {
-            console.log(response)
             populateAddModal(response);
             $("#collegeModal").data("mode", "add");
             $("#collegeModal").modal("show");
@@ -1892,7 +1890,7 @@
         }
       });
     });
-
+ 
     // Submit handler — staff variant
     $(document).on('click', '#submitStaffRecordForm', function () {
       const collegeCode = $("#collegeModal").data("college-code");

@@ -1800,7 +1800,7 @@
     // Colleges & total students & staff
     animateCount($("#colleges_num"), data.total_colleges);
     animateCount($("#students_num"), data.total_students);
-    animateCount($("#staff_num"),0)
+    animateCount($("#staff_num"), data.total_staff)
 
     // STUDENT RECORDS UPDATER
     // gender
@@ -1919,6 +1919,120 @@
     animateCount($("#other_disability_stu_others"), data.other_disability_stu_others);
 
     // STAFF RECORD UPDATER
+    // gender
+    animateCount($("#gender_stf_male"), data.total_stf_male);
+    animateCount($("#gender_stf_female"), data.total_stf_female);
+    animateCount($("#gender_stf_others"), data.total_stf_others);
+
+    // washrooms
+    animateCount($("#total_stf_washrooms"), data.total_stf_washrooms);
+    animateCount($("#male_stf_washrooms"), data.male_stf_washrooms);
+    animateCount($("#female_stf_washrooms"), data.female_stf_washrooms);
+
+    // category — Open
+    animateCount($("#open_stf_male"), data.open_stf_male);
+    animateCount($("#open_stf_female"), data.open_stf_female);
+    animateCount($("#open_stf_others"), data.open_stf_others);
+
+    // category — OBC
+    animateCount($("#obc_stf_male"), data.obc_stf_male);
+    animateCount($("#obc_stf_female"), data.obc_stf_female);
+    animateCount($("#obc_stf_others"), data.obc_stf_others);
+
+    // category — SC
+    animateCount($("#sc_stf_male"), data.sc_stf_male);
+    animateCount($("#sc_stf_female"), data.sc_stf_female);
+    animateCount($("#sc_stf_others"), data.sc_stf_others);
+
+    // category — ST
+    animateCount($("#st_stf_male"), data.st_stf_male);
+    animateCount($("#st_stf_female"), data.st_stf_female);
+    animateCount($("#st_stf_others"), data.st_stf_others);
+
+    // category — NT
+    animateCount($("#nt_stf_male"), data.nt_stf_male);
+    animateCount($("#nt_stf_female"), data.nt_stf_female);
+    animateCount($("#nt_stf_others"), data.nt_stf_others);
+
+    // category — VJNT
+    animateCount($("#vjnt_stf_male"), data.vjnt_stf_male);
+    animateCount($("#vjnt_stf_female"), data.vjnt_stf_female);
+    animateCount($("#vjnt_stf_others"), data.vjnt_stf_others);
+
+    // category — EWS
+    animateCount($("#ews_stf_male"), data.ews_stf_male);
+    animateCount($("#ews_stf_female"), data.ews_stf_female);
+    animateCount($("#ews_stf_others"), data.ews_stf_others);
+
+    // religion — Hindu
+    animateCount($("#hindu_stf_male"), data.hindu_stf_male);
+    animateCount($("#hindu_stf_female"), data.hindu_stf_female);
+    animateCount($("#hindu_stf_others"), data.hindu_stf_others);
+
+    // religion — Muslim
+    animateCount($("#muslim_stf_male"), data.muslim_stf_male);
+    animateCount($("#muslim_stf_female"), data.muslim_stf_female);
+    animateCount($("#muslim_stf_others"), data.muslim_stf_others);
+
+    // religion — Sikh
+    animateCount($("#sikh_stf_male"), data.sikh_stf_male);
+    animateCount($("#sikh_stf_female"), data.sikh_stf_female);
+    animateCount($("#sikh_stf_others"), data.sikh_stf_others);
+
+    // religion — Christian
+    animateCount($("#christian_stf_male"), data.christian_stf_male);
+    animateCount($("#christian_stf_female"), data.christian_stf_female);
+    animateCount($("#christian_stf_others"), data.christian_stf_others);
+
+    // religion — Jain
+    animateCount($("#jain_stf_male"), data.jain_stf_male);
+    animateCount($("#jain_stf_female"), data.jain_stf_female);
+    animateCount($("#jain_stf_others"), data.jain_stf_others);
+
+    // religion — Buddhist
+    animateCount($("#buddhist_stf_male"), data.buddhist_stf_male);
+    animateCount($("#buddhist_stf_female"), data.buddhist_stf_female);
+    animateCount($("#buddhist_stf_others"), data.buddhist_stf_others);
+
+    // religion — Other
+    animateCount($("#other_religion_stf_male"), data.other_religion_stf_male);
+    animateCount($("#other_religion_stf_female"), data.other_religion_stf_female);
+    animateCount($("#other_religion_stf_others"), data.other_religion_stf_others);
+
+    // disability — No Disability
+    animateCount($("#no_disability_stf_male"), data.no_disability_stf_male);
+    animateCount($("#no_disability_stf_female"), data.no_disability_stf_female);
+    animateCount($("#no_disability_stf_others"), data.no_disability_stf_others);
+
+    // disability — Low Vision
+    animateCount($("#lowvision_stf_male"), data.low_vision_stf_male);
+    animateCount($("#lowvision_stf_female"), data.low_vision_stf_female);
+    animateCount($("#lowvision_stf_others"), data.low_vision_stf_others);
+
+    // disability — Blindness
+    animateCount($("#blindness_stf_male"), data.blindness_stf_male);
+    animateCount($("#blindness_stf_female"), data.blindness_stf_female);
+    animateCount($("#blindness_stf_others"), data.blindness_stf_others);
+
+    // disability — Hearing Impaired
+    animateCount($("#hearing_stf_male"), data.hearing_stf_male);
+    animateCount($("#hearing_stf_female"), data.hearing_stf_female);
+    animateCount($("#hearing_stf_others"), data.hearing_stf_others);
+
+    // disability — Locomotor
+    animateCount($("#locomotor_stf_male"), data.locomotor_stf_male);
+    animateCount($("#locomotor_stf_female"), data.locomotor_stf_female);
+    animateCount($("#locomotor_stf_others"), data.locomotor_stf_others);
+
+    // disability — Autism
+    animateCount($("#autism_stf_male"), data.autism_stf_male);
+    animateCount($("#autism_stf_female"), data.autism_stf_female);
+    animateCount($("#autism_stf_others"), data.autism_stf_others);
+
+    // disability — Other
+    animateCount($("#other_disability_stf_male"), data.other_disability_stf_male);
+    animateCount($("#other_disability_stf_female"), data.other_disability_stf_female);
+    animateCount($("#other_disability_stf_others"), data.other_disability_stf_others);
   }
 
   function gatherSelectedFilters() {
@@ -2138,7 +2252,6 @@
     $("#applyFilter").click(function () {
 
       let selectedFilters = gatherSelectedFilters();
-      console.log("Selected Filters:", selectedFilters);
 
       // Check if at least one filter is selected
       let hasSelection = Object.entries(selectedFilters)
@@ -2220,7 +2333,6 @@
     $("#export_filtered_excel").click(function () {
       // Initialize an object to hold all selected filters
       let selectedFilters = gatherSelectedFilters();
-      console.log("Selected Filters:", selectedFilters);
 
       // Send AJAX request
       $.ajax({

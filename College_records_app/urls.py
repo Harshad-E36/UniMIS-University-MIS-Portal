@@ -31,4 +31,6 @@ urlpatterns = [
     path("edit_staff/", views.update_staff_aggregate, name="edit_staff"),
     path("delete-staff-record/", views.delete_staff_record, name="delete_staff_record"),
     path("export-staff-excel/", views.export_staff_excel, name="export_staff_excel"),
+
+    path('users/unassigned-json/', views.unassigned_users_json, name='unassigned_users_json'),
 ]

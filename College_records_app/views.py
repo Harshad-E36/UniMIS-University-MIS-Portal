@@ -180,6 +180,7 @@ def add_edit_record(request):
 
     college_code = request.POST.get('college_code')
     college_name = request.POST.get('college_name')
+
     address = request.POST.get('address')
     country = request.POST.get('country')
     state = request.POST.get('state')
@@ -366,13 +367,13 @@ def get_dashboard_data(request):
 
         # get academic year from request
         academic_year = request.GET.get('year', None)
-        print(academic_year)
 
         # base queryset for students (filtered by academic_year if provided)
         student_qs = student_aggregate_master.objects.filter(is_deleted=False)
         staff_qs = staff_master_aggregate.objects.filter(is_deleted=False)
         if academic_year:
             student_qs = student_qs.filter(Academic_Year=academic_year)
+            staff_qs = staff_qs.filter(Academic_Year=academic_year)
 
         # colleges aggregates
         total_colleges = College.objects.filter(is_deleted=False).count()
@@ -388,9 +389,8 @@ def get_dashboard_data(request):
             return staff_qs.aggregate(total = Sum(field))['total'] or 0
         
         def stu_washrooms_agg(field):
-            s = student_qs.aggregate(total=Sum(field))['total'] or 0
-            print(s)
-            return s
+            return student_qs.aggregate(total=Sum(field))['total'] or 0
+            
         def stf_washrooms_agg(field):
             return staff_qs.aggregate(total = Sum(field))['total'] or 0
 
@@ -1815,7 +1815,6 @@ def update_student_aggregate(request):
                 others = _to_int(gender.get("others") or gender.get("other"), 0)
 
                 washrooms = data.get("washrooms", {}) or {}
-                print(washrooms)
                 total_washrooms = _to_int(washrooms.get("total"), 0)
                 male_washrooms = _to_int(washrooms.get("male"), 0)
                 female_washrooms = _to_int(washrooms.get("female"), 0)
@@ -2470,7 +2469,7 @@ def get_college_records(request):
             Q(belongs_to__icontains=search_value) |
             Q(affiliated__icontains=search_value) |
             Q(college_programs__Discipline__icontains=search_value) |
-            Q(college_programs__ProgramName__contains=search_value)
+            Q(college_programs__ProgramName__icontains=search_value)
         ).distinct()
 
     qs = qs.prefetch_related(program_prefetch)
@@ -2584,7 +2583,7 @@ def export_colleges_excel(request):
     # if extra_filters.get('state'):
     #     qs = qs.filter(state=extra_filters['state'])
 
-    # Global search across relevant fields
+    # Global search across relevant fields (keeps same behavior as DataTables search)
     if search_text:
         qs = qs.filter(
             Q(College_Code__icontains=search_text) |
@@ -2600,10 +2599,10 @@ def export_colleges_excel(request):
             Q(belongs_to__icontains=search_text) |
             Q(affiliated__icontains=search_text) |
             Q(college_programs__Discipline__icontains=search_text) |
-            Q(college_programs__ProgramName__contains=search_text)
+            Q(college_programs__ProgramName__icontains=search_text)
         )
 
-    # Apply ordering mapped from DataTables indices to model fields
+    # Apply ordering mapped from DataTables indices to model fields (if provided)
     if order_instructions and isinstance(order_instructions, list):
         order_by = []
         for ord_pair in order_instructions:
@@ -2648,20 +2647,39 @@ def export_colleges_excel(request):
 
     # Iterate over colleges (qs already filtered & ordered)
     for college in qs:
-        # Group programs under each discipline
-        discipline_map = {}
-        for cp in college.college_programs.all():
-            disc = getattr(cp, 'Discipline', None) or 'No Discipline'
-            prog = (
-                getattr(cp, 'ProgramName', None) or
-                getattr(cp, 'Program', None) or
-                getattr(cp, 'name', None) or
-                'No Program'
-            )
-            discipline_map.setdefault(disc, []).append(prog)
+        # Build program queryset for this college
+        college_program_qs = college.college_programs.filter(is_deleted=False)
 
-        if not discipline_map:
-            discipline_map = {"No Discipline": ["No Programs"]}
+        # If user used the datatable searchbar, interpret search_text to restrict programs:
+        # - include programs whose Discipline or ProgramName contain the search_text
+        # - if none match for this college, skip the college entirely (user searched specifically)
+        if search_text:
+            allowed_cps = list(college_program_qs.filter(
+                Q(Discipline__icontains=search_text) | Q(ProgramName__icontains=search_text)
+            ))
+            # If the global search matched the college-level fields (eg. college name) but no programs
+            # match the search_text, user requested filtering by discipline/program→skip this college.
+            if not allowed_cps:
+                # If you prefer to still include colleges matched by college fields even when no programs match,
+                # comment out this continue and set allowed_cps = list(college_program_qs)
+                continue
+        else:
+            # No search_text → include all programs
+            allowed_cps = list(college_program_qs)
+
+        # If still no programs (college has none), create a single placeholder row
+        if not allowed_cps:
+            allowed_cps = [None]
+
+        # Group allowed programs under each discipline
+        discipline_map = {}
+        for cp in allowed_cps:
+            if cp is None:
+                discipline_map.setdefault("No Discipline", []).append(None)
+            else:
+                disc = getattr(cp, 'Discipline', None) or 'No Discipline'
+                prog = getattr(cp, 'ProgramName', None) or 'No Program'
+                discipline_map.setdefault(disc, []).append(prog)
 
         discipline_list = list(discipline_map.items())
 
@@ -2687,7 +2705,6 @@ def export_colleges_excel(request):
             getattr(college, 'college_type', '') or '',
             getattr(college, 'belongs_to', '') or '',
             getattr(college, 'affiliated', '') or '',
-            # college-level washrooms removed
         ]
 
         for col_index, value in enumerate(college_fields, start=1):
@@ -2706,7 +2723,7 @@ def export_colleges_excel(request):
             discipline_start_row = current_row
             discipline_end_row = current_row + discipline_rowspan - 1
 
-            # Merge discipline cell (column 13 now, since we removed washrooms)
+            # Merge discipline cell (column 13)
             ws.merge_cells(
                 start_row=discipline_start_row, start_column=13,
                 end_row=discipline_end_row, end_column=13
@@ -2751,6 +2768,7 @@ def export_colleges_excel(request):
     wb.save(response)
     return response
 
+
 @ajax_login_required
 def export_student_excel(request):
     if request.method != "POST":
@@ -2778,7 +2796,7 @@ def export_student_excel(request):
     ).prefetch_related("college_programs", "student_aggregates").distinct()
 
     # -----------------------
-    # Global Search (restored)
+    # Global Search - keep same fields as DataTable
     # -----------------------
     if global_search:
         qs = qs.filter(
@@ -2796,17 +2814,15 @@ def export_student_excel(request):
         ).distinct()
 
     # -----------------------
-    # Ordering support (optional; payload 'order' should be list of [column_index, dir] pairs)
-    # Map visible column indexes to model fields if you want server-side ordering.
-    # NOTE: Column mapping assumes columns before student area are the meta columns.
+    # Ordering (DataTables-style)
     # -----------------------
     COLUMN_INDEX_TO_FIELD = {
         1: "College_Code",
         2: "College_Name",
         3: "student_aggregates__Academic_Year",
-        # Depending on your frontend column ordering, adjust index 4 mapping if needed:
         4: "student_aggregates__total_students",
     }
+
     order_by = []
     try:
         for pair in order_instructions:
@@ -2822,13 +2838,13 @@ def export_student_excel(request):
             if field:
                 order_by.append(("-" if direction == "desc" else "") + field)
     except Exception:
-        order_by = []
+        pass
 
     if order_by:
         qs = qs.order_by(*order_by)
 
     # -----------------------
-    # Build XLSX
+    # Build Excel File
     # -----------------------
     wb = Workbook()
     ws = wb.active
@@ -2842,13 +2858,12 @@ def export_student_excel(request):
 
         "Discipline", "Program",
 
-        # Student census columns (student-area starts at column 15)
-        # Washrooms first (renamed the first washroom header as requested)
-        "Total Students Washrooms",   # student.total_washrooms
-        "Male Students washrooms",             # student.male_washrooms
-        "Female Students washrooms",           # student.female_washrooms
+        # Student data columns start here
+        "Total Students Washrooms",
+        "Male Students washrooms",
+        "Female Students washrooms",
 
-        "Total Students",             # student.total_students
+        "Total Students",
         "Total Male", "Total Female", "Total Others",
 
         # caste
@@ -2880,7 +2895,7 @@ def export_student_excel(request):
     ]
     ws.append(headers)
 
-    # style header
+    # Style header
     header_fill = PatternFill(start_color="006699", fill_type="solid")
     for col in range(1, len(headers) + 1):
         c = ws.cell(row=1, column=col)
@@ -2888,16 +2903,10 @@ def export_student_excel(request):
         c.fill = header_fill
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    row_num = 2
-
-    # ---------- student fields (student-area order) ----------
-    # order: washrooms (3) -> total_students -> gender totals -> caste/religion/disability...
     student_fields = [
         "total_washrooms", "male_washrooms", "female_washrooms",
         "total_students",
         "total_male", "total_female", "total_others",
-
-        # caste (gender split)
         "open_male", "open_female", "open_others",
         "obc_male", "obc_female", "obc_others",
         "sc_male", "sc_female", "sc_others",
@@ -2905,8 +2914,6 @@ def export_student_excel(request):
         "nt_male", "nt_female", "nt_others",
         "vjnt_male", "vjnt_female", "vjnt_others",
         "ews_male", "ews_female", "ews_others",
-
-        # religion
         "hindu_male", "hindu_female", "hindu_others",
         "muslim_male", "muslim_female", "muslim_others",
         "sikh_male", "sikh_female", "sikh_others",
@@ -2914,8 +2921,6 @@ def export_student_excel(request):
         "jain_male", "jain_female", "jain_others",
         "buddhist_male", "buddhist_female", "buddhist_others",
         "other_religion_male", "other_religion_female", "other_religion_others",
-
-        # disability
         "no_disability_male", "no_disability_female", "no_disability_others",
         "low_vision_male", "low_vision_female", "low_vision_others",
         "blindness_male", "blindness_female", "blindness_others",
@@ -2927,30 +2932,60 @@ def export_student_excel(request):
 
     overall_agg = {f: 0 for f in student_fields}
 
+    row_num = 2
+
     # -----------------------
-    # Iterate colleges and write rows
+    # MAIN LOOP — includes discipline/program filtering logic
     # -----------------------
     for college in qs:
-        # map program_id -> student_aggregate record for this year (may be empty)
+
+        # 1) Find only the year aggregates for this college
         year_records = {
             r.Program_id: r
             for r in college.student_aggregates.filter(Academic_Year=year, is_deleted=False)
         }
 
-        # group programs by discipline (master)
-        discipline_map = {}
-        for cp in college.college_programs.filter(is_deleted=False):
-            discipline_map.setdefault(cp.Discipline, []).append(cp)
-        if not discipline_map:
-            discipline_map = {"No Discipline": []}
+        # 2) Determine allowed college programs based on global_search
+        master_programs = college.college_programs.filter(is_deleted=False)
 
-        total_program_rows = sum(len(plist) if plist else 1 for _, plist in discipline_map.items())
+        if global_search:
+            # only allow programs whose discipline or program name match search
+            allowed_programs = list(master_programs.filter(
+                Q(Discipline__icontains=global_search) |
+                Q(ProgramName__icontains=global_search)
+            ))
+
+            # If the global search matched the college-level fields but no programs match the search_text,
+            # we skip the college (user is searching specifically for program/discipline).
+            if not allowed_programs:
+                continue
+        else:
+            # no search filtering → include all programs
+            allowed_programs = list(master_programs)
+
+        # Guard: ensure at least one placeholder row when there are no programs
+        if not allowed_programs:
+            allowed_programs = [None]
+
+        # 3) Build discipline → program_list mapping from ONLY allowed programs
+        discipline_map = {}
+        for cp in allowed_programs:
+            if cp is None:
+                discipline_map.setdefault("No Discipline", []).append(None)
+            else:
+                discipline_map.setdefault(cp.Discipline or "Unspecified", []).append(cp)
+
+        discipline_list = list(discipline_map.items())
+
+        # 4) Setup row merging
+        total_program_rows = sum(len(v) if v else 1 for _, v in discipline_list)
         if total_program_rows <= 0:
             total_program_rows = 1
+
         start_row = row_num
         end_row = row_num + total_program_rows - 1
 
-        # MERGE college info across the rows (12 meta fields)
+        # 5) Write college info (merged)
         college_fields = [
             college.College_Code,
             college.College_Name,
@@ -2965,43 +3000,49 @@ def export_student_excel(request):
             college.belongs_to or "",
             college.affiliated or "",
         ]
-        # discipline column = 13, program = 14, student data starts at 15
+
         for ci, val in enumerate(college_fields, start=1):
-            ws.merge_cells(start_row=start_row, start_column=ci, end_row=end_row, end_column=ci)
+            ws.merge_cells(
+                start_row=start_row,
+                start_column=ci,
+                end_row=end_row,
+                end_column=ci
+            )
             cell = ws.cell(row=start_row, column=ci, value=val)
             cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
 
-        # write discipline & program rows
+        # 6) Write programs
         current_row = row_num
-        for discipline, progs in discipline_map.items():
-            progs_list = progs if progs else [None]
+        for discipline, program_objs in discipline_list:
+            # ensure program_objs is non-empty
+            if not program_objs:
+                program_objs = [None]
+
+            # safe merge for discipline column (column 13)
             ws.merge_cells(
                 start_row=current_row,
                 start_column=13,
-                end_row=current_row + len(progs_list) - 1,
-                end_column=13,
+                end_row=current_row + len(program_objs) - 1,
+                end_column=13
             )
             ws.cell(row=current_row, column=13, value=discipline).alignment = Alignment(
                 vertical="center", horizontal="center", wrap_text=True
             )
 
-            for prog in progs_list:
-                if prog:
-                    ws.cell(current_row, 14, prog.ProgramName)
-                    rec = year_records.get(prog.id)
+            for cp in program_objs:
+                if cp:
+                    ws.cell(row=current_row, column=14, value=cp.ProgramName)
+                    rec = year_records.get(cp.id)
                 else:
-                    ws.cell(current_row, 14, "No Program")
+                    ws.cell(row=current_row, column=14, value="No Program")
                     rec = None
 
-                # write student fields starting at column 15
-                if rec:
-                    for i, field in enumerate(student_fields):
-                        v = getattr(rec, field, 0) or 0
-                        ws.cell(current_row, 15 + i, v)
-                        overall_agg[field] += v
-                else:
-                    for i, field in enumerate(student_fields):
-                        ws.cell(current_row, 15 + i, 0)
+                # student data columns start at 15
+                for i, field in enumerate(student_fields):
+                    val = getattr(rec, field, 0) if rec else 0
+                    ws.cell(row=current_row, column=15 + i, value=val)
+                    overall_agg[field] += val if val else 0
+
                 current_row += 1
 
         row_num = end_row + 1
@@ -3011,34 +3052,28 @@ def export_student_excel(request):
     # -----------------------
     agg_row = row_num
     ws.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=12)
-    label_cell = ws.cell(agg_row, 1, f"Aggregate Values - {year}")
+    label_cell = ws.cell(row=agg_row, column=1, value=f"Aggregate Values - {year}")
     label_cell.font = Font(bold=True)
     label_cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # student area starts at 15. Because we reordered student_fields:
-    # 15 -> total_washrooms (header "Total Students Washrooms")
-    # 16 -> male_washrooms
-    # 17 -> female_washrooms
-    # 18 -> total_students
-    ws.cell(agg_row, 15, overall_agg.get("total_washrooms", 0))
-    ws.cell(agg_row, 16, overall_agg.get("male_washrooms", 0))
-    ws.cell(agg_row, 17, overall_agg.get("female_washrooms", 0))
-    ws.cell(agg_row, 18, overall_agg.get("total_students", 0))
+    # Key totals (student area starts at column 15)
+    ws.cell(row=agg_row, column=15, value=overall_agg.get("total_washrooms", 0))
+    ws.cell(row=agg_row, column=16, value=overall_agg.get("male_washrooms", 0))
+    ws.cell(row=agg_row, column=17, value=overall_agg.get("female_washrooms", 0))
+    ws.cell(row=agg_row, column=18, value=overall_agg.get("total_students", 0))
 
-    # style the key student washroom/total cells
     for col_idx in (15, 16, 17, 18):
-        c = ws.cell(agg_row, col_idx)
+        c = ws.cell(row=agg_row, column=col_idx)
         c.font = Font(bold=True, color="CC6600")
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # overall student census aggregates starting at column 15
     for i, field in enumerate(student_fields):
-        tot = overall_agg[field]
-        cell = ws.cell(agg_row, 15 + i, tot)
-        cell.font = Font(bold=True, color="CC6600")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
+        tot = overall_agg.get(field, 0)
+        c = ws.cell(row=agg_row, column=15 + i, value=tot)
+        c.font = Font(bold=True, color="CC6600")
+        c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Auto-width heuristic
+    # Auto-width
     for col in range(1, len(headers) + 1):
         letter = get_column_letter(col)
         max_len = 0
@@ -3065,17 +3100,6 @@ def export_student_excel(request):
 
 @ajax_login_required
 def export_dashboard_excel(request):
-    """
-    Export Excel with two sheets: 'Students' and 'Staff'.
-    Assumes these imports are present in the module:
-      import json, datetime
-      from io import BytesIO
-      from openpyxl import Workbook
-      from openpyxl.styles import PatternFill, Font, Alignment
-      from openpyxl.utils import get_column_letter
-      from django.http import HttpResponse, HttpResponseBadRequest
-      from django.db.models import Q, Sum
-    """
     if request.method != "POST":
         return HttpResponseBadRequest("Only POST allowed")
 
@@ -3085,7 +3109,7 @@ def export_dashboard_excel(request):
         return HttpResponseBadRequest("Missing academic year")
 
     def non_empty_list(key):
-        return [v for v in request.POST.getlist(key) if v]
+        return [v for v in request.POST.getlist(key) if v is not None and v != ""]
 
     college_codes   = non_empty_list("CollegeCode[]")
     college_names   = non_empty_list("CollegeName[]")
@@ -3112,6 +3136,7 @@ def export_dashboard_excel(request):
         qs = qs.filter(college_type__in=college_types)
     if belongs_to_list:
         qs = qs.filter(belongs_to__in=belongs_to_list)
+    # Keep initial filtering if user provided disciplines/programs (this reduces the college list)
     if disciplines:
         qs = qs.filter(college_programs__Discipline__in=disciplines)
     if programs:
@@ -3205,8 +3230,8 @@ def export_dashboard_excel(request):
 
     # style header for both sheets
     header_fill = PatternFill(start_color="006699", fill_type="solid")
-    for ws in (ws_students, ws_staff):
-        for col in range(1, len(headers_students) + 1):
+    for ws, headers in ((ws_students, headers_students), (ws_staff, headers_staff)):
+        for col in range(1, len(headers) + 1):
             c = ws.cell(row=1, column=col)
             c.font = Font(bold=True, color="FFFFFF")
             c.fill = header_fill
@@ -3278,24 +3303,50 @@ def export_dashboard_excel(request):
     row_students = 2
     row_staff = 2
 
-    # iterate colleges
+    # ---------- Iterate colleges (with restricted programs per filters) ----------
     for college in qs:
-        # student & staff year records keyed by Program_id
+        # Determine allowed programs for this college based on filters
+        # Priority: programs filter -> disciplines filter -> all programs
+        college_program_qs = college.college_programs.filter(is_deleted=False)
+
+        if programs:
+            # programs contains ProgramName values (strings) — if you pass IDs adjust this
+            allowed_cps = list(college_program_qs.filter(ProgramName__in=programs))
+        elif disciplines:
+            allowed_cps = list(college_program_qs.filter(Discipline__in=disciplines))
+        else:
+            allowed_cps = list(college_program_qs)
+
+        # If there are no allowed programs for this college, create a single placeholder row
+        if not allowed_cps:
+            allowed_cps = [None]
+
+        # build allowed program id list (for restricting aggregates)
+        allowed_prog_ids = [cp.id for cp in allowed_cps if cp is not None]
+
+        # student & staff year records keyed by Program_id (restrict to allowed programs)
         student_year_records = {
             rec.Program_id: rec
-            for rec in college.student_aggregates.filter(Academic_Year=year, is_deleted=False)
+            for rec in college.student_aggregates.filter(
+                Academic_Year=year, is_deleted=False,
+                **({"Program__in": allowed_prog_ids} if allowed_prog_ids else {})
+            )
         }
         staff_year_records = {
             rec.Program_id: rec
-            for rec in college.staff_aggregates.filter(Academic_Year=year, is_deleted=False)
+            for rec in college.staff_aggregates.filter(
+                Academic_Year=year, is_deleted=False,
+                **({"Program__in": allowed_prog_ids} if allowed_prog_ids else {})
+            )
         }
 
-        # group programs by discipline
+        # group programs by discipline, but only from allowed_cps
         discipline_map = {}
-        for cp in college.college_programs.filter(is_deleted=False):
-            discipline_map.setdefault(cp.Discipline, []).append(cp)
-        if not discipline_map:
-            discipline_map = {"No Discipline": []}
+        for cp in allowed_cps:
+            if cp is None:
+                discipline_map.setdefault("No Discipline", []).append(None)
+            else:
+                discipline_map.setdefault(cp.Discipline or "Unspecified", []).append(cp)
 
         total_program_rows = sum(len(plist) if plist else 1 for _, plist in discipline_map.items())
         if total_program_rows <= 0:
@@ -3370,7 +3421,7 @@ def export_dashboard_excel(request):
                     if srec:
                         val = getattr(srec, field, None)
                         if val is None:
-                            # fallback (kept explicit for clarity)
+                            # fallback explicit
                             val = getattr(srec, field, 0) or 0
                         val = val or 0
                     ws_students.cell(cur_row_s, 15 + i, val)
@@ -4467,6 +4518,7 @@ def delete_staff_record(request):
         return JsonResponse(response_data)
 
 
+@ajax_login_required
 def export_staff_excel(request):
     if request.method != "POST":
         return HttpResponseBadRequest("Only POST allowed")
@@ -4511,7 +4563,7 @@ def export_staff_excel(request):
         ).distinct()
 
     # -----------------------
-    # Ordering support (optional)
+    # Ordering support
     # -----------------------
     COLUMN_INDEX_TO_FIELD = {
         1: "College_Code",
@@ -4519,6 +4571,7 @@ def export_staff_excel(request):
         3: "staff_aggregates__Academic_Year",
         4: "staff_aggregates__total_staff",
     }
+
     order_by = []
     try:
         for pair in order_instructions:
@@ -4530,11 +4583,12 @@ def export_staff_excel(request):
                 direction = (pair.get("dir") or "asc").lower()
             else:
                 continue
+
             field = COLUMN_INDEX_TO_FIELD.get(cidx)
             if field:
                 order_by.append(("-" if direction == "desc" else "") + field)
     except Exception:
-        order_by = []
+        pass
 
     if order_by:
         qs = qs.order_by(*order_by)
@@ -4546,7 +4600,7 @@ def export_staff_excel(request):
     ws = wb.active
     ws.title = "Staff Records"
 
-    # ---------- HEADERS ----------
+    # HEADERS
     headers = [
         "College Code", "College Name", "Address", "Pincode", "Country",
         "State", "District", "Taluka", "City",
@@ -4554,13 +4608,11 @@ def export_staff_excel(request):
 
         "Discipline", "Program",
 
-        # Staff census columns (staff-area starts at column 15)
-        # Washrooms first (renamed to staff washrooms)
-        "Total Staff Washrooms",   # staff.total_staff_washrooms (or model field mapped below)
-        "Male Staff Washrooms",    # staff.male_staff_washrooms
-        "Female Staff Washrooms",  # staff.female_staff_washrooms
+        "Total Staff Washrooms",
+        "Male Staff Washrooms",
+        "Female Staff Washrooms",
 
-        "Total Staff",             # staff.total_staff
+        "Total Staff",
         "Total Male", "Total Female", "Total Others",
 
         # caste
@@ -4600,16 +4652,12 @@ def export_staff_excel(request):
         c.fill = header_fill
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    row_num = 2
-
-    # ---------- staff fields (staff-area order) ----------
-    # order: washrooms (3) -> total_staff -> gender totals -> caste/religion/disability...
+    # STAFF FIELDS
     staff_fields = [
         "total_staff_washrooms", "male_staff_washrooms", "female_staff_washrooms",
         "total_staff",
         "total_male", "total_female", "total_others",
 
-        # caste (gender split)
         "open_male", "open_female", "open_others",
         "obc_male", "obc_female", "obc_others",
         "sc_male", "sc_female", "sc_others",
@@ -4618,7 +4666,6 @@ def export_staff_excel(request):
         "vjnt_male", "vjnt_female", "vjnt_others",
         "ews_male", "ews_female", "ews_others",
 
-        # religion
         "hindu_male", "hindu_female", "hindu_others",
         "muslim_male", "muslim_female", "muslim_others",
         "sikh_male", "sikh_female", "sikh_others",
@@ -4627,7 +4674,6 @@ def export_staff_excel(request):
         "buddhist_male", "buddhist_female", "buddhist_others",
         "other_religion_male", "other_religion_female", "other_religion_others",
 
-        # disability
         "no_disability_male", "no_disability_female", "no_disability_others",
         "low_vision_male", "low_vision_female", "low_vision_others",
         "blindness_male", "blindness_female", "blindness_others",
@@ -4639,30 +4685,54 @@ def export_staff_excel(request):
 
     overall_agg = {f: 0 for f in staff_fields}
 
+    row_num = 2
+
     # -----------------------
-    # Iterate colleges and write rows (reading from staff_aggregates)
+    # MAIN LOOP
     # -----------------------
     for college in qs:
-        # map program_id -> staff_aggregate record for this year (may be empty)
+
+        # year-based staff records
         year_records = {
             r.Program_id: r
             for r in college.staff_aggregates.filter(Academic_Year=year, is_deleted=False)
         }
 
-        # group programs by discipline (master)
-        discipline_map = {}
-        for cp in college.college_programs.filter(is_deleted=False):
-            discipline_map.setdefault(cp.Discipline, []).append(cp)
-        if not discipline_map:
-            discipline_map = {"No Discipline": []}
+        # filter programs based on global_search
+        master_programs = college.college_programs.filter(is_deleted=False)
 
-        total_program_rows = sum(len(plist) if plist else 1 for _, plist in discipline_map.items())
+        if global_search:
+            allowed_programs = list(master_programs.filter(
+                Q(Discipline__icontains=global_search) |
+                Q(ProgramName__icontains=global_search)
+            ))
+
+            if not allowed_programs:
+                continue
+        else:
+            allowed_programs = list(master_programs)
+
+        if not allowed_programs:
+            allowed_programs = [None]
+
+        # group by discipline
+        discipline_map = {}
+        for cp in allowed_programs:
+            if cp is None:
+                discipline_map.setdefault("No Discipline", []).append(None)
+            else:
+                discipline_map.setdefault(cp.Discipline or "Unspecified", []).append(cp)
+
+        discipline_list = list(discipline_map.items())
+
+        total_program_rows = sum(len(v) if v else 1 for _, v in discipline_list)
         if total_program_rows <= 0:
             total_program_rows = 1
+
         start_row = row_num
         end_row = row_num + total_program_rows - 1
 
-        # MERGE college info across the rows (12 meta fields)
+        # merged college fields
         college_fields = [
             college.College_Code,
             college.College_Name,
@@ -4677,117 +4747,110 @@ def export_staff_excel(request):
             college.belongs_to or "",
             college.affiliated or "",
         ]
-        # discipline column = 13, program = 14, staff data starts at 15
+
         for ci, val in enumerate(college_fields, start=1):
-            ws.merge_cells(start_row=start_row, start_column=ci, end_row=end_row, end_column=ci)
+            ws.merge_cells(
+                start_row=start_row,
+                start_column=ci,
+                end_row=end_row,
+                end_column=ci
+            )
             cell = ws.cell(row=start_row, column=ci, value=val)
             cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
 
-        # write discipline & program rows
+        # discipline + program listing
         current_row = row_num
-        for discipline, progs in discipline_map.items():
-            progs_list = progs if progs else [None]
+        for discipline, progs in discipline_list:
+
+            if not progs:
+                progs = [None]
+
             ws.merge_cells(
                 start_row=current_row,
                 start_column=13,
-                end_row=current_row + len(progs_list) - 1,
-                end_column=13,
+                end_row=current_row + len(progs) - 1,
+                end_column=13
             )
             ws.cell(row=current_row, column=13, value=discipline).alignment = Alignment(
                 vertical="center", horizontal="center", wrap_text=True
             )
 
-            for prog in progs_list:
-                if prog:
-                    ws.cell(current_row, 14, prog.ProgramName)
-                    rec = year_records.get(prog.id)
+            for cp in progs:
+                if cp:
+                    ws.cell(row=current_row, column=14, value=cp.ProgramName)
+                    rec = year_records.get(cp.id)
                 else:
-                    ws.cell(current_row, 14, "No Program")
+                    ws.cell(row=current_row, column=14, value="No Program")
                     rec = None
 
-                # write staff fields starting at column 15
-                if rec:
-                    for i, field in enumerate(staff_fields):
-                        # try to read field directly; fall back to legacy names if necessary
-                        # support models that still use total_washrooms / total_washrooms names
-                        v = None
-                        # preference to new staff-named fields
-                        if hasattr(rec, field):
-                            v = getattr(rec, field) or 0
-                        else:
-                            # fallback mapping for common legacy names
-                            fallback_map = {
-                                "total_staff_washrooms": "total_washrooms",
-                                "male_staff_washrooms": "male_washrooms",
-                                "female_staff_washrooms": "female_washrooms",
-                                "total_staff": "total_students",
-                            }
-                            fb = fallback_map.get(field)
-                            if fb and hasattr(rec, fb):
-                                v = getattr(rec, fb) or 0
-                            else:
-                                v = getattr(rec, field, 0) or 0
-                        ws.cell(current_row, 15 + i, v)
-                        overall_agg[field] += v
-                else:
-                    for i, field in enumerate(staff_fields):
-                        ws.cell(current_row, 15 + i, 0)
+                # write staff fields
+                for i, field in enumerate(staff_fields):
+                    if rec and hasattr(rec, field):
+                        v = getattr(rec, field) or 0
+                    else:
+                        # fallback mapping for legacy names
+                        fallback = {
+                            "total_staff_washrooms": "total_washrooms",
+                            "male_staff_washrooms": "male_washrooms",
+                            "female_staff_washrooms": "female_washrooms",
+                        }
+                        v = getattr(rec, fallback.get(field, field), 0) if rec else 0
+
+                    ws.cell(row=current_row, column=15 + i, value=v)
+                    overall_agg[field] += v
+
                 current_row += 1
 
         row_num = end_row + 1
 
     # -----------------------
-    # FINAL AGGREGATE ROW
+    # FINAL TOTAL ROW
     # -----------------------
     agg_row = row_num
+
     ws.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=12)
-    label_cell = ws.cell(agg_row, 1, f"Aggregate Values - {year}")
-    label_cell.font = Font(bold=True)
-    label_cell.alignment = Alignment(horizontal="center", vertical="center")
+    label = ws.cell(agg_row, 1, f"Aggregate Values - {year}")
+    label.font = Font(bold=True)
+    label.alignment = Alignment(horizontal="center", vertical="center")
 
-    # staff area starts at 15. Because we reordered staff_fields:
-    # 15 -> total_staff_washrooms
-    # 16 -> male_staff_washrooms
-    # 17 -> female_staff_washrooms
-    # 18 -> total_staff
-    ws.cell(agg_row, 15, overall_agg.get("total_staff_washrooms", 0))
-    ws.cell(agg_row, 16, overall_agg.get("male_staff_washrooms", 0))
-    ws.cell(agg_row, 17, overall_agg.get("female_staff_washrooms", 0))
-    ws.cell(agg_row, 18, overall_agg.get("total_staff", 0))
+    ws.cell(agg_row, 15, overall_agg["total_staff_washrooms"])
+    ws.cell(agg_row, 16, overall_agg["male_staff_washrooms"])
+    ws.cell(agg_row, 17, overall_agg["female_staff_washrooms"])
+    ws.cell(agg_row, 18, overall_agg["total_staff"])
 
-    # style the key staff washroom/total cells
     for col_idx in (15, 16, 17, 18):
         c = ws.cell(agg_row, col_idx)
         c.font = Font(bold=True, color="CC6600")
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # overall staff census aggregates starting at column 15
     for i, field in enumerate(staff_fields):
-        tot = overall_agg[field]
-        cell = ws.cell(agg_row, 15 + i, tot)
-        cell.font = Font(bold=True, color="CC6600")
-        cell.alignment = Alignment(horizontal="center", vertical="center")
+        val = overall_agg[field]
+        c = ws.cell(agg_row, 15 + i, value=val)
+        c.font = Font(bold=True, color="CC6600")
+        c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Auto-width heuristic
+    # auto-size columns
     for col in range(1, len(headers) + 1):
         letter = get_column_letter(col)
         max_len = 0
         for cell in ws[letter]:
             if cell.value:
-                l = len(str(cell.value))
-                if l > max_len:
-                    max_len = l
+                max_len = max(max_len, len(str(cell.value)))
         ws.column_dimensions[letter].width = min(max_len + 5, 60)
 
-    # Return XLSX
+    # respond
     output = BytesIO()
     wb.save(output)
     output.seek(0)
-    date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"Staff_Report_{year}_{date_str}.xlsx"
+    filename = f"Staff_Report_{year}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
     resp = HttpResponse(
         output.getvalue(),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    resp["Content-Disposition"] = f'attachment; filename=\"{filename}\"'
     return resp
+
+
+def unassigned_users_json(request):
+    pass
