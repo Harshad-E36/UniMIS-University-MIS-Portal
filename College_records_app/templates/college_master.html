@@ -1171,8 +1171,6 @@
       $("#RecordsModal").trigger(event);
     });
 
-
-
     // LOAD DATA INTO MODAL
     $('#RecordsModal').on('show.bs.modal', function (e) {
 
@@ -1231,6 +1229,8 @@
       });
 
       createCourseDropdowns(disciplines, coursesByDiscipline);
+
+
     });
 
     // ================= RESET =================
@@ -1341,7 +1341,6 @@
     $(document).on("change", ".course-checkbox, .discipline-checkbox", function () {
       $("#add_edit_form").valid();
     });
-
 
 
     // Dynamic Taluka and City Syncing
