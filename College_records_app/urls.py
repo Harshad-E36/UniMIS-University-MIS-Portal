@@ -33,4 +33,5 @@ urlpatterns = [
     path("export-staff-excel/", views.export_staff_excel, name="export_staff_excel"),
 
     path('users/unassigned-json/', views.unassigned_users_json, name='unassigned_users_json'),
+    path('change-password/', views.change_password, name='change_password'),
 ]

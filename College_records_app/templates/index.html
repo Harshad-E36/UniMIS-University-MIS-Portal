@@ -322,6 +322,34 @@
       color: #0959c6;
     }
 
+    /* Modern rounded select to match modal inputs */
+    .modern-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      padding: 10px 12px;
+      width: 100%;
+      background-color: #fff;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #333;
+      cursor: pointer;
+
+      background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 14px;
+    }
+
+    .modern-select:focus {
+      border-color: var(--brand-blue);
+      box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.2);
+      outline: none;
+    }
+
     /* Logout Button */
     .logout-btn {
       border-radius: 6px !important;
@@ -1653,44 +1681,64 @@
 
   </div>
 
-  <!-- Create User Modal -->
+  <!-- Create / Change Password Modal -->
   <div class="modal fade UserModal" id="createUserModal" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-md modal-dialog-centered">
       <div class="modal-content">
 
         <div class="modal-header">
-          <h5 class="modal-title fw-semibold">Create New User</h5>
+          <h5 class="modal-title fw-semibold" id="userModalTitle">Create New User</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
         <div class="modal-body">
-          <form id="createUserForm">
-            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+          <form id="createUserForm" method="POST" autocomplete="off">
+            <!-- NOTE: we still add csrf token to form for non-AJAX fallback; primary AJAX uses header token -->
+            <input type="hidden" name="csrfmiddlewaretoken" id="form_csrfmiddlewaretoken" value="{{ csrf_token }}">
 
+            <!-- Username -->
             <div class="mb-3">
               <label class="modern-label">Username</label>
-              <input type="text" class="form-control modern-input" name="username" id="cu_username">
+              <input type="text" class="form-control modern-input" name="username" id="cu_username" />
             </div>
 
+            <!-- Email -->
             <div class="mb-3">
               <label class="modern-label">Email</label>
-              <input type="email" class="form-control modern-input" name="email" id="cu_email">
+              <input type="email" class="form-control modern-input" name="email" id="cu_email" />
             </div>
 
-            <div class="mb-3">
-              <label class="modern-label">Password</label>
-              <input type="password" class="form-control modern-input" name="password" id="cu_password">
+            <!-- Account Type (Only for create-user mode) -->
+            <div class="mb-3 " id="accountTypeWrapper">
+              <label class="modern-label">Account Type</label>
+              <select class="modern-select" id="cu_account_type" name="account_type">
+                <option value="user">Regular User</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
 
-            <div class="mb-3">
+            <!-- Old password (only shown for regular users changing password) -->
+            <div class="mb-3 d-none" id="oldPasswordWrapper">
+              <label class="modern-label">Old Password</label>
+              <input type="password" class="form-control modern-input" name="old_password" id="cu_old_password" />
+            </div>
+
+            <!-- New / Password -->
+            <div class="mb-3" id="newPasswordWrapper">
+              <label class="modern-label" id="newPasswordLabel">Password</label>
+              <input type="password" class="form-control modern-input" name="password" id="cu_password" />
+            </div>
+
+            <!-- Confirm new password -->
+            <div class="mb-3" id="confirmPasswordWrapper">
               <label class="modern-label">Confirm Password</label>
-              <input type="password" class="form-control modern-input" name="confirm_password" id="cu_confirm_password">
+              <input type="password" class="form-control modern-input" name="confirm_password"
+                id="cu_confirm_password" />
             </div>
 
-            <button type="submit" class="btn create-btn w-100">
-              <i class="bi bi-check-circle"></i> Create User
+            <button type="submit" class="btn create-btn w-100" id="createUserSubmitBtn">
+              <i class="bi bi-check-circle"></i> <span id="createUserSubmitBtnText">Create User</span>
             </button>
-
           </form>
         </div>
 
@@ -1698,9 +1746,24 @@
     </div>
   </div>
 
+  <input type="hidden" id="global_is_superuser" value="{{ request.user.is_superuser }}">
+  <input type="hidden" id="global_username" value="{{ request.user.username }}">
+  <input type="hidden" id="global_email" value="{{ request.user.email }}">
+
 </body>
 
 <script>
+  const rawIsSuper = $('#global_is_superuser').val();
+  const USER_IS_SUPER = (rawIsSuper === true) ||
+    (typeof rawIsSuper === 'string' && (
+      rawIsSuper.toLowerCase() === 'true' ||
+      rawIsSuper === '1' ||
+      rawIsSuper === 'yes'
+    ));
+  const CURRENT_USERNAME = $('#global_username').val() || '';
+  const CURRENT_EMAIL = $('#global_email').val() || '';
+
+
   // function to get CSRF cookie
   function getCookie(name) {
     var cookieValue = null;
@@ -1756,27 +1819,6 @@
   }
 
 
-  function createUserAjax() {
-    $.ajax({
-      url: "/signup/",
-      type: "POST",
-      data: $("#createUserForm").serialize(),
-
-      success: function (response) {
-        if (response.status === 201) {
-          showNotification("User created successfully!", "success");
-          $("#createUserModal").modal("hide");
-          $("#createUserForm")[0].reset();
-        } else {
-          showNotification(response.message, "error");
-        }
-      },
-
-      error: function () {
-        showNotification("Something went wrong. Try again!", "error");
-      }
-    });
-  }
 
   function animateCount($el, to, duration = 500) {
     const start = 0;
@@ -2057,6 +2099,92 @@
     };
   }
 
+  function restrictFiltersForNormalUser() {
+    const $navbar = $('.filter-navbar');
+    if ($navbar.length === 0) return;
+
+    // Find discipline & program dropdown wrappers
+    const $discDropdown = $('#filterDiscipline').closest('.dropdown');
+    const $progDropdown = $('#filterProgram').closest('.dropdown');
+
+    // Find the original first-row container that holds the filter dropdowns
+    let $firstRow = $navbar.find('.d-flex.flex-wrap.justify-content-center.align-items-center.w-100.mb-2').first();
+    if ($firstRow.length === 0) {
+      $firstRow = $navbar.find('.d-flex').first();
+    }
+    if ($firstRow.length === 0) return;
+
+    // Find the original button-row wrapper (where apply/clear originally lived)
+    const $origButtonRow = $navbar.find('.d-flex').filter(function () {
+      return $(this).find('#applyFilter,#clearFilter').length > 0;
+    }).first();
+
+    // 1) Hide all dropdowns except Discipline & Program (keep these visible)
+    $navbar.find('.dropdown').each(function () {
+      const $d = $(this);
+      if ($d.is($discDropdown) || $d.is($progDropdown)) {
+        $d.removeClass('d-none');
+        return;
+      }
+      $d.addClass('d-none');
+    });
+
+    // 2) Ensure Discipline & Program are present in the first row and in that order.
+    if ($discDropdown.length) $discDropdown.detach().appendTo($firstRow);
+    if ($progDropdown.length) $progDropdown.detach().appendTo($firstRow);
+
+    // 3) Move Apply/Clear buttons into the same first row, preserve event handlers
+    const $applyBtn = $('#applyFilter');
+    const $clearBtn = $('#clearFilter');
+
+    if ($applyBtn.length || $clearBtn.length) {
+      // Build a button container that will sit inline in the first row
+      const $btnContainer = $('<div class="d-flex gap-2 align-items-center"></div>');
+
+      // Detach buttons (preserve events) and append to container in correct order
+      if ($applyBtn.length) $btnContainer.append($applyBtn.detach());
+      if ($clearBtn.length) $btnContainer.append($clearBtn.detach());
+
+      // Append container to the firstRow. Because firstRow uses justify-content-center,
+      // appended items will remain centered with the other visible filters.
+      $firstRow.append($btnContainer);
+
+      // Remove the original button-row wrapper only if it's not the same as firstRow
+      if ($origButtonRow.length && !$origButtonRow.is($firstRow)) {
+        // If original wrapper still contains anything else, only remove the buttons inside it.
+        $origButtonRow.find('#applyFilter,#clearFilter').remove();
+        // If wrapper is now empty or you prefer to remove it:
+        if ($.trim($origButtonRow.text()) === '') {
+          $origButtonRow.remove();
+        }
+      }
+    }
+
+    // 4) Ensure first row keeps centered alignment
+    $firstRow.addClass('justify-content-center align-items-center');
+
+  }
+
+  function hideCollegeStatCard() {
+    // Grab all three stat columns
+    const $collegeCol = $('#colleges_num').closest('.col-12');
+    const $studentCol = $('#students_num').closest('.col-12');
+    const $staffCol = $('#staff_num').closest('.col-12');
+
+    // Hide the colleges card
+    $collegeCol.addClass('d-none');
+
+    // Remove old md width classes & apply col-md-6
+    [$studentCol, $staffCol].forEach($col => {
+      // Remove ANY col-md-* classes
+      $col.removeClass(function (index, className) {
+        return (className.match(/col-md-\d+/g) || []).join(' ');
+      });
+
+      // Apply new width
+      $col.addClass('col-md-6');
+    });
+  }
 
 
   $(document).ready(function () {
@@ -2118,54 +2246,6 @@
           alert("Logout failed. Try again.");
         }
       });
-    });
-
-    // Open Modal
-    $("#createUserBtn").click(() => {
-      $("#createUserModal").modal("show");
-    });
-
-    // Validation rules
-    $("#createUserForm").validate({
-      rules: {
-        username: {
-          required: true,
-          minlength: 3
-        },
-        email: {
-          required: true,
-          email: true
-        },
-        password: {
-          required: true,
-          minlength: 6
-        },
-        confirm_password: {
-          required: true,
-          equalTo: "#cu_password"
-        }
-      },
-      messages: {
-        username: {
-          required: "Please enter a username",
-          minlength: "Username must be at least 3 characters"
-        },
-        email: {
-          required: "Please enter an email",
-          email: "Enter a valid email address"
-        },
-        password: {
-          required: "Please enter a password",
-          minlength: "Password must be at least 6 characters"
-        },
-        confirm_password: {
-          required: "Please confirm the password",
-          equalTo: "Passwords do not match"
-        }
-      },
-      submitHandler: function () {
-        createUserAjax();
-      }
     });
 
 
@@ -2427,6 +2507,241 @@
         }
       });
     });
+
+    if (!USER_IS_SUPER) {
+      restrictFiltersForNormalUser();
+      hideCollegeStatCard();
+    }
+
+    // set create/change button mode (on page load)
+    function setCreateUserButtonMode() {
+      if (USER_IS_SUPER) {
+        $('#createUserBtn').html('<i class="bi bi-person-plus"></i> Create User')
+          .removeClass('btn-primary').addClass('btn-light');
+      } else {
+        $('#createUserBtn').html('<i class="bi bi-key"></i> Change Password')
+          .removeClass('btn-light').addClass('btn-primary');
+      }
+    }
+    setCreateUserButtonMode();
+
+    // prepare modal per-mode
+    function openUserModal() {
+      if (USER_IS_SUPER) {
+        // Admin - Create user
+        $('#userModalTitle').text('Create New User');
+        $('#createUserSubmitBtnText').text('Create User');
+
+        $('#cu_username').prop('readonly', false).val('');
+        $('#cu_email').prop('readonly', false).val('');
+
+        $('#oldPasswordWrapper').addClass('d-none');
+        $('#newPasswordLabel').text('Password');
+
+        $('#cu_password, #cu_confirm_password, #cu_old_password').val('');
+
+        // SHOW account type dropdown
+        $('#accountTypeWrapper').removeClass('d-none');
+        $('#cu_account_type').val('user'); // default
+      }
+      else {
+        // Regular user - Change password
+        $('#userModalTitle').text('Change Password');
+        $('#createUserSubmitBtnText').text('Change Password');
+
+        $('#cu_username').val(CURRENT_USERNAME).prop('readonly', true);
+        $('#cu_email').val(CURRENT_EMAIL).prop('readonly', true);
+
+        $('#oldPasswordWrapper').removeClass('d-none');
+        $('#newPasswordLabel').text('New Password');
+
+        $('#cu_old_password, #cu_password, #cu_confirm_password').val('');
+
+        // HIDE account type dropdown
+        $('#accountTypeWrapper').addClass('d-none');
+      }
+
+      $('#createUserModal').modal('show');
+    }
+
+    // open modal on clicking toolbar/button
+    $('#createUserBtn').on('click', function () {
+      openUserModal();
+    });
+
+
+    // ====== AJAX functions ======
+    function createUserAjax() {
+
+      const payload = {
+        username: $('#cu_username').val().trim(),
+        email: $('#cu_email').val().trim(),
+        password: $('#cu_password').val(),
+        account_type: $('#cu_account_type').val()
+      };
+
+      $.ajax({
+        url: "/signup/",
+        type: "POST",
+        data: payload,      // <-- FIX: form-encoded so Django receives request.POST
+        success: function (response) {
+          if (response.status === 201) {
+            showNotification("User created successfully!", "success");
+            $("#createUserModal").modal("hide");
+            $("#createUserForm")[0].reset();
+          } else {
+            showNotification(response.message || "Failed to create user", "error");
+          }
+        },
+
+        error: function (xhr) {
+          let msg = "Something went wrong.";
+          if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+          showNotification(msg, "error");
+        }
+      });
+    }
+
+
+    function changePasswordAjax() {
+      const payload = {
+        old_password: $('#cu_old_password').val(),
+        new_password: $('#cu_password').val(),
+        confirm_password: $('#cu_confirm_password').val()
+      };
+
+      $.ajax({
+        url: "/change-password/",
+        type: "POST",
+        data: payload, // form-encoded so Django sees request.POST
+        success: function (response) {
+          // success handler always receives status 200 responses
+          if (response && response.success) {
+            showNotification("Password changed successfully!", "success");
+            $('#createUserModal').modal('hide');
+            $('#createUserForm')[0].reset();
+          } else {
+            // If backend returns {error:"..."} but still 200 (unlikely)
+            const msg = response.error || response.message || "Failed to change password";
+            showNotification(msg, "error");
+          }
+        },
+
+        error: function (xhr) {
+          // Extract server-side JSON error cleanly
+          let msg = "Something went wrong!";
+
+          if (xhr.responseJSON && xhr.responseJSON.error) {
+            msg = xhr.responseJSON.error;
+
+          } else if (xhr.responseJSON && xhr.responseJSON.message) {
+            msg = xhr.responseJSON.message;
+
+          } else if (xhr.responseText) {
+            // try parsing text manually if Django returned plain JSON string
+            try {
+              const parsed = JSON.parse(xhr.responseText);
+              if (parsed.error) msg = parsed.error;
+              else if (parsed.message) msg = parsed.message;
+            } catch (e) { /* ignore */ }
+          }
+
+          showNotification(msg, "error");
+        }
+      });
+    }
+
+    // ====== jQuery Validate setup (adapts per-mode) ======
+    if ($.validator) {
+      $("#createUserForm").validate({
+        rules: {
+          username: {
+            required: function () { return USER_IS_SUPER; },
+            minlength: 3
+          },
+          email: {
+            required: function () { return USER_IS_SUPER; },
+            email: true
+          },
+          password: {
+            required: function () { return true; }, // both flows need a new password
+            minlength: 6
+          },
+          confirm_password: {
+            required: function () { return true; },
+            equalTo: "#cu_password"
+          },
+          old_password: {
+            required: function () { return !USER_IS_SUPER; }
+          }
+        },
+        messages: {
+          username: {
+            required: "Please enter a username",
+            minlength: "Username must be at least 3 characters"
+          },
+          email: {
+            required: "Please enter an email",
+            email: "Enter a valid email address"
+          },
+          password: {
+            required: "Please enter a password",
+            minlength: "Password must be at least 6 characters"
+          },
+          confirm_password: {
+            required: "Please confirm the password",
+            equalTo: "Passwords do not match"
+          },
+          old_password: {
+            required: "Please enter your old password"
+          }
+        },
+        submitHandler: function () {
+          // decide which ajax to call
+          if (USER_IS_SUPER) {
+            // ensure username/email present
+            const uname = $('#cu_username').val().trim();
+            const email = $('#cu_email').val().trim();
+            if (!uname) { showNotification('Username is required', 'error'); return false; }
+            if (!email) { showNotification('Email is required', 'error'); return false; }
+            createUserAjax();
+          } else {
+            // change password flow should ensure new != old
+            const newpw = $('#cu_password').val();
+            const oldpw = $('#cu_old_password').val();
+            if (!oldpw) { showNotification('Old password is required', 'error'); return false; }
+            if (newpw === oldpw) {
+              showNotification("New password must be different from old password", "error");
+              return false;
+            }
+            changePasswordAjax();
+          }
+          return false; // prevent default form submit
+        },
+        errorPlacement: function (error, element) {
+          // default placement (you can customize to match your UI)
+          error.addClass('text-danger small');
+          error.insertAfter(element);
+        }
+      });
+    } else {
+      console.warn('jQuery Validation plugin not found - form validation will be skipped.');
+    }
+    $("#createUserForm").on("submit", function (e) {
+      e.preventDefault(); // FORCE disable normal submit
+    });
+
+
+    // optional: make modal reset state when hidden (so next open is clean)
+    $('#createUserModal').on('hidden.bs.modal', function () {
+      // reset form and validation errors
+      $('#createUserForm')[0].reset();
+      $('#cu_username, #cu_email').prop('readonly', false);
+      $('#oldPasswordWrapper').addClass('d-none');
+      if ($.validator) { $('#createUserForm').validate().resetForm(); }
+    });
+
+
 
   });
 
