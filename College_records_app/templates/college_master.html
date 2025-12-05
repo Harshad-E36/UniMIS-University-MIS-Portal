@@ -1129,38 +1129,38 @@
     });
 
 
-    // $('#RecordsModal').on('show.bs.modal', function (e) {
-    //   var $select = $('#assigned_user_id');
-    //   // prevent refetching if already populated
-    //   if ($select.data('loaded')) return;
+    $('#RecordsModal').on('show.bs.modal', function (e) {
+      var $select = $('#assigned_user_id');
+      // prevent refetching if already populated
+      if ($select.data('loaded')) return;
 
-    //   $select.empty().append('<option value="" disabled selected>Loading users...</option>');
+      $select.empty().append('<option value="" disabled selected>Loading users...</option>');
 
-    //   $.ajax({
-    //     url: "{% url 'unassigned_users_json' %}",
-    //     type: "GET",
-    //     dataType: "json",
-    //     success: function (resp) {
-    //       $select.empty();
-    //       var users = resp.users || [];
-    //       if (!users.length) {
-    //         $select.append('<option value="" disabled selected>No unassigned users</option>');
-    //         $select.data('loaded', true);
-    //         return;
-    //       }
-    //       $select.append('<option value="" disabled selected>Select user</option>');
-    //       users.forEach(function (u) {
-    //         var label = u.username + (u.full_name ? (' — ' + u.full_name) : '');
-    //         $select.append($('<option>', { value: u.id, text: label }));
-    //       });
-    //       $select.data('loaded', true);
-    //     },
-    //     error: function (xhr) {
-    //       console.error('Failed to load users', xhr);
-    //       $select.empty().append('<option value="" disabled selected>Failed to load users</option>');
-    //     }
-    //   });
-    // });
+      $.ajax({
+        url: "{% url 'unassigned_users_json' %}",
+        type: "GET",
+        dataType: "json",
+        success: function (resp) {
+          $select.empty();
+          var users = resp.users || [];
+          if (!users.length) {
+            $select.append('<option value="" disabled selected>No unassigned users</option>');
+            $select.data('loaded', true);
+            return;
+          }
+          $select.append('<option value="" disabled selected>Select user</option>');
+          users.forEach(function (u) {
+            var label = u.username;
+            $select.append($('<option>', { value: u.id, text: label }));
+          });
+          $select.data('loaded', true);
+        },
+        error: function (xhr) {
+          console.error('Failed to load users', xhr);
+          $select.empty().append('<option value="" disabled selected>Failed to load users</option>');
+        }
+      });
+    });
 
 
     //EDIT BUTTON

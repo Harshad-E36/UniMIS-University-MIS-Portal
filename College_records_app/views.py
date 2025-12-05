@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
-from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo, academic_year, student_aggregate_master, staff_master_aggregate
+from .models import College, CollegeProgram, Taluka, District, Discipline, Programs, CollegeType, BelongsTo, academic_year, student_aggregate_master, staff_master_aggregate, UserCollege
+from django.contrib.auth import get_user_model
 from django.db.models import Prefetch
 from django.db.models import Q, Sum
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
@@ -60,7 +61,7 @@ def home(request):
         "Collegetype": CollegeType.objects.all(),
         "BelongsTo": BelongsTo.objects.all(),
         "programs": Programs.objects.all(),
-        "academic_year": academic_year.objects.all()
+        "academic_year": academic_year.objects.all(),
     })
    
 
@@ -4852,5 +4853,24 @@ def export_staff_excel(request):
     return resp
 
 
+User = get_user_model()
+
 def unassigned_users_json(request):
-    pass
+
+    if request.method == "GET":
+        # fetch only active users (optional) and exclude superusers
+        users = User.objects.filter(is_active=True).exclude(is_superuser=True)
+        # left join idea: users without profile.college set
+        # If some users don't have a profile, treat them as unassigned (we will create profile when assigning)
+        # Use filtering with reverse lookup on UserCollege (if you used related_name 'college_profile', adapt accordingly)
+
+        assigned_user_ids = UserCollege.objects.filter(college__isnull=False).values_list("user_id", flat=True)
+        qs = users.exclude(id__in=list(assigned_user_ids))
+
+        result = []
+
+        for u in qs.order_by("username")[:500]:
+            result.append({"id": u.id, "username": u.username})
+
+
+    return JsonResponse({"users": result})
