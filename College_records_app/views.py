@@ -64,7 +64,7 @@ def home(request):
     if not request.user.is_authenticated:
         return redirect('login')
     
-        # Defaults (superuser / fallback)
+    # Defaults (superuser / fallback)
     colleges_qs = College.objects.filter(is_deleted=False)
     disciplines_qs = Discipline.objects.all()
     programs_qs = Programs.objects.all()
