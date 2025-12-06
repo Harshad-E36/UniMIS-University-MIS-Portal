@@ -35,6 +35,10 @@
 
 
   <style>
+    /* ============================================================
+   Variables
+   (colors, radii, shadows — used throughout)
+   ============================================================ */
     :root {
       --brand-blue: #0d6efd;
       --brand-blue-dark: #0b5ed7;
@@ -50,7 +54,10 @@
       --radius-sm: 10px;
     }
 
-    /* Base */
+    /* ============================================================
+   Base / Utility
+   (base font, body, small helpers)
+   ============================================================ */
     body {
       background: var(--bg);
       font-family: "Segoe UI", Roboto, sans-serif;
@@ -59,15 +66,32 @@
       height: 100%;
       overflow-x: hidden;
       caret-color: transparent;
+      color: #24303a;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Small helpers */
     label.error {
       color: var(--danger);
       font-size: 0.9rem;
     }
 
-    /* Header */
+    .text-muted {
+      color: var(--muted) !important;
+    }
+
+    /* small helper for consistent button small size */
+    .btn-sm {
+      padding: 6px 10px;
+    }
+
+    /* ============================================================
+   Header
+   (single consolidated header block — layout, typography,
+   controls, year-select, responsive)
+   ============================================================ */
+
+    /* Header container */
     .header {
       background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
       color: #fff;
@@ -78,57 +102,220 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
     }
 
-    .header h1 {
-      font-size: 2rem;
-      margin: 0;
+    /* Left column: app title + context */
+    .header-left {
+      min-width: 0;
+      max-width: 62%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* App title: modern and stylish */
+    .app-title {
+      font-family: "Poppins", "Segoe UI", Roboto, sans-serif;
+      font-size: 2.8rem;
       font-weight: 600;
+      letter-spacing: 1.5px;
+      line-height: 1.05;
+      margin-bottom: 6px;
+
+      /* gradient text effect (subtle) */
+      background: linear-gradient(90deg, #ffffff 0%, #e3f2ff 40%, #d6ffea 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
     }
 
-    /* Welcome */
+    /* Subtitle: college name or admin title */
+    .admin-title,
+    .college-name {
+      font-family: "Poppins", "Segoe UI", Roboto, sans-serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      color: rgba(255, 255, 255, 0.98);
+      margin-top: 2px;
+      line-height: 1.12;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Secondary label */
+    .admin-label {
+      font-family: "Poppins", "Segoe UI", Roboto, sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+      margin-top: 6px;
+      letter-spacing: 0.4px;
+    }
+
+    /* Right column (buttons + year control) */
+    .header-right {
+      min-width: 0;
+      max-width: 38%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    /* Welcome text */
     #welcome_msg {
       font-size: 0.95rem;
-      color: #fff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-      transition: opacity .3s ease;
+      color: rgba(255, 255, 255, 0.98);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
     }
 
-    /* Content section (consolidated) */
-    .content-section {
-      padding: 0.5rem 0;
-      margin: 0.5rem;
+    /* Button container inside header (grouping) */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
-    /* Stat cards */
+    /* Unified header button silhouette */
+    .header .btn {
+      height: 42px;
+      border-radius: 10px;
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      box-shadow: 0 6px 18px rgba(19, 46, 78, 0.06);
+      border: none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    /* smaller variant */
+    .header .btn-sm {
+      padding-left: 12px;
+      padding-right: 12px;
+      height: 40px;
+    }
+
+    /* White pill buttons (Create / Change) */
+    .btn-group-left .btn,
+    .create-user-btn,
+    .change-password-btn {
+      background: #fff;
+      color: var(--brand-blue);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(16, 64, 128, 0.05);
+    }
+
+    /* Logout outline */
+    .btn-group-left .logout-btn {
+      background: transparent !important;
+      color: #fff !important;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: none;
+    }
+
+    /* Accent export button */
+    .btn-export {
+      background: linear-gradient(90deg, #ffb020, #ff9f0f);
+      color: rgba(0, 0, 0, 0.9);
+      border: none;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-weight: 800;
+      box-shadow: 0 6px 18px rgba(33, 37, 41, 0.12);
+    }
+
+    .btn-export:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(33, 37, 41, 0.14);
+    }
+
+    /* Create user button style */
+    .create-user-btn {
+      background: #fff;
+      color: var(--brand-blue);
+    }
+
+    /* Academic year wrapper + select styling */
+    .year-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .year-label {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.95);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* modern styled select for header (prevents arrow overlap) */
+    #globalAcademicYear.modern-select,
+    .year-select.modern-select {
+      min-width: 150px;
+      max-width: 220px;
+      padding: 8px 44px 8px 12px;
+      height: 44px;
+      font-weight: 700;
+      border-radius: 10px;
+      background-color: #fff;
+      color: #21303b;
+      box-shadow: 0 6px 16px rgba(19, 46, 78, 0.06);
+      background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 14px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    .year-select.modern-select option {
+      white-space: nowrap;
+    }
+
+    /* Hover/focus polish */
+    .header .btn:hover,
+    .header .btn:focus {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 26px rgba(19, 46, 78, 0.08);
+      outline: none;
+    }
+
+    /* ============================================================
+   Stat Cards
+   (visuals for top stat cards)
+   ============================================================ */
     .stat-card {
       border-radius: 12px !important;
       padding: 1.75rem 1.2rem !important;
-      /* increased padding */
       background: #ffffff;
       position: relative;
       overflow: hidden;
       height: 160px !important;
-      /* ⬆ increased height (was ~120-130px) */
       box-shadow: 0 6px 14px rgba(22, 28, 36, 0.06);
-      transition:
-        transform .18s ease,
-        box-shadow .18s ease,
-        background .25s ease;
+      transition: transform .18s ease, box-shadow .18s ease, background .25s ease;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
     }
 
-    /* Hover — gentle and clean */
     .stat-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 10px 22px rgba(22, 28, 36, 0.09);
       background: #ffffff;
     }
 
-    /* Center content vertically */
     .stat-card .card-body {
       width: 100%;
       height: 100%;
@@ -136,13 +323,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      /* stays centered */
-      gap: 0.35rem;
+      gap: .35rem;
       padding: 0;
       background: transparent;
     }
 
-    /* Title */
     .stat-card .card-title {
       font-size: 1.2rem !important;
       font-weight: 800 !important;
@@ -150,37 +335,30 @@
       color: #3a4756 !important;
       text-transform: uppercase;
       filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
-      opacity: 0.95;
+      opacity: .95;
     }
 
-    .stat-card:hover .card-title {
-      color: var(--brand-blue-dark) !important;
-    }
-
-    /* Hero number */
     .stat-card .stat-number {
       font-size: 2.3rem;
       font-weight: 650;
       color: var(--brand-blue);
       line-height: 1.15;
       letter-spacing: -0.35px;
-      transition: transform .18s ease, color .18s ease;
-      opacity: 0.96;
+      opacity: .96;
       font-variant-numeric: tabular-nums;
+      transition: transform .18s ease, color .18s ease;
     }
 
-    /* Hover effect */
     .stat-card:hover .stat-number {
       transform: translateY(-2px);
       color: var(--brand-blue-dark);
       opacity: 1;
     }
 
-    /* Responsive tweaks */
+    /* Responsive tweaks for stat cards */
     @media (max-width: 991px) {
       .stat-card {
         height: 140px !important;
-        /* still taller for tablets */
         padding: 1.3rem 1rem !important;
       }
 
@@ -192,7 +370,6 @@
     @media (max-width: 576px) {
       .stat-card {
         height: 120px !important;
-        /* compact but not short */
         padding: 1rem 0.8rem !important;
       }
 
@@ -201,30 +378,10 @@
       }
     }
 
-    /* Accessibility focus */
-    .stat-card:focus-within,
-    .stat-card:focus {
-      outline: 2px solid rgba(13, 110, 253, 0.08);
-      outline-offset: 2px;
-    }
-
-    .stat-hint {
-      margin-top: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #6b7280;
-      /* gray-500 */
-      opacity: 0.85;
-      transition: opacity .2s ease, transform .2s ease;
-      pointer-events: none;
-    }
-
-    .stat-card:hover .stat-hint {
-      opacity: 1;
-      transform: translateY(-2px);
-    }
-
-    /* Filter Navbar (cleaned) */
+    /* ============================================================
+   Filter Navbar
+   (filter controls & dropdown styling)
+   ============================================================ */
     .filter-navbar {
       background: linear-gradient(90deg, var(--brand-blue), var(--brand-green));
       border-radius: var(--radius-md);
@@ -253,7 +410,7 @@
       transform: translateY(-1px);
     }
 
-    /* Dropdowns and dropdown contents */
+    /* Drop-down contents */
     .filter-dropdown {
       border-radius: var(--radius-md);
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
@@ -263,7 +420,6 @@
       padding: .5rem;
     }
 
-    /* College name dropdown: preserve responsive sizing */
     #filterCollegeName+.dropdown-menu {
       min-width: 472px;
       width: 100%;
@@ -271,7 +427,7 @@
       overflow-y: auto;
     }
 
-    /* Apply / Clear buttons */
+    /* Apply / Clear */
     .apply-btn {
       border-radius: 20px;
       font-weight: 600;
@@ -302,35 +458,13 @@
       transform: translateY(-1px);
     }
 
-    /* Create button */
-    .create-user-btn,
-    .change-password-btn {
-      border-radius: 6px;
-      padding: 5px 14px;
-      font-size: .85rem;
-      transition: all .18s ease-in-out;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .create-user-btn,
-    .change-password-btn {
-      background: #fff;
-      color: var(--brand-blue);
-      border: none;
-    }
-
-    .create-user-btn:hover,
-    .change-password-btn:hover {
-      background: #eaf2ff;
-      color: #0959c6;
-    }
-
-    /* Modern rounded select to match modal inputs */
+    /* ============================================================
+   Modern Inputs & Selects
+   ============================================================ */
     .modern-select {
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
-
       border: 1px solid #ced4da;
       border-radius: 8px;
       padding: 10px 12px;
@@ -340,7 +474,6 @@
       font-weight: 500;
       color: #333;
       cursor: pointer;
-
       background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
       background-repeat: no-repeat;
       background-position: right 12px center;
@@ -353,19 +486,29 @@
       outline: none;
     }
 
-    /* Logout Button */
-    .logout-btn {
-      border-radius: 6px !important;
-      padding: 4px 10px !important;
-      font-size: 0.85rem !important;
-      transition: 0.15s ease-in-out;
+    /* Inputs */
+    .modern-input {
+      border-radius: var(--radius-sm);
+      border: 1px solid #d5dce5;
+      padding: 10px 12px;
+      transition: .18s;
     }
 
-    .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
+    .modern-input:focus {
+      border-color: var(--brand-blue);
+      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
     }
 
-    /* Modal (modern modal styles consolidated) */
+    /* Labels */
+    .modern-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+    }
+
+    /* ============================================================
+   User Modal (Create / Change Password)
+   ============================================================ */
     .UserModal .modal-content {
       border-radius: 14px;
       border: none;
@@ -387,7 +530,6 @@
       color: #fff !important;
     }
 
-    /* Close button style */
     .UserModal .btn-close {
       filter: invert(1) brightness(200%);
       opacity: .85;
@@ -397,7 +539,6 @@
       opacity: 1;
     }
 
-    /* Modal body / spacing & scrolling */
     .modal-body {
       max-height: 88vh;
       overflow-y: auto;
@@ -408,26 +549,7 @@
       padding: 1.4rem;
     }
 
-    /* Inputs / labels */
-    .modern-input {
-      border-radius: var(--radius-sm);
-      border: 1px solid #d5dce5;
-      padding: 10px 12px;
-      transition: .18s;
-    }
-
-    .modern-input:focus {
-      border-color: var(--brand-blue);
-      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
-    }
-
-    .modern-label {
-      font-weight: 600;
-      font-size: 0.9rem;
-      margin-bottom: 5px;
-    }
-
-    /* Create button in modal */
+    /* Create button inside modal */
     .UserModal .create-btn {
       background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
       color: #fff;
@@ -451,20 +573,9 @@
       transform: translateY(-2px);
     }
 
-    /* Responsive tweaks */
-    @media (max-width:768px) {
-
-      .apply-btn,
-      .clear-btn {
-        width: 140px;
-      }
-
-      .filter-navbar {
-        padding: 12px;
-      }
-    }
-
-    /* Notifications (required by showNotification JS) */
+    /* ============================================================
+   Notifications
+   ============================================================ */
     .notification {
       position: fixed;
       top: 10px;
@@ -494,13 +605,14 @@
       transform: translateX(-50%) translateY(20px);
     }
 
-    /* ---------- Student Records layout & behavior ---------- */
-
+    /* ============================================================
+   Student Records (sr-cards) layout & behavior
+   ============================================================ */
     #sr-cards-row {
       align-items: stretch;
     }
 
-    /* Base sr-card: remove forced min-heights so layout can be driven by content */
+    /* Base sr-card */
     .sr-card {
       background: #fff;
       border-radius: 12px;
@@ -512,23 +624,19 @@
       gap: 12px;
       box-sizing: border-box;
       overflow: hidden;
-      /* contain internal scrolling */
     }
 
-    /* Hover */
     .sr-card:hover {
       transform: translateY(-6px);
       box-shadow: var(--card-shadow-hover);
     }
 
-    /* Header */
     .sr-card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
       flex: 0 0 auto;
-      /* header not flexible */
     }
 
     .sr-card-title {
@@ -546,22 +654,19 @@
       font-size: 0.82rem;
     }
 
-    /* Card body: flexible area; will expand to available card height on the stretched cards */
+    /* Card body flexible */
     .sr-card-body {
       display: flex;
       flex-direction: column;
       gap: 8px;
       flex: 1 1 auto;
-      /* take remaining vertical space in the card */
       min-height: 0;
-      /* allow children to overflow properly */
       box-sizing: border-box;
       overflow: hidden;
-      /* hide overflow; inner list will scroll if needed */
       padding-right: 6px;
     }
 
-    /* Rows that show a label + a number (gender / washrooms lines) */
+    /* Rows with label + number */
     .sr-gender-row,
     .sr-list-row {
       display: flex;
@@ -571,7 +676,6 @@
       border-radius: 8px;
       background: linear-gradient(180deg, rgba(13, 110, 253, 0.03), transparent);
       flex: 0 0 auto;
-      /* keep intrinsic height */
     }
 
     .sr-key {
@@ -594,64 +698,42 @@
       font-size: 1.15rem;
       color: #6b7280;
       line-height: 1;
-      opacity: 0.85;
+      opacity: .85;
       letter-spacing: 0.2px;
     }
 
-    /* List containers (Category / Religion / Disability) */
+    /* list body scroll behavior */
     .sr-list-body {
       display: flex;
       flex-direction: column;
       gap: 6px;
-
-      /* critical: allow this inner list to grow and scroll if the card is constrained */
       flex: 1 1 auto;
       min-height: 0;
-      /* important for proper overflow handling inside flex items */
       overflow-y: auto;
       padding-right: 6px;
       box-sizing: border-box;
     }
 
-    /* If you have a small list-style body for the two stacked cards, same behavior:
-   - for the left column (two stacked cards) we want them to use natural height (no scroll).
-   - so their .sr-card-body should NOT force scrolling unless content exceeds viewport.
-*/
-    .sr-gender-scroll {
-      /* allow content to size naturally; only scroll if overflowing (rare) */
-      flex: 0 0 auto;
-      max-height: none;
-      overflow: visible;
-      padding-right: 0;
-    }
-
-    /* Make left-column stacked cards size to their content (no internal scroll).
-   Your markup used: <div class="col-lg-3 col-md-6 col-sm-12 d-flex flex-column gap-3">,
-   so target that pattern:
-*/
+    /* left stacked cards sizing */
     .col-lg-3.d-flex.flex-column>.sr-card {
-      /* don't force these to fill column; let them take their natural height */
       flex: 0 0 auto;
       min-height: 0;
       overflow: visible;
     }
 
     .col-lg-3.d-flex.flex-column {
-      /* ensure parent column itself stretches in the row (so it becomes the tallest if content is large) */
       align-self: stretch;
     }
 
-    /* For the other columns’ cards, make them stretch to match the tallest column (left column)
-   and let their internal list scroll if needed. */
+    /* other columns stretch */
     .col-lg-3:not(.d-flex)>.sr-card,
     .col-lg-3:not(.d-flex) .sr-card {
-      /* make the card take full height available from the row/column */
       height: 100%;
       display: flex;
       flex-direction: column;
     }
 
-    /* small visual tweaks to keep rows looking consistent */
+    /* small tweaks */
     .sr-list-row:hover {
       background: rgba(13, 110, 253, 0.03);
     }
@@ -669,21 +751,21 @@
       font-weight: 700;
     }
 
-    /* small number pulse animation */
+    /* pulse animation */
     @keyframes sr-pulse {
       0% {
         transform: scale(1);
-        opacity: 0.98;
+        opacity: .98
       }
 
       50% {
         transform: scale(1.08);
-        opacity: 1;
+        opacity: 1
       }
 
       100% {
         transform: scale(1);
-        opacity: 0.98;
+        opacity: .98
       }
     }
 
@@ -691,7 +773,7 @@
       animation: sr-pulse .5s ease-in-out;
     }
 
-    /* Responsive: keep behavior but relax widths */
+    /* responsive sr tweaks */
     @media (max-width: 991px) {
       .sr-values {
         min-width: 90px;
@@ -700,12 +782,154 @@
 
     @media (max-width: 576px) {
       #sr-cards-row {
-        gap: 10px;
+        gap: 10px
       }
 
       .sr-values {
-        min-width: 80px;
+        min-width: 80px
       }
+    }
+
+    /* ============================================================
+   Small responsive helpers (global)
+   ============================================================ */
+    @media (max-width: 880px) {
+
+      /* stack header nicely */
+      .header {
+        padding: 18px 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .header-left {
+        order: 1;
+        width: 100%;
+      }
+
+      .header-right {
+        order: 2;
+        width: 100%;
+        align-items: flex-start;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .app-title {
+        font-size: 1.8rem;
+        letter-spacing: 1.2px;
+      }
+
+      .admin-title,
+      .college-name {
+        font-size: 1.05rem;
+        -webkit-line-clamp: 2;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      #globalAcademicYear.modern-select {
+        min-width: 120px;
+        padding-right: 40px;
+        height: 40px;
+      }
+    }
+
+    /* medium screens: allow college to use two lines */
+    @media (min-width: 561px) and (max-width: 1199px) {
+      .college-name {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    }
+
+    /* ================================
+   HEADER TYPOGRAPHY FIXES & TUNING
+   ================================ */
+
+    /* 1) Prevent text clipping (the g/y descenders) */
+    .header-left {
+      line-height: normal !important;
+    }
+
+    .app-title,
+    .college-name,
+    .admin-title,
+    .admin-label {
+      line-height: 1.25 !important;
+      /* prevents descender clipping */
+    }
+
+    /* 2) New modern MIS title — smaller + better font */
+    .app-title {
+      font-family: "Inter", "Poppins", "Segoe UI", sans-serif !important;
+      font-size: 2.3rem !important;
+      /* slightly smaller */
+      font-weight: 600 !important;
+      letter-spacing: 1.2px !important;
+      margin-bottom: 4px !important;
+
+      background: linear-gradient(90deg, #ffffff 0%, #e3f2ff 35%, #c9ffe4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* 3) Make college name bigger and readable */
+    .college-name {
+      font-size: 1.6rem !important;
+      font-weight: 700 !important;
+      color: #fff !important;
+    }
+
+    /* 4) Make “Admin Dashboard” bigger (matching page fonts) */
+    .admin-label {
+      font-size: 1.25rem !important;
+      font-weight: 600 !important;
+      color: rgba(255, 255, 255, 0.90) !important;
+      margin-top: 6px;
+    }
+
+    /* 5) “Admin Master Dashboard” for superuser */
+    .admin-title {
+      font-size: 1.55rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.5px;
+    }
+
+    /* 6) Fix Academic Year select — smaller & exact width */
+    #globalAcademicYear.modern-select {
+      min-width: 110px !important;
+      /* perfect size for “2025-26” */
+      max-width: 110px !important;
+      height: 40px !important;
+      padding: 6px 32px 6px 10px !important;
+      /* spacing for arrow */
+      font-size: 0.95rem !important;
+      font-weight: 700 !important;
+      border-radius: 8px !important;
+      background-position: right 10px center !important;
+    }
+
+    /* 7) Welcome message spacing alignment */
+    #welcome_msg {
+      margin-right: 4px !important;
+    }
+
+    /* 8) Keep buttons vertically aligned with new font sizes */
+    .header .btn,
+    .header .btn-sm {
+      height: 40px !important;
+      display: inline-flex !important;
+      align-items: center !important;
     }
   </style>
 
@@ -715,53 +939,77 @@
   data-username="{{ request.user.username|escapejs }}" data-email="{{ request.user.email|escapejs }}">
 
   <!-- Header -->
-  <header class="header d-flex justify-content-between align-items-center">
-    <div>
-      <h1>Dashboard</h1>
-      <p class="mb-0">Welcome to your dashboard</p>
+  <header class="header d-flex justify-content-between align-items-center flex-wrap">
+    <!-- LEFT: App title + context -->
+    <div class="header-left me-3">
+      <div class="app-title">Example MIS software</div>
+
+      {% if request.user.is_superuser %}
+      <div class="header-subtitle admin-title">Admin Dashboard</div>
+      {% else %}
+      {# Non-superuser: read first college from Colleges queryset (template-only) #}
+      {% if Colleges and Colleges|length > 0 %}
+      {% with c=Colleges.0 %}
+      <div class="header-subtitle college-name" title="{{ c.College_Name|default:'' }}">
+        {{ c.College_Name|default:"No College Assignedd" }}
+      </div>
+      {% endwith %}
+      {% else %}
+      <div class="header-subtitle college-name" title="">
+        No College Assigned
+      </div>
+      {% endif %}
+
+      {% endif %}
     </div>
 
-    <div class="d-flex flex-column align-items-end">
 
-      <span id="welcome_msg" class="text-light fw-semibold mb-2">
-        Welcome, {{ request.user.username }}
-      </span>
+    <!-- RIGHT: buttons & controls (keep IDs / markup as before) -->
+    <div class="header-right d-flex flex-column align-items-end">
+      <span id="welcome_msg" class="text-light fw-semibold mb-2 me-2">Welcome, {{ request.user.username }}</span>
 
-      <!-- ROW 1: 3 buttons -->
-      <div class="d-flex gap-2 align-items-center">
-        <button id="ChangePasswordBtn" class="btn btn-light btn-sm change-password-btn">
-          <i class="bi bi-person-plus"></i> Change Password
-        </button>
+      <div class="header-actions d-flex gap-2 align-items-center mb-2">
 
-        <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
-          <i class="bi bi-box-arrow-right"></i> Logout
-        </button>
+        <!-- primary group: quick account actions (left) -->
+        <div class="btn-group-left d-flex gap-2 align-items-center">
+          <button id="ChangePasswordBtn" class="btn btn-light btn-sm change-password-btn">
+            <i class="bi bi-key"></i> Change Password
+          </button>
 
-        <button id="export_filtered_excel" class="btn btn-warning btn-sm">
-          <i class="bi bi-file-earmark-excel"></i> Export to Excel
-        </button>
-      </div>
-
-      <!-- ROW 2: create user + Academic year -->
-      <div class="d-flex gap-2 align-items-center">
-
-        {% if request.user.is_superuser %}
-        <button id="createUserBtn" class="btn btn-light btn-sm create-user-btn">
-          <i class="bi bi-person-plus"></i> Create User
-        </button>
-        {% endif %}
-
-        <div class="d-flex align-items-center mt-2">
-          <div class="text-light small me-2 fw-semibold">Academic Year</div>
-          <select id="globalAcademicYear" class="form-select form-select-sm w-auto">
-            {% for year in academic_year %}
-            <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
-            {% endfor %}
-          </select>
+          <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </button>
         </div>
+
+        <!-- accent action (Export) placed centrally so it's prominent -->
+        <div class="btn-group-accent ">
+          <button id="export_filtered_excel" class="btn btn-export btn-sm">
+            <i class="bi bi-file-earmark-excel"></i> Export
+          </button>
+        </div>
+
       </div>
 
+
+      <div class="d-flex align-items-center">
+        <!-- admin-only (keep ID) -->
+        <div class="btn-group-admin d-flex gap-2 align-items-center me-2">
+          {% if request.user.is_superuser %}
+          <button id="createUserBtn" class="btn btn-light btn-sm create-user-btn">
+            <i class="bi bi-person-plus"></i> Create User
+          </button>
+          {% endif %}
+        </div>
+
+        <div class="text-light small me-2 fw-semibold">Academic Year</div>
+        <select id="globalAcademicYear" class="form-select form-select-sm w-auto modern-select">
+          {% for year in academic_year %}
+          <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
+
   </header>
 
   <div id="protected_content">
