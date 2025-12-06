@@ -654,6 +654,9 @@
             </div>
 
           </div>
+
+          <div class="d-none" id="disabled_note"></div>
+
         </div>
 
 
@@ -767,15 +770,15 @@
         <!-- WASHROOM COUNT -->
         <h6 class="fw-bold text-secondary border-bottom pb-1 mt-4">Washroom Count</h6>
         <div class="row mt-2">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label>Total Washrooms</label>
             <input type="number" class="form-control wash-total" min="0" placeholder="T">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label>Male Washrooms</label>
             <input type="number" class="form-control wash-male" min="0" placeholder="M">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label>Female Washrooms</label>
             <input type="number" class="form-control wash-female" min="0" placeholder="F">
           </div>
@@ -1575,6 +1578,40 @@
     });
   }
 
+  function startYearFromAcadStr(yr) {
+    if (!yr || typeof yr !== "string") return null;
+    const m = yr.match(/^(\d{4})/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  // update the disabled note element based on current selection vs backend year
+  function updateDisabledNote() {
+    const $note = $("#disabled_note");
+    if (!$note.length) return;
+
+    const selectedYearStr = $("#globalAcademicYear").val() || "";
+    const selectedStart = startYearFromAcadStr(selectedYearStr);
+
+    const backendYearStr = window.CURRENT_ACADEMIC_YEAR || "";
+    const backendStart = startYearFromAcadStr(backendYearStr);
+
+    const isPrevious =
+      selectedStart !== null &&
+      backendStart !== null &&
+      selectedStart < backendStart;
+
+    if (isPrevious) {
+      const msg = `Note: selected year ${selectedYearStr} is disabled (current academic year: ${backendYearStr}).`;
+      $note
+        .html('<span class="text-danger fw-semibold">' + msg + '</span>')
+        .removeClass("d-none");
+    } else {
+      $note.empty().addClass("d-none");
+    }
+  }
+
+  // expose backend-provided current academic year to JS
+  window.CURRENT_ACADEMIC_YEAR = "{{ current_academic_year|default:''|escapejs }}";
 
   function initStudentTable() {
     const table = $("#records_table").DataTable({
@@ -1600,9 +1637,9 @@
           searchable: false,
           render: function () {
             return `
-            <button class="btn btn-sm btn-outline-primary toggle-programs">
-              <i class="bi bi-plus-lg"></i>
-            </button>`;
+          <button class="btn btn-sm btn-outline-primary toggle-programs">
+            <i class="bi bi-plus-lg"></i>
+          </button>`;
           }
         },
         { data: "college_code" },
@@ -1617,7 +1654,28 @@
         {
           data: null,
           render: function (data, type, row) {
-            // use jQuery instead of document.querySelector/template clone
+            // helper: parse "2024-25" -> 2024 (integer) or null
+            function startYearFromAcadStr(yr) {
+              if (!yr || typeof yr !== "string") return null;
+              const m = yr.match(/^(\d{4})/);
+              return m ? parseInt(m[1], 10) : null;
+            }
+
+            // selected year from UI
+            const selectedYearStr = $("#globalAcademicYear").val() || "";
+            const selectedStart = startYearFromAcadStr(selectedYearStr);
+
+            // backend provided current academic year (should be injected as window.CURRENT_ACADEMIC_YEAR)
+            const backendYearStr = window.CURRENT_ACADEMIC_YEAR || "";
+            const backendStart = startYearFromAcadStr(backendYearStr);
+
+            // determine if selected is a previous year compared to backend current
+            const isPrevious =
+              selectedStart !== null &&
+              backendStart !== null &&
+              selectedStart < backendStart;
+
+            // clone action template
             const $clone = $($("#actionButtonsTemplate").html().trim());
 
             $clone
@@ -1629,6 +1687,47 @@
               .find(".btn-delete")
               .attr("data-college", row.college_code)
               .attr("data-year", row.academic_year);
+
+            if (isPrevious) {
+              // visually mark as disabled BUT do NOT .prop('disabled', true) so clicks still reach JS
+              $clone.find(".btn-edit, .btn-delete")
+                .addClass("disabled")                    // keeps greyed look
+                .attr("aria-disabled", "true")           // accessibility hint
+                // DO NOT set .prop('disabled', true) so clicks still reach JS
+                .attr("title", "Locked: previous academic year")
+                // optional: neutral outline so it reads as disabled/locked
+                .removeClass("btn-outline-primary btn-outline-danger")
+                .addClass("btn-outline-secondary");
+
+              // mark container so handlers can detect quickly
+              $clone.find(".action-icons").attr("data-locked", "1");
+            } else {
+              // ensure enabled look
+              $clone.find(".btn-edit")
+                .removeClass("disabled")
+                .attr("aria-disabled", "false")
+                .prop("disabled", false)
+                .removeClass("btn-outline-secondary")
+                .addClass("btn-outline-primary")
+                .attr("title", "Edit");
+
+              $clone.find(".btn-delete")
+                .removeClass("disabled")
+                .attr("aria-disabled", "false")
+                .prop("disabled", false)
+                .removeClass("btn-outline-secondary")
+                .addClass("btn-outline-danger")
+                .attr("title", "Delete");
+
+              $clone.find(".action-icons").removeAttr("data-locked");
+            }
+
+            // add a data-locked flag for quick checking from outside if needed
+            if (isPrevious) {
+              $clone.find(".action-icons").attr("data-locked", "1");
+            } else {
+              $clone.find(".action-icons").removeAttr("data-locked");
+            }
 
             return $("<div>").append($clone).html();
           }
@@ -1658,9 +1757,6 @@
         method: "POST",
         data: JSON.stringify(payload),
         contentType: "application/json",
-        // headers: {
-        //   "X-CSRFToken": (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || ""
-        // },
         xhr: function () {
           const xhr = new window.XMLHttpRequest();
           xhr.responseType = "blob";
@@ -1717,6 +1813,7 @@
     $("#globalAcademicYear").on("change", function () {
       selectedYear = $(this).val();
       table.ajax.reload();
+      updateDisabledNote();
     });
 
     //  LABEL MAP FOR FULL DESCRIPTIONS
@@ -1849,9 +1946,9 @@
               }
 
               tr.innerHTML = `
-                <td class="text-start">${LABEL_MAP[label] || label}</td>
-                <td class="text-end">${displayValue}</td>
-              `;
+            <td class="text-start">${LABEL_MAP[label] || label}</td>
+            <td class="text-end">${displayValue}</td>
+          `;
 
               tbody.appendChild(tr);
             });
@@ -1865,28 +1962,28 @@
                 washCard.className = "card shadow-sm mt-2";
 
                 washCard.innerHTML = `
-              <div class="card-header bg-info text-white py-2 text-center fw-bold">
-                Washrooms
-              </div>
-              <div class="card-body p-2">
-                <table class="table table-sm mb-0">
-                  <tbody>
-                    <tr>
-                      <td>Total</td>
-                      <td class="text-end">${wash.total_washrooms ?? 0}</td>
-                    </tr>
-                    <tr>
-                      <td>Male</td>
-                      <td class="text-end">${wash.male_washrooms ?? 0}</td>
-                    </tr>
-                    <tr>
-                      <td>Female</td>
-                      <td class="text-end">${wash.female_washrooms ?? 0}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            `;
+          <div class="card-header bg-info text-white py-2 text-center fw-bold">
+            Washrooms
+          </div>
+          <div class="card-body p-2">
+            <table class="table table-sm mb-0">
+              <tbody>
+                <tr>
+                  <td>Total</td>
+                  <td class="text-end">${wash.total_washrooms ?? 0}</td>
+                </tr>
+                <tr>
+                  <td>Male</td>
+                  <td class="text-end">${wash.male_washrooms ?? 0}</td>
+                </tr>
+                <tr>
+                  <td>Female</td>
+                  <td class="text-end">${wash.female_washrooms ?? 0}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
 
                 // stack below Gender in the same col-md-3
                 colDiv.appendChild(washCard);
@@ -1909,7 +2006,6 @@
 
     //  EXPAND / COLLAPSE CHILD ROWS
     $("#records_table tbody").on("click", ".toggle-programs", function () {
-
       const tr = $(this).closest("tr");
       const row = table.row(tr);
       const btn = $(this);
@@ -1922,7 +2018,39 @@
         btn.html('<i class="bi bi-dash-lg"></i>');
       }
     });
+
+    //
+    // Intercept pointer/mousedown on locked edit/delete buttons and show notification.
+    // Use mousedown so we run BEFORE normal click handlers.
+    //
+    $(document).on('mousedown', '#records_table .btn-edit, #records_table .btn-delete', function (e) {
+      const $btn = $(this);
+      const ariaDisabled = $btn.attr('aria-disabled') === 'true';
+      const hasDisabledClass = $btn.hasClass('disabled');
+      const parentLocked = $btn.closest('.action-icons').attr('data-locked') === '1';
+
+      if (ariaDisabled || hasDisabledClass || parentLocked) {
+        // Prevent click handlers from running
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const year = $('#globalAcademicYear').val() || '';
+        const msg = year ? `Editing is disabled for academic year ${year}.` : 'Editing is disabled for the selected academic year.';
+
+        if (typeof showNotification === 'function') {
+          showNotification(msg, 'warning');
+        } else {
+          alert(msg);
+        }
+
+        return false;
+      }
+      // otherwise allow normal behavior
+    });
+
+    return table;
   }
+
 
 
   function showNotification(message, type) {
@@ -1955,6 +2083,7 @@
       success: function (response) {
         if (response.status === 200) {
           initStudentTable()
+          updateDisabledNote();
         } else {
           window.location.href = "/home/";
         }
@@ -2182,7 +2311,7 @@
             if (response.status === 200) {
               showNotification("Student records saved successfully!", "success");
               $("#collegeModal").modal("hide");
-              table.ajax.reload(null, false);
+              $('#records_table').DataTable().ajax.reload(null, false);
             }
             else if (response.status === 400) {
               alert(
@@ -2211,8 +2340,7 @@
             if (response.status === 200) {
               showNotification("Student records updated successfully!", "success");
               $("#collegeModal").modal("hide");
-              table.ajax.reload(null, false);
-
+              $('#records_table').DataTable().ajax.reload(null, false);
             }
             else if (response.status === 400) {
               alert(

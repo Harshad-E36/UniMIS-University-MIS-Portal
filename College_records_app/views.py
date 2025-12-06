@@ -14,6 +14,7 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment
 from openpyxl.utils import get_column_letter
 import datetime
+from datetime import date
 from io import BytesIO
 import io
 
@@ -112,6 +113,15 @@ def home(request):
 def college_master(request):
     return render(request, 'college_master.html', {"disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all()}) 
 
+def compute_current_academic_year(today=None):
+    today = today or date.today()
+    y = today.year
+    if today.month >= 8:
+        start = y
+    else:
+        start = y - 1
+    end_short = str(start + 1)[-2:]
+    return f"{start}-{end_short}"
 
 def student_master(request):
     if not request.user.is_authenticated:
@@ -124,7 +134,10 @@ def student_master(request):
         if profile:
             CollegeCode = profile.college.College_Code
             CollegeName = profile.college.College_Name
-    return render(request, 'student_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName})
+
+    current_academic_year = compute_current_academic_year()
+
+    return render(request, 'student_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName, "current_academic_year": current_academic_year, })
 
 def staff_master(request):
     if not request.user.is_authenticated:
@@ -137,7 +150,10 @@ def staff_master(request):
         if profile:
             CollegeCode = profile.college.College_Code
             CollegeName = profile.college.College_Name
-    return render(request, 'staff_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName})
+
+    current_academic_year = compute_current_academic_year()
+
+    return render(request, 'staff_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName, "current_academic_year": current_academic_year,})
 
 
 def user_status(request):

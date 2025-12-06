@@ -693,6 +693,7 @@
             </div>
 
           </div>
+          <div class="d-none" id="disabled_note"></div>
         </div>
 
 
@@ -1614,6 +1615,40 @@
     });
   }
 
+  function startYearFromAcadStr(yr) {
+    if (!yr || typeof yr !== "string") return null;
+    const m = yr.match(/^(\d{4})/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  // update the disabled note element based on current selection vs backend year
+  function updateDisabledNote() {
+    const $note = $("#disabled_note");
+    if (!$note.length) return;
+
+    const selectedYearStr = $("#globalAcademicYear").val() || "";
+    const selectedStart = startYearFromAcadStr(selectedYearStr);
+
+    const backendYearStr = window.CURRENT_ACADEMIC_YEAR || "";
+    const backendStart = startYearFromAcadStr(backendYearStr);
+
+    const isPrevious =
+      selectedStart !== null &&
+      backendStart !== null &&
+      selectedStart < backendStart;
+
+    if (isPrevious) {
+      const msg = `Note: selected year ${selectedYearStr} is disabled (current academic year: ${backendYearStr}).`;
+      $note
+        .html('<span class="text-danger fw-semibold">' + msg + '</span>')
+        .removeClass("d-none");
+    } else {
+      $note.empty().addClass("d-none");
+    }
+  }
+
+  // expose backend-provided current academic year to JS
+  window.CURRENT_ACADEMIC_YEAR = "{{ current_academic_year|default:''|escapejs }}";
 
   function initStaffTable() {
     const table = $("#staff_records_table").DataTable({
@@ -1635,7 +1670,10 @@
           orderable: false,
           searchable: false,
           render: function () {
-            return `\n            <button class="btn btn-sm btn-outline-primary toggle-programs">\n              <i class="bi bi-plus-lg"></i>\n            </button>`;
+            return `
+            <button class="btn btn-sm btn-outline-primary toggle-programs">
+              <i class="bi bi-plus-lg"></i>
+            </button>`;
           }
         },
         { data: "college_code" },
@@ -1650,6 +1688,28 @@
         {
           data: null,
           render: function (data, type, row) {
+            // helper: parse "2024-25" -> 2024 (integer) or null
+            function startYearFromAcadStr(yr) {
+              if (!yr || typeof yr !== "string") return null;
+              const m = yr.match(/^(\d{4})/);
+              return m ? parseInt(m[1], 10) : null;
+            }
+
+            // selected year from UI
+            const selectedYearStr = $("#globalAcademicYear").val() || "";
+            const selectedStart = startYearFromAcadStr(selectedYearStr);
+
+            // backend provided current academic year (should be injected as window.CURRENT_ACADEMIC_YEAR)
+            const backendYearStr = window.CURRENT_ACADEMIC_YEAR || "";
+            const backendStart = startYearFromAcadStr(backendYearStr);
+
+            // determine if selected is a previous year compared to backend current
+            const isPrevious =
+              selectedStart !== null &&
+              backendStart !== null &&
+              selectedStart < backendStart;
+
+            // clone action template
             const $clone = $($("#actionButtonsTemplate").html().trim());
 
             $clone
@@ -1661,6 +1721,45 @@
               .find(".btn-delete")
               .attr("data-college", row.college_code)
               .attr("data-year", row.academic_year);
+
+            if (isPrevious) {
+              // visually mark as disabled BUT do NOT .prop('disabled', true) so clicks still reach JS (we intercept)
+              $clone.find(".btn-edit, .btn-delete")
+                .addClass("disabled")
+                .attr("aria-disabled", "true")
+                .removeClass("btn-outline-primary btn-outline-danger")
+                .addClass("btn-outline-secondary")
+                .attr("title", "Locked: previous academic year");
+
+              // mark container so handlers can detect quickly
+              $clone.find(".action-icons").attr("data-locked", "1");
+            } else {
+              // ensure enabled look
+              $clone.find(".btn-edit")
+                .removeClass("disabled")
+                .attr("aria-disabled", "false")
+                .prop("disabled", false)
+                .removeClass("btn-outline-secondary")
+                .addClass("btn-outline-primary")
+                .attr("title", "Edit");
+
+              $clone.find(".btn-delete")
+                .removeClass("disabled")
+                .attr("aria-disabled", "false")
+                .prop("disabled", false)
+                .removeClass("btn-outline-secondary")
+                .addClass("btn-outline-danger")
+                .attr("title", "Delete");
+
+              $clone.find(".action-icons").removeAttr("data-locked");
+            }
+
+            // add a data-locked flag for quick checking from outside if needed
+            if (isPrevious) {
+              $clone.find(".action-icons").attr("data-locked", "1");
+            } else {
+              $clone.find(".action-icons").removeAttr("data-locked");
+            }
 
             return $("<div>").append($clone).html();
           }
@@ -1745,6 +1844,7 @@
     $("#globalAcademicYear").on("change", function () {
       selectedYear = $(this).val();
       table.ajax.reload();
+      updateDisabledNote();
     });
 
     // LABEL MAP (same)
@@ -1867,7 +1967,29 @@
                 const washCard = document.createElement("div");
                 washCard.className = "card shadow-sm mt-2";
 
-                washCard.innerHTML = `\n              <div class="card-header bg-info text-white py-2 text-center fw-bold">\n                Washrooms\n              </div>\n              <div class="card-body p-2">\n                <table class="table table-sm mb-0">\n                  <tbody>\n                    <tr>\n                      <td>Total</td>\n                      <td class="text-end">${wash.total_washrooms ?? 0}</td>\n                    </tr>\n                    <tr>\n                      <td>Male</td>\n                      <td class="text-end">${wash.male_washrooms ?? 0}</td>\n                    </tr>\n                    <tr>\n                      <td>Female</td>\n                      <td class="text-end">${wash.female_washrooms ?? 0}</td>\n                    </tr>\n                  </tbody>\n                </table>\n              </div>\n            `;
+                washCard.innerHTML = `
+              <div class="card-header bg-info text-white py-2 text-center fw-bold">
+                Washrooms
+              </div>
+              <div class="card-body p-2">
+                <table class="table table-sm mb-0">
+                  <tbody>
+                    <tr>
+                      <td>Total</td>
+                      <td class="text-end">${wash.total_washrooms ?? 0}</td>
+                    </tr>
+                    <tr>
+                      <td>Male</td>
+                      <td class="text-end">${wash.male_washrooms ?? 0}</td>
+                    </tr>
+                    <tr>
+                      <td>Female</td>
+                      <td class="text-end">${wash.female_washrooms ?? 0}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            `;
 
                 colDiv.appendChild(washCard);
               }
@@ -1901,7 +2023,39 @@
         btn.html('<i class="bi bi-dash-lg"></i>');
       }
     });
+
+    //
+    // Intercept pointer/mousedown on locked edit/delete buttons and show notification.
+    // Use mousedown so we run BEFORE normal click handlers.
+    //
+    $(document).on('mousedown', '#staff_records_table .btn-edit, #staff_records_table .btn-delete', function (e) {
+      const $btn = $(this);
+      const ariaDisabled = $btn.attr('aria-disabled') === 'true';
+      const hasDisabledClass = $btn.hasClass('disabled');
+      const parentLocked = $btn.closest('.action-icons').attr('data-locked') === '1';
+
+      if (ariaDisabled || hasDisabledClass || parentLocked) {
+        // Prevent click handlers from running
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const year = $('#globalAcademicYear').val() || '';
+        const msg = year ? `Editing is disabled for academic year ${year}.` : 'Editing is disabled for the selected academic year.';
+
+        if (typeof showNotification === 'function') {
+          showNotification(msg, 'warning');
+        } else {
+          alert(msg);
+        }
+
+        return false;
+      }
+      // otherwise allow normal behavior
+    });
+
+    return table;
   }
+
 
 
   function showNotification(message, type) {
@@ -1933,6 +2087,7 @@
       success: function (response) {
         if (response.status === 200) {
           initStaffTable();
+          updateDisabledNote();
         } else {
           window.location.href = "/home/";
         }
