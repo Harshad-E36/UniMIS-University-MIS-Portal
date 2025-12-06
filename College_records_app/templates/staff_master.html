@@ -509,12 +509,13 @@
     .metric-body td.text-end {
       white-space: nowrap;
     }
-    
   </style>
 
 </head>
 
-<body>
+<body data-is-super="{{ request.user.is_superuser|yesno:'true,false' }}"
+  data-college-code="{{ college_code|default:''|escapejs }}">
+
   <!-- Staff Records -->
   <div class="container-fluid">
     <div class="row">
@@ -1144,6 +1145,9 @@
 </body>
 
 <script>
+
+  const USER_IS_SUPER = document.body.dataset.isSuper === "true";
+  const CURRENT_COLLEGE_CODE = document.body.dataset.collegeCode || "";
 
   // function to get CSRF cookie
   function getCookie(name) {
@@ -1823,29 +1827,6 @@
       }
     });
 
-    // Toggle the cassette — note: add button id in HTML should be #AddStaffButton
-    $(document).on('click', '#AddStaffButton', function (e) {
-      e.stopPropagation();
-
-      const cassette = $("#collegeCodeCassette");
-      cassette.toggleClass("show");
-
-      if (cassette.hasClass("show")) {
-        $("#collegeCodeInput").focus();
-      } else {
-        $("#collegeCodeInput").val("");
-      }
-    });
-
-    $(document).on("click", function (e) {
-      if (!$(e.target).closest("#collegeCodeCassette, #AddStaffButton").length) {
-        $("#collegeCodeCassette").removeClass("show");
-        $("#collegeCodeInput").val("");
-      }
-    });
-
-    $("#collegeCodeCassette").on("click", function (e) { e.stopPropagation(); });
-
     // toggle collapsible discipline
     $(document).on("click", ".toggle-discipline", function () {
       const container = $(this).closest(".discipline-wrapper").find(".discipline-programs-container");
@@ -1855,9 +1836,65 @@
       icon.toggleClass("bi-chevron-down bi-chevron-up");
     });
 
-     // ADD MODE - When user enters college code to add new records
-    $("#submitCollegeCode").on("click", function () {
-      const collegeCode = $("#collegeCodeInput").val().trim();
+
+    // Toggle the cassette (superuser only)
+    $("#AddStaffButton").off("click.cassette").on("click.cassette", function (e) {
+      e.stopPropagation();
+
+      // Superuser -> original toggle behavior
+      if (USER_IS_SUPER) {
+        const cassette = $("#collegeCodeCassette");
+        cassette.toggleClass("show");
+
+        if (cassette.hasClass("show")) {
+          // Opening → focus but DO NOT clear
+          $("#collegeCodeInput").focus();
+        } else {
+          // Closing → clear input
+          $("#collegeCodeInput").val("");
+        }
+        return;
+      }
+
+      // Non-superuser -> auto-fill & submit their assigned college code
+      if (!CURRENT_COLLEGE_CODE) {
+        if (typeof showNotification === "function") {
+          showNotification("No college assigned to your account", "danger");
+        } else {
+          alert("No college assigned to your account");
+        }
+        return;
+      }
+
+      // fill the input (in case submit handler reads it) and trigger submit
+      $("#collegeCodeInput").val(CURRENT_COLLEGE_CODE);
+
+      // Option A (preferred): trigger the same click handler you already have
+      $("#submitCollegeCode").trigger("click");
+
+    });
+
+    // Click outside closes cassette (superuser only)
+    $(document).off("click.cassetteOutside").on("click.cassetteOutside", function (e) {
+      if (!USER_IS_SUPER) return; // Non-superuser has no cassette UI to close
+      if (!$(e.target).closest("#collegeCodeCassette, #AddStaffButton").length) {
+        $("#collegeCodeCassette").removeClass("show");
+        // Clear input when closed
+        $("#collegeCodeInput").val("");
+      }
+    });
+
+    // Prevent inner clicks from closing it (only needed when superuser)
+    $("#collegeCodeCassette").off("click.prevent").on("click.prevent", function (e) {
+      if (USER_IS_SUPER) e.stopPropagation();
+    });
+
+
+    // SUBMIT handler - reuse your same AJAX, but allow non-super to auto-call it
+    $("#submitCollegeCode").off("click.submitCollegeCode").on("click.submitCollegeCode", function () {
+      // If superuser, read what's in the input
+      // If non-superuser, value should already be set above, but double-check and fallback
+      const collegeCode = (USER_IS_SUPER ? $("#collegeCodeInput").val().trim() : (CURRENT_COLLEGE_CODE || $("#collegeCodeInput").val().trim()));
 
       if (!collegeCode) {
         showNotification("Please enter a college code", "danger");
@@ -1890,7 +1927,8 @@
         }
       });
     });
- 
+
+
     // Submit handler — staff variant
     $(document).on('click', '#submitStaffRecordForm', function () {
       const collegeCode = $("#collegeModal").data("college-code");
@@ -2054,7 +2092,7 @@
           college_code: college,
           academic_year: year,
           mode: "edit",
-          page:"staff"
+          page: "staff"
         },
         success: function (response) {
           $btn.prop("disabled", false).removeClass("disabled");
