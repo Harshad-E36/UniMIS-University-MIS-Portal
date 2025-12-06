@@ -87,7 +87,7 @@ def home(request):
 
             # Filter static tables using those names
             disciplines_qs = Discipline.objects.filter(DisciplineName__in=discipline_name)
-           # 🔑 IMPORTANT: filter programs by BOTH discipline and program name
+           # IMPORTANT: filter programs by BOTH discipline and program name
             programs_qs = Programs.objects.filter(
                 Discipline__DisciplineName__in=discipline_name,
                 ProgramName__in=program_name,
@@ -3365,12 +3365,17 @@ def export_student_excel(request):
 @ajax_login_required
 def export_dashboard_excel(request):
     if request.method != "POST":
-        return HttpResponseBadRequest("Only POST allowed")
-
+       return JsonResponse(
+            {"message": "Only POST allowed"},
+            status=400
+        )
     # --- Academic year: REQUIRED from POST ---
     year = (request.POST.get("year") or "").strip()
     if not year:
-        return HttpResponseBadRequest("Missing academic year")
+         return JsonResponse(
+            {"message": "Missing academic year"},
+            status=400
+        )
 
     def non_empty_list(key):
         return [v for v in request.POST.getlist(key) if v is not None and v != ""]
@@ -3384,10 +3389,27 @@ def export_dashboard_excel(request):
     disciplines     = non_empty_list("Discipline[]")
     programs        = non_empty_list("Programs[]")
 
-    qs = College.objects.filter(is_deleted=False).prefetch_related(
+    # --------- BASE QS: all active colleges ----------
+    qs = College.objects.filter(is_deleted=False)
+
+    # 🔒 Restrict by logged-in user's college (if not superuser)
+    user = request.user
+    if not user.is_superuser:
+        profile = UserCollege.objects.filter(user=user).first()
+        if not profile or not profile.college or profile.college.is_deleted:
+            # normal user but no valid college assigned
+           return JsonResponse(
+                {"message": "No college assigned to this user."},
+                status=400
+            )
+        qs = qs.filter(id=profile.college.id)
+
+    # prefetch AFTER user restriction
+    qs = qs.prefetch_related(
         "college_programs", "student_aggregates", "staff_aggregates"
     )
 
+    # --------- Apply filters from request ----------
     if college_codes:
         qs = qs.filter(College_Code__in=college_codes)
     if college_names:
@@ -3570,25 +3592,20 @@ def export_dashboard_excel(request):
     # ---------- Iterate colleges (with restricted programs per filters) ----------
     for college in qs:
         # Determine allowed programs for this college based on filters
-        # Priority: programs filter -> disciplines filter -> all programs
         college_program_qs = college.college_programs.filter(is_deleted=False)
 
         if programs:
-            # programs contains ProgramName values (strings) — if you pass IDs adjust this
             allowed_cps = list(college_program_qs.filter(ProgramName__in=programs))
         elif disciplines:
             allowed_cps = list(college_program_qs.filter(Discipline__in=disciplines))
         else:
             allowed_cps = list(college_program_qs)
 
-        # If there are no allowed programs for this college, create a single placeholder row
         if not allowed_cps:
             allowed_cps = [None]
 
-        # build allowed program id list (for restricting aggregates)
         allowed_prog_ids = [cp.id for cp in allowed_cps if cp is not None]
 
-        # student & staff year records keyed by Program_id (restrict to allowed programs)
         student_year_records = {
             rec.Program_id: rec
             for rec in college.student_aggregates.filter(
@@ -3604,7 +3621,6 @@ def export_dashboard_excel(request):
             )
         }
 
-        # group programs by discipline, but only from allowed_cps
         discipline_map = {}
         for cp in allowed_cps:
             if cp is None:
@@ -3646,20 +3662,18 @@ def export_dashboard_excel(request):
             cell = ws_staff.cell(row=start_row_s, column=ci, value=val)
             cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
 
-        # write per-program rows for both sheets
         cur_row_s = row_students
         cur_row_f = row_staff
+
         for discipline, progs in discipline_map.items():
             progs_list = progs if progs else [None]
 
-            # STUDENT: merge discipline column for block
             ws_students.merge_cells(
                 start_row=cur_row_s, start_column=13,
                 end_row=cur_row_s + len(progs_list) - 1, end_column=13
             )
             ws_students.cell(cur_row_s, 13, discipline).alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
 
-            # STAFF: same discipline merge
             ws_staff.merge_cells(
                 start_row=cur_row_f, start_column=13,
                 end_row=cur_row_f + len(progs_list) - 1, end_column=13
@@ -3667,7 +3681,6 @@ def export_dashboard_excel(request):
             ws_staff.cell(cur_row_f, 13, discipline).alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
 
             for prog in progs_list:
-                # Program name cell on both sheets
                 if prog:
                     ws_students.cell(cur_row_s, 14, prog.ProgramName)
                     ws_staff.cell(cur_row_f, 14, prog.ProgramName)
@@ -3685,7 +3698,6 @@ def export_dashboard_excel(request):
                     if srec:
                         val = getattr(srec, field, None)
                         if val is None:
-                            # fallback explicit
                             val = getattr(srec, field, 0) or 0
                         val = val or 0
                     ws_students.cell(cur_row_s, 15 + i, val)
@@ -3695,7 +3707,6 @@ def export_dashboard_excel(request):
                 for j, field in enumerate(staff_fields):
                     val = 0
                     if frec:
-                        # prefer exact staff field name; fall back to student-style names where appropriate
                         if hasattr(frec, field):
                             val = getattr(frec, field, 0) or 0
                         else:
@@ -3703,7 +3714,6 @@ def export_dashboard_excel(request):
                                 "total_staff_washrooms": "total_washrooms",
                                 "male_staff_washrooms": "male_washrooms",
                                 "female_staff_washrooms": "female_washrooms",
-                                # total_staff fallback to total_staff or total_students
                                 "total_staff": "total_staff" if hasattr(frec, "total_staff") else "total_students",
                             }
                             fb = fallback_map.get(field)
@@ -3721,15 +3731,12 @@ def export_dashboard_excel(request):
         row_staff = end_row_s + 1
 
     # --- Aggregate row per sheet ---
-
-    # STUDENT sheet aggregate
     agg_row = row_students
     ws_students.merge_cells(start_row=agg_row, start_column=1, end_row=agg_row, end_column=12)
     lbl = ws_students.cell(agg_row, 1, f"Aggregate Values - {year}")
     lbl.font = Font(bold=True)
     lbl.alignment = Alignment(horizontal="center", vertical="center")
 
-    # write student washrooms & totals explicit
     ws_students.cell(agg_row, 15, overall_student_agg.get("total_washrooms", 0))
     ws_students.cell(agg_row, 16, overall_student_agg.get("male_washrooms", 0))
     ws_students.cell(agg_row, 17, overall_student_agg.get("female_washrooms", 0))
@@ -3745,14 +3752,12 @@ def export_dashboard_excel(request):
         c.font = Font(bold=True, color="CC6600")
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # STAFF sheet aggregate
     agg_row_s = row_staff
     ws_staff.merge_cells(start_row=agg_row_s, start_column=1, end_row=agg_row_s, end_column=12)
     lbl2 = ws_staff.cell(agg_row_s, 1, f"Aggregate Values - {year}")
     lbl2.font = Font(bold=True)
     lbl2.alignment = Alignment(horizontal="center", vertical="center")
 
-    # write staff washrooms & totals explicit
     ws_staff.cell(agg_row_s, 15, overall_staff_agg.get("total_staff_washrooms", 0))
     ws_staff.cell(agg_row_s, 16, overall_staff_agg.get("male_staff_washrooms", 0))
     ws_staff.cell(agg_row_s, 17, overall_staff_agg.get("female_staff_washrooms", 0))
@@ -3768,10 +3773,7 @@ def export_dashboard_excel(request):
         c.font = Font(bold=True, color="CC6600")
         c.alignment = Alignment(horizontal="center", vertical="center")
 
-    # -----------------------
-    # Auto-width (no freeze panes so full horizontal scroll works)
-    # -----------------------
-    # For students sheet: number of columns = meta (14) + len(student_fields)
+    # Auto-width
     students_cols = 14 + len(student_fields)
     for col in range(1, students_cols + 1):
         letter = get_column_letter(col)
@@ -3783,7 +3785,6 @@ def export_dashboard_excel(request):
                     max_len = l
         ws_students.column_dimensions[letter].width = min(max_len + 5, 60)
 
-    # For staff sheet: number of columns = meta (14) + len(staff_fields)
     staff_cols = 14 + len(staff_fields)
     for col in range(1, staff_cols + 1):
         letter = get_column_letter(col)
@@ -3795,7 +3796,6 @@ def export_dashboard_excel(request):
                     max_len = l
         ws_staff.column_dimensions[letter].width = min(max_len + 5, 60)
 
-    # Return XLSX
     output = BytesIO()
     wb.save(output)
     output.seek(0)
@@ -3807,6 +3807,7 @@ def export_dashboard_excel(request):
     )
     resp["Content-Disposition"] = f'attachment; filename="{filename}"'
     return resp
+
 
 
 

@@ -2425,11 +2425,11 @@
     });
 
 
-    $("#export_filtered_excel").click(function () {
-      // Initialize an object to hold all selected filters
+    $(document).on("click", "#export_filtered_excel", function (e) {
+      e.preventDefault();
+
       let selectedFilters = gatherSelectedFilters();
 
-      // Send AJAX request
       $.ajax({
         type: "POST",
         url: "{% url 'export_filtered_excel' %}",
@@ -2444,15 +2444,34 @@
           "Discipline[]": selectedFilters.discipline,
           "Programs[]": selectedFilters.programs
         },
+
+        // ⬇⬇ IMPORTANT PART ⬇⬇
         xhr: function () {
           const xhr = new window.XMLHttpRequest();
-          xhr.responseType = "blob";
+
+          xhr.onreadystatechange = function () {
+            // readyState 2 = HEADERS_RECEIVED
+            if (xhr.readyState === 2) {
+              // If server will respond OK => use blob for Excel
+              if (xhr.status >= 200 && xhr.status < 300) {
+                xhr.responseType = "blob";
+              } else {
+                // For errors (400, 403, 500...), use text so we can read message
+                xhr.responseType = "text";
+              }
+            }
+          };
+
           return xhr;
         },
-        success: function (blob, status, xhr) {
-          let filename = "Stastics_data.xlsx";
-          const disp = xhr.getResponseHeader("Content-Disposition");
+        // ⬆⬆ IMPORTANT PART ⬆⬆
 
+        success: function (data, status, xhr) {
+          // here 'data' is a Blob because we set responseType=blob for 2xx
+          let blob = data;
+
+          let filename = "Statistics_data.xlsx";
+          const disp = xhr.getResponseHeader("Content-Disposition");
           if (disp && disp.indexOf("filename=") !== -1) {
             const match = disp.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/);
             if (match && match[1]) {
@@ -2461,12 +2480,11 @@
           }
 
           const url = window.URL.createObjectURL(blob);
-          const $a = $("<a style='display:none;'></a>");
+          const $a = $("<a style='display:none;'></a>")
+            .attr("href", url)
+            .attr("download", filename);
 
-          $a.attr("href", url).attr("download", filename);
           $("body").append($a);
-
-          // trigger download
           $a[0].click();
 
           setTimeout(function () {
@@ -2474,27 +2492,23 @@
             $a.remove();
           }, 200);
         },
+
         error: function (xhr, status, err) {
-          if (xhr.response && xhr.response.type === "application/json") {
-            const reader = new FileReader();
-            reader.onload = function () {
-              try {
-                const json = JSON.parse(reader.result);
-                alert(
-                  "Export failed: " +
-                  (json.message || json.detail || JSON.stringify(json))
-                );
-              } catch (e) {
-                alert("Export failed");
-              }
-            };
-            reader.readAsText(xhr.response);
-          } else {
-            alert("Export failed: " + status);
+          console.log("Export error:", status, err, xhr);
+
+          // now for errors, response is plain text/JSON (NOT blob anymore)
+          const text = xhr.responseText || "";
+
+          try {
+            const json = JSON.parse(text);
+            const msg = json.message || json.detail || text || "Unknown error";
+            showNotification("Export failed: " + msg, "error");
+          } catch (e) {
+            // not JSON, just show the text or generic message
+            showNotification("Export failed: " + (text || err || status || "Unknown error"), "error");
           }
         }
       });
-
     });
 
     $('#globalAcademicYear').on('change', function () {
