@@ -511,6 +511,7 @@
 
             <h1 class="fw-bold">Student Records</h1>
             <p>Add your student record here</p>
+
             <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton">
               <i class="bi bi-plus-lg"></i> Add Record
             </button>
@@ -523,8 +524,8 @@
                 <button class="btn btn-primary btn-sm" id="submitCollegeCode">Submit</button>
               </div>
             </div>
-          </div>
 
+          </div>
         </div>
 
 
@@ -1315,7 +1316,6 @@
         message: `${programName}: Disability total (${disabilitySum}) does not match Total Students (${total}).`
       };
     }
-
     // All checks passed
     return { valid: true };
   }

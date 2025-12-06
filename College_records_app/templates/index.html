@@ -711,7 +711,9 @@
 
 </head>
 
-<body>
+<body data-is-super="{{ request.user.is_superuser|yesno:'true,false' }}"
+  data-username="{{ request.user.username|escapejs }}" data-email="{{ request.user.email|escapejs }}">
+
   <!-- Header -->
   <header class="header d-flex justify-content-between align-items-center">
     <div>
@@ -770,7 +772,7 @@
 
         <!-- Row 1: Filters -->
         <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 w-100 mb-2">
-          
+
           {% if request.user.is_superuser %}
           <!-- College Code -->
           <div class="dropdown">
@@ -1762,22 +1764,15 @@
     </div>
   </div>
 
-  <input type="hidden" id="global_is_superuser" value="{{ request.user.is_superuser }}">
-  <input type="hidden" id="global_username" value="{{ request.user.username }}">
-  <input type="hidden" id="global_email" value="{{ request.user.email }}">
+
 
 </body>
 
 <script>
-  const rawIsSuper = $('#global_is_superuser').val();
-  const USER_IS_SUPER = (rawIsSuper === true) ||
-    (typeof rawIsSuper === 'string' && (
-      rawIsSuper.toLowerCase() === 'true' ||
-      rawIsSuper === '1' ||
-      rawIsSuper === 'yes'
-    ));
-  const CURRENT_USERNAME = $('#global_username').val() || '';
-  const CURRENT_EMAIL = $('#global_email').val() || '';
+
+  const USER_IS_SUPER = document.body.dataset.isSuper === "true";
+  const CURRENT_USERNAME = document.body.dataset.username || "";
+  const CURRENT_EMAIL = document.body.dataset.email || "";
 
 
   // function to get CSRF cookie
