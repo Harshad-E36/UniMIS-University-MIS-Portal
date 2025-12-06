@@ -125,10 +125,14 @@
 
       /* gradient text effect (subtle) */
       background: linear-gradient(90deg, #ffffff 0%, #e3f2ff 40%, #d6ffea 100%);
+      background-clip: text;
       -webkit-background-clip: text;
+      color: transparent;
       -webkit-text-fill-color: transparent;
+
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
     }
+
 
     /* Subtitle: college name or admin title */
     .admin-title,
@@ -829,6 +833,7 @@
       .admin-title,
       .college-name {
         font-size: 1.05rem;
+        line-clamp: 2;
         -webkit-line-clamp: 2;
         display: -webkit-box;
         -webkit-box-orient: vertical;
@@ -846,6 +851,7 @@
     @media (min-width: 561px) and (max-width: 1199px) {
       .college-name {
         display: -webkit-box;
+        line-clamp: 2;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
@@ -873,15 +879,19 @@
     .app-title {
       font-family: "Inter", "Poppins", "Segoe UI", sans-serif !important;
       font-size: 2.3rem !important;
-      /* slightly smaller */
       font-weight: 600 !important;
       letter-spacing: 1.2px !important;
       margin-bottom: 4px !important;
 
       background: linear-gradient(90deg, #ffffff 0%, #e3f2ff 35%, #c9ffe4 100%);
+      background-clip: text;
       -webkit-background-clip: text;
+
+      /* Required for gradient text visibility */
       -webkit-text-fill-color: transparent;
+      color: transparent;
     }
+
 
     /* 3) Make college name bigger and readable */
     .college-name {
@@ -930,6 +940,64 @@
       height: 40px !important;
       display: inline-flex !important;
       align-items: center !important;
+    }
+
+    /* ---------- Add spacing around the "Student Records" heading only ---------- */
+    /* Targets the content section that is aria-labelled by #sr-heading so other sections are unaffected */
+    .content-section[aria-labelledby="sr-heading"] {
+      /* space above the whole section so it doesn't touch stat cards above */
+      padding-top: 28px;
+      /* space below the heading area before cards begin */
+      padding-bottom: 14px;
+    }
+
+    /* Make sure the heading itself keeps compact margins inside the section */
+    #sr-heading {
+      margin: 0 0 6px 0;
+      /* small gap between h3 and the small caption */
+      line-height: 1.12;
+    }
+
+    /* Make the caption a block so it sits below the heading and follows spacing rules */
+    .content-section[aria-labelledby="sr-heading"] small.text-muted {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+    }
+
+    /* Slightly reduce spacing on small screens */
+    @media (max-width: 880px) {
+      .content-section[aria-labelledby="sr-heading"] {
+        padding-top: 18px;
+        padding-bottom: 10px;
+      }
+    }
+
+    /* ---------- Extra breathing room for Staff Records ---------- */
+    /* Targets the Staff Records section only (uses your aria-labelledby) */
+    .content-section[aria-labelledby="staff-heading"] {
+      /* space above (if needed) and comfortable space below so cards don't butt against page bottom */
+      padding-top: 28px;
+      padding-bottom: 48px;
+      /* <- increased bottom space so cards won't touch page bottom */
+    }
+
+    /* Slight extra bottom padding on the cards row itself to be safe when columns stretch */
+    #staff-cards-row {
+      padding-bottom: 8px;
+      /* allow last card's shadow to be visible */
+    }
+
+    /* Slightly reduce the extra padding on small screens so vertical space stays usable */
+    @media (max-width: 880px) {
+      .content-section[aria-labelledby="staff-heading"] {
+        padding-top: 18px;
+        padding-bottom: 28px;
+      }
+
+      #staff-cards-row {
+        padding-bottom: 6px;
+      }
     }
   </style>
 

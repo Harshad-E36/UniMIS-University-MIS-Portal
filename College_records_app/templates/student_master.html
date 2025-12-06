@@ -457,6 +457,122 @@
     .metric-body td.text-end {
       white-space: nowrap;
     }
+
+    /* ---------- Student Master header tweaks (scoped) ---------- */
+    /* center content block inside existing header-banner */
+    .header-banner {
+      position: relative;
+      overflow: visible;
+    }
+
+    /* centered content container */
+    .header-center-content {
+      max-width: 920px;
+      /* limit line length */
+      margin: 0 auto;
+      /* center horizontally */
+      color: #fff;
+      padding: 0 1rem;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Product title (Example MIS Software) */
+    .product-title {
+      font-family: "Poppins", "Segoe UI", Roboto, sans-serif;
+      font-size: 2.6rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      color: #fff;
+      text-transform: none;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    /* College name (visible only when provided) */
+    .product-college {
+      font-family: "Poppins", "Segoe UI", Roboto, sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-top: 6px;
+      color: #f2fbf6;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* small centered subtitle ("Student Master") */
+    .page-subtitle {
+      font-size: 0.98rem;
+      color: rgba(255, 255, 255, 0.92);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* keep Add Record button spacing (no functional change) */
+    .header-center-content .btn {
+      min-width: 170px;
+    }
+
+    /* RIGHT-side actions: keep absolute positioning and vertical centering */
+    .header-banner .header-actions {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+      z-index: 5;
+      padding: 0.25rem;
+    }
+
+    /* when screen narrow, make header-actions flow below center content */
+    @media (max-width: 880px) {
+      .product-title {
+        font-size: 1.8rem;
+      }
+
+      .product-college {
+        font-size: 1rem;
+        display: block;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        display: -webkit-box;
+      }
+
+      .header-banner .header-actions {
+        position: static;
+        transform: none;
+        margin-top: 0.75rem;
+        align-items: center;
+        flex-direction: row;
+        gap: 0.5rem;
+      }
+
+      .header-center-content {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+    }
+
+    /* ensure the cassette keeps placed below center content and not overlapping */
+    #collegeCodeCassette {
+      margin-top: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* small polish: ensure academic year fits */
+    .header-banner .header-actions select#globalAcademicYear {
+      width: 110px;
+      max-width: 120px;
+    }
   </style>
 
 </head>
@@ -468,35 +584,55 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-lg-12 mx-auto">
+
         <div class="header-container text-center">
           <div class="header-banner position-relative">
-            <!-- RIGHT SIDE — vertically centered actions (replace only the absolute block) -->
+
+            <!-- LEFT/CENTER: Product title + college + small subtitle (centered) -->
+            <div class="header-center-content">
+
+              <div class="product-title">Example MIS Software</div>
+
+              {% if college_name %}
+              <!-- non-superuser with college assigned -->
+              <div class="product-college" title="{{ college_name }}">{{ college_name }}</div>
+              {% else %}
+              {% if not request.user.is_superuser %}
+              <!-- non-superuser with NO college -->
+              <div class="product-college" title="No College Assigned">
+                No College Assigned
+              </div>
+              {% endif %}
+              {% endif %}
+
+              <div class="page-subtitle">Student Master</div>
+
+              <!-- Add Record button (unchanged behavior/ID) -->
+              <div class="mt-3">
+                <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton">
+                  <i class="bi bi-plus-lg"></i> Add Student Records
+                </button>
+              </div>
+            </div>
+
+            <!-- RIGHT SIDE — vertically centered actions (unchanged IDs) -->
             <div class="header-actions">
 
-              <!-- Welcome Text -->
               <span id="welcome_msg" class="text-light fw-semibold d-block mb-1">
                 Welcome, {{ request.user.username }}
               </span>
 
-              <!-- TOP ROW: Logout + Export -->
               <div class="btn-row">
-
-                <!-- Logout (IDs/classes unchanged) -->
                 <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
                   <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
 
-                <!-- Export Excel (small button) -->
                 <button type="button" class="btn btn-warning btn-sm shadow-sm" id="ExportStudentExcelButton">
-                  <i class="bi bi-file-earmark-excel"></i>
-                  Export to Excel
+                  <i class="bi bi-file-earmark-excel"></i> Export to Excel
                 </button>
-
               </div>
 
-              <!-- BOTTOM ROW: Academic Year -->
               <div class="bottom-row">
-
                 <div class="text-light small me-2 fw-semibold">Academic Year</div>
 
                 <select id="globalAcademicYear" class="form-select form-select-sm">
@@ -504,18 +640,9 @@
                   <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
                   {% endfor %}
                 </select>
-
               </div>
 
             </div>
-
-
-            <h1 class="fw-bold">Student Records</h1>
-            <p>Add your student record here</p>
-
-            <button type="button" class="btn btn-success btn-lg shadow-sm" id="AddRecordButton">
-              <i class="bi bi-plus-lg"></i> Add Record
-            </button>
 
             <!-- Cascading Input Cassette -->
             <div id="collegeCodeCassette" class="cassette">

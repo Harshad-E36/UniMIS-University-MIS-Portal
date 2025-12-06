@@ -118,6 +118,7 @@ def student_master(request):
         return redirect('login')
     
     CollegeCode = None
+    CollegeName = None
     if not request.user.is_superuser:
         profile = UserCollege.objects.filter(user=request.user).first()
         if profile:
@@ -130,6 +131,7 @@ def staff_master(request):
         return redirect('login')
     
     CollegeCode = None
+    CollegeName = None
     if not request.user.is_superuser:
         profile = UserCollege.objects.filter(user=request.user).first()
         if profile:
