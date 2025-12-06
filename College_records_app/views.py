@@ -4957,6 +4957,7 @@ def export_staff_excel(request):
 
 User = get_user_model()
 
+
 def unassigned_users_json(request):
 
     if request.method == "GET":
@@ -5020,20 +5021,7 @@ def unassigned_users_json(request):
     return JsonResponse({"users": result})
 
 
-
-
 def change_password(request):
-    """
-    Simple change-password view (POST).
-    Expects form-encoded POST fields:
-      - old_password
-      - new_password
-
-    Responses:
-      200: {"success": True}
-      400: {"error": "..."}  (bad input)
-      403: {"error": "..."}  (old password incorrect)
-    """
     user = request.user
 
     old = request.POST.get("old_password", "").strip()
