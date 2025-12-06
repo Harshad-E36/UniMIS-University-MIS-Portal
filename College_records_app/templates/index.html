@@ -303,7 +303,8 @@
     }
 
     /* Create button */
-    .create-user-btn {
+    .create-user-btn,
+    .change-password-btn {
       border-radius: 6px;
       padding: 5px 14px;
       font-size: .85rem;
@@ -311,13 +312,15 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .create-user-btn {
+    .create-user-btn,
+    .change-password-btn {
       background: #fff;
       color: var(--brand-blue);
       border: none;
     }
 
-    .create-user-btn:hover {
+    .create-user-btn:hover,
+    .change-password-btn:hover {
       background: #eaf2ff;
       color: #0959c6;
     }
@@ -724,8 +727,8 @@
 
       <!-- ROW 1: 3 buttons -->
       <div class="d-flex gap-2 align-items-center">
-        <button id="createUserBtn" class="btn btn-light btn-sm create-user-btn">
-          <i class="bi bi-person-plus"></i> Create User
+        <button id="ChangePasswordBtn" class="btn btn-light btn-sm change-password-btn">
+          <i class="bi bi-person-plus"></i> Change Password
         </button>
 
         <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
@@ -737,14 +740,23 @@
         </button>
       </div>
 
-      <!-- ROW 2: Academic year -->
-      <div class="d-flex align-items-center mt-2">
-        <div class="text-light small me-2 fw-semibold">Academic Year</div>
-        <select id="globalAcademicYear" class="form-select form-select-sm w-auto">
-          {% for year in academic_year %}
-          <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
-          {% endfor %}
-        </select>
+      <!-- ROW 2: create user + Academic year -->
+      <div class="d-flex gap-2 align-items-center">
+
+        {% if request.user.is_superuser %}
+        <button id="createUserBtn" class="btn btn-light btn-sm create-user-btn">
+          <i class="bi bi-person-plus"></i> Create User
+        </button>
+        {% endif %}
+
+        <div class="d-flex align-items-center mt-2">
+          <div class="text-light small me-2 fw-semibold">Academic Year</div>
+          <select id="globalAcademicYear" class="form-select form-select-sm w-auto">
+            {% for year in academic_year %}
+            <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
 
     </div>
@@ -758,7 +770,8 @@
 
         <!-- Row 1: Filters -->
         <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 w-100 mb-2">
-
+          
+          {% if request.user.is_superuser %}
           <!-- College Code -->
           <div class="dropdown">
             <button class="btn btn-light filter-btn dropdown-toggle" type="button" id="filterCollegeCode"
@@ -884,6 +897,7 @@
               </li>
             </ul>
           </div>
+          {% endif %}
 
           <!-- Discipline -->
           <div class="dropdown">
@@ -943,6 +957,7 @@
       <div class="row g-3 m-0">
 
         <!-- Colleges -->
+        {% if request.user.is_superuser %}
         <div class="col-12 col-md-4">
           <div class="card stat-card text-center" data-url="{% url 'college_master' %}">
             <div class="card-body">
@@ -952,6 +967,7 @@
             </div>
           </div>
         </div>
+        {% endif %}
 
         <!-- Students -->
         <div class="col-12 col-md-4">
@@ -2173,6 +2189,7 @@
 
     // Hide the colleges card
     $collegeCol.addClass('d-none');
+    $("#createUserBtn").addClass('d-none');
 
     // Remove old md width classes & apply col-md-6
     [$studentCol, $staffCol].forEach($col => {
@@ -2212,8 +2229,8 @@
               if (response.status === 200) {
                 // keep original counters
                 updateDashboardCounters(response);
-              } 
-              else if (response.status === 403){
+              }
+              else if (response.status === 403) {
                 showNotification(response.detail || "No college assigned to this user.", "error");
               }
               else {
@@ -2520,25 +2537,28 @@
       hideCollegeStatCard();
     }
 
-    // set create/change button mode (on page load)
-    function setCreateUserButtonMode() {
-      if (USER_IS_SUPER) {
-        $('#createUserBtn').html('<i class="bi bi-person-plus"></i> Create User')
-          .removeClass('btn-primary').addClass('btn-light');
-      } else {
-        $('#createUserBtn').html('<i class="bi bi-key"></i> Change Password')
-          .removeClass('btn-light').addClass('btn-primary');
-      }
-    }
-    setCreateUserButtonMode();
+    $('#createUserBtn').on('click', function () {
+      openUserModal('create');
+    });
+    $('#ChangePasswordBtn').on('click', function () {
+      openUserModal('change');
+    });
 
-    // prepare modal per-mode
-    function openUserModal() {
-      if (USER_IS_SUPER) {
-        // Admin - Create user
+    // openUserModal(mode) - mode is 'create' or 'change'
+    function openUserModal(mode) {
+      // store mode on modal so submitHandler can read it
+      $('#createUserModal').data('mode', mode);
+
+      // Reset form fields and validation first so we start clean
+      if ($.validator) { $('#createUserForm').validate().resetForm(); }
+      $('#createUserForm')[0].reset();
+
+      if (mode === 'create') {
+        // Admin create user mode
         $('#userModalTitle').text('Create New User');
         $('#createUserSubmitBtnText').text('Create User');
 
+        // empty + editable
         $('#cu_username').prop('readonly', false).val('');
         $('#cu_email').prop('readonly', false).val('');
 
@@ -2550,32 +2570,32 @@
         // SHOW account type dropdown
         $('#accountTypeWrapper').removeClass('d-none');
         $('#cu_account_type').val('user'); // default
-      }
-      else {
-        // Regular user - Change password
+
+      } else if (mode === 'change') {
+        // Regular user change password mode
         $('#userModalTitle').text('Change Password');
         $('#createUserSubmitBtnText').text('Change Password');
 
-        $('#cu_username').val(CURRENT_USERNAME).prop('readonly', true);
-        $('#cu_email').val(CURRENT_EMAIL).prop('readonly', true);
+        // Populate username/email from globals and lock them
+        $('#cu_username').val(CURRENT_USERNAME || '').prop('readonly', true);
+        $('#cu_email').val(CURRENT_EMAIL || '').prop('readonly', true);
 
+        // show old password, adjust label
         $('#oldPasswordWrapper').removeClass('d-none');
         $('#newPasswordLabel').text('New Password');
 
         $('#cu_old_password, #cu_password, #cu_confirm_password').val('');
 
-        // HIDE account type dropdown
+        // HIDE account type dropdown (not relevant)
         $('#accountTypeWrapper').addClass('d-none');
       }
 
+      // If any inputs have change listeners, trigger change to let them react
+      $('#cu_username, #cu_email').trigger('change');
+
+      // finally show modal
       $('#createUserModal').modal('show');
     }
-
-    // open modal on clicking toolbar/button
-    $('#createUserBtn').on('click', function () {
-      openUserModal();
-    });
-
 
     // ====== AJAX functions ======
     function createUserAjax() {
@@ -2704,16 +2724,18 @@
           }
         },
         submitHandler: function () {
-          // decide which ajax to call
-          if (USER_IS_SUPER) {
+          // read current mode from modal data attribute
+          var mode = $('#createUserModal').data('mode') || 'create';
+
+          if (mode === 'create') {
             // ensure username/email present
             const uname = $('#cu_username').val().trim();
             const email = $('#cu_email').val().trim();
             if (!uname) { showNotification('Username is required', 'error'); return false; }
             if (!email) { showNotification('Email is required', 'error'); return false; }
             createUserAjax();
-          } else {
-            // change password flow should ensure new != old
+          } else if (mode === 'change') {
+            // change password flow
             const newpw = $('#cu_password').val();
             const oldpw = $('#cu_old_password').val();
             if (!oldpw) { showNotification('Old password is required', 'error'); return false; }
@@ -2722,33 +2744,39 @@
               return false;
             }
             changePasswordAjax();
+          } else {
+            console.warn('Unknown user modal mode:', mode);
           }
+
           return false; // prevent default form submit
         },
+        // keep your errorPlacement, rules and messages unchanged
         errorPlacement: function (error, element) {
-          // default placement (you can customize to match your UI)
           error.addClass('text-danger small');
           error.insertAfter(element);
         }
       });
     } else {
       console.warn('jQuery Validation plugin not found - form validation will be skipped.');
+      // If no validator, still intercept form submit
+      $('#createUserForm').on('submit', function (e) {
+        e.preventDefault();
+        var mode = $('#createUserModal').data('mode') || 'create';
+        if (mode === 'create') createUserAjax();
+        else changePasswordAjax();
+      });
     }
-    $("#createUserForm").on("submit", function (e) {
-      e.preventDefault(); // FORCE disable normal submit
-    });
 
-
-    // optional: make modal reset state when hidden (so next open is clean)
+    // -------------------------
+    // Reset modal when hidden
+    // -------------------------
     $('#createUserModal').on('hidden.bs.modal', function () {
-      // reset form and validation errors
       $('#createUserForm')[0].reset();
       $('#cu_username, #cu_email').prop('readonly', false);
       $('#oldPasswordWrapper').addClass('d-none');
+      $('#accountTypeWrapper').removeClass('d-none'); // restore for next create open
       if ($.validator) { $('#createUserForm').validate().resetForm(); }
     });
-
-
 
   });
 
