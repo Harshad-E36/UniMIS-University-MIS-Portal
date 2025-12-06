@@ -82,12 +82,17 @@ def home(request):
             cp_qs = CollegeProgram.objects.filter(College=user_college, is_deleted=False)
 
             # distinct discipline names and program names from mapping table
-            disciplne_name = cp_qs.values_list("Discipline", flat=True).distinct()
+            discipline_name = cp_qs.values_list("Discipline", flat=True).distinct()
             program_name = cp_qs.values_list("ProgramName", flat=True).distinct()
 
             # Filter static tables using those names
-            disciplines_qs = Discipline.objects.filter(DisciplineName__in=disciplne_name)
-            programs_qs = Programs.objects.filter(ProgramName__in=program_name)
+            disciplines_qs = Discipline.objects.filter(DisciplineName__in=discipline_name)
+           # 🔑 IMPORTANT: filter programs by BOTH discipline and program name
+            programs_qs = Programs.objects.filter(
+                Discipline__DisciplineName__in=discipline_name,
+                ProgramName__in=program_name,
+            )
+
 
         else:
             # Normal user but no college assigned → send empty sets
