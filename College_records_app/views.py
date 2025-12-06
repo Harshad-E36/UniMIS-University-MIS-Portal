@@ -122,7 +122,8 @@ def student_master(request):
         profile = UserCollege.objects.filter(user=request.user).first()
         if profile:
             CollegeCode = profile.college.College_Code
-    return render(request, 'student_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode})
+            CollegeName = profile.college.College_Name
+    return render(request, 'student_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName})
 
 def staff_master(request):
     if not request.user.is_authenticated:
@@ -133,7 +134,8 @@ def staff_master(request):
         profile = UserCollege.objects.filter(user=request.user).first()
         if profile:
             CollegeCode = profile.college.College_Code
-    return render(request, 'staff_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode})
+            CollegeName = profile.college.College_Name
+    return render(request, 'staff_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName})
 
 
 def user_status(request):
