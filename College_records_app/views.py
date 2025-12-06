@@ -2470,12 +2470,34 @@ def get_student_records(request):
         latest = academic_year.objects.order_by("-Academic_Year").first()
         year = latest.Academic_Year if latest else ""
 
+    # ---- helper: get user's college (None => superuser/admin) ----
+    def _get_user_college(user):
+        if user.is_superuser:
+            return None
+        profile = UserCollege.objects.filter(user=user).first()
+        if not profile or not profile.college or profile.college.is_deleted:
+            return None
+        return profile.college
+
+    user_college = _get_user_college(request.user)
+
+    # Normal user but no college assigned → forbid
+    if not request.user.is_superuser and not user_college:
+        return JsonResponse(
+            {"detail": "No college assigned to this user. Contact admin."},
+            status=403
+        )
+
     # 1) Base queryset: colleges that have student aggregates in this year
     base_qs = College.objects.filter(
         is_deleted=False,
         student_aggregates__Academic_Year=year,
         student_aggregates__is_deleted=False,
     ).distinct()
+
+    # restrict to this user's college if not superuser
+    if user_college:
+        base_qs = base_qs.filter(id=user_college.id)
 
     # 2) Total before search
     records_total = base_qs.count()
@@ -3848,6 +3870,25 @@ def get_staff_records(request):
         latest = academic_year.objects.order_by("-Academic_Year").first()
         year = latest.Academic_Year if latest else ""
 
+    # ---- helper: get user's college (None => superuser/admin) ----
+    def _get_user_college(user):
+        if user.is_superuser:
+            return None
+        profile = UserCollege.objects.filter(user=user).first()
+        if not profile or not profile.college or profile.college.is_deleted:
+            return None
+        return profile.college
+
+    user_college = _get_user_college(request.user)
+
+    # Normal user but no college assigned → forbid
+    if not request.user.is_superuser and not user_college:
+        return JsonResponse(
+            {"detail": "No college assigned to this user. Contact admin."},
+            status=403
+        )
+
+
     # 1) Base queryset: colleges that have staff aggregates in this year
     base_qs = College.objects.filter(
         is_deleted=False,
@@ -3855,6 +3896,11 @@ def get_staff_records(request):
         staff_aggregates__is_deleted=False,
     ).distinct()
 
+    # restrict to this user's college if not superuser
+    if user_college:
+        base_qs = base_qs.filter(id=user_college.id)
+    
+    
     # 2) Total before search
     records_total = base_qs.count()
 
