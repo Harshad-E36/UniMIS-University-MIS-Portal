@@ -63,16 +63,46 @@ def _to_int(value, default=0):
 def home(request):
     if not request.user.is_authenticated:
         return redirect('login')
+    
+        # Defaults (superuser / fallback)
+    colleges_qs = College.objects.filter(is_deleted=False)
+    disciplines_qs = Discipline.objects.all()
+    programs_qs = Programs.objects.all()
+
+    if not request.user.is_superuser:
+        profile = UserCollege.objects.filter(user=request.user).first()
+        if profile and profile.college and not profile.college.is_deleted:
+            user_college = profile.college
+
+            # only this college
+            colleges_qs = College.objects.filter(id=user_college.id, is_deleted=False)
+            # or: colleges_qs = College.objects.filter(pk=user_college.pk, is_deleted=False)
+
+            # Get mapped disciplines + programs from CollegeProgram for this college
+            cp_qs = CollegeProgram.objects.filter(College=user_college, is_deleted=False)
+
+            # distinct discipline names and program names from mapping table
+            disciplne_name = cp_qs.values_list("Discipline", flat=True).distinct()
+            program_name = cp_qs.values_list("ProgramName", flat=True).distinct()
+
+            # Filter static tables using those names
+            disciplines_qs = Discipline.objects.filter(DisciplineName__in=disciplne_name)
+            programs_qs = Programs.objects.filter(ProgramName__in=program_name)
+
+        else:
+            # Normal user but no college assigned → send empty sets
+            colleges_qs = College.objects.none()
+            disciplines_qs = Discipline.objects.none()
+            programs_qs = Programs.objects.none()
 
     return render(request, 'index.html', {
-        "Colleges": College.objects.filter(is_deleted=False),
-        "disciplines": Discipline.objects.all(),
+        "Colleges": colleges_qs,
+        "disciplines": disciplines_qs,
         "Collegetype": CollegeType.objects.all(),
         "BelongsTo": BelongsTo.objects.all(),
-        "programs": Programs.objects.all(),
+        "programs": programs_qs,
         "academic_year": academic_year.objects.all(),
     })
-   
 
 def college_master(request):
     return render(request, 'college_master.html', {"disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all()}) 
@@ -717,61 +747,15 @@ def apply_filters(request):
     programs = request.POST.getlist('Programs[]')
     academic_year = request.POST.get('year')  # matches your frontend
 
-    # ============================================================
-    # BASE FILTER (on College master)
-    # ============================================================
-    filter_criteria = Q(is_deleted=False)
-    if college_codes:
-        filter_criteria &= Q(College_Code__in=college_codes)
-    if college_names:
-        filter_criteria &= Q(College_Name__in=college_names)
-    if districts:
-        filter_criteria &= Q(District__in=districts)
-    if talukas:
-        filter_criteria &= Q(taluka__in=talukas)
-    if college_types:
-        filter_criteria &= Q(college_type__in=college_types)
-    if belongs_tos:
-        filter_criteria &= Q(belongs_to__in=belongs_tos)
-
-    base_ids = set(
-        College.objects.filter(filter_criteria)
-        .values_list("id", flat=True)
-        .distinct()
-    )
-
-    # ============================================================
-    # Determine which colleges match Discipline/Program using master table
-    # (so colleges are counted even if no student rows exist for the selected year)
-    # ============================================================
-    if disciplines or programs:
-        prog_master_q = Q(is_deleted=False)
-        if disciplines:
-            prog_master_q &= Q(Discipline__in=disciplines)
-        if programs:
-            prog_master_q &= Q(ProgramName__in=programs)
-
-        prog_master_ids = set(
-            CollegeProgram.objects.filter(prog_master_q)
-            .values_list("College_id", flat=True)
-            .distinct()
-        )
-
-        filtered_college_ids = list(base_ids.intersection(prog_master_ids))
-    else:
-        filtered_college_ids = list(base_ids)
-
-    # ============================================================
-    # If no matched colleges -> return zeros early (echo year)
-    # ============================================================
-    if not filtered_college_ids:
-        return JsonResponse({
+    def _zero_response():
+          return JsonResponse({
             "status": 200,
             "message": "Filters applied successfully",
             "academic_year": academic_year,
 
             "total_colleges": 0,
             "total_students": 0,
+            "total_staff" : 0,
 
             # washrooms
             "total_stu_washrooms": 0,
@@ -876,10 +860,170 @@ def apply_filters(request):
             "other_disability_stu_female": 0,
             "other_disability_stu_others": 0,
 
+            # staff data
+            # staff data
+            'total_stf_washrooms': 0,
+            'male_stf_washrooms': 0,
+            'female_stf_washrooms': 0,
+
+            'total_stf_male': 0,
+            'total_stf_female': 0,
+            'total_stf_others': 0,
+
+            'open_stf_male': 0,
+            'open_stf_female': 0,
+            'open_stf_others': 0,
+
+            'obc_stf_male': 0,
+            'obc_stf_female': 0,
+            'obc_stf_others': 0,
+
+            'sc_stf_male': 0,
+            'sc_stf_female': 0,
+            'sc_stf_others': 0,
+
+            'st_stf_male': 0,
+            'st_stf_female': 0,
+            'st_stf_others': 0,
+
+            'nt_stf_male': 0,
+            'nt_stf_female': 0,
+            'nt_stf_others': 0,
+
+            'vjnt_stf_male': 0,
+            'vjnt_stf_female': 0,
+            'vjnt_stf_others': 0,
+
+            'ews_stf_male': 0,
+            'ews_stf_female': 0,
+            'ews_stf_others': 0,
+
+            'hindu_stf_male': 0,
+            'hindu_stf_female': 0,
+            'hindu_stf_others': 0,
+
+            'muslim_stf_male': 0,
+            'muslim_stf_female': 0,
+            'muslim_stf_others': 0,
+
+            'sikh_stf_male': 0,
+            'sikh_stf_female': 0,
+            'sikh_stf_others': 0,
+
+            'christian_stf_male': 0,
+            'christian_stf_female': 0,
+            'christian_stf_others': 0,
+
+            'jain_stf_male': 0,
+            'jain_stf_female': 0,
+            'jain_stf_others': 0,
+
+            'buddhist_stf_male': 0,
+            'buddhist_stf_female': 0,
+            'buddhist_stf_others': 0,
+
+            'other_religion_stf_male': 0,
+            'other_religion_stf_female': 0,
+            'other_religion_stf_others': 0,
+
+            'no_disability_stf_male': 0,
+            'no_disability_stf_female': 0,
+            'no_disability_stf_others': 0,
+
+            'low_vision_stf_male': 0,
+            'low_vision_stf_female': 0,
+            'low_vision_stf_others': 0,
+
+            'blindness_stf_male': 0,
+            'blindness_stf_female': 0,
+            'blindness_stf_others': 0,
+
+            'hearing_stf_male': 0,
+            'hearing_stf_female': 0,
+            'hearing_stf_others': 0,
+
+            'locomotor_stf_male': 0,
+            'locomotor_stf_female': 0,
+            'locomotor_stf_others': 0,
+
+            'autism_stf_male': 0,
+            'autism_stf_female': 0,
+            'autism_stf_others': 0,
+
+            'other_disability_stf_male': 0,
+            'other_disability_stf_female': 0,
+            'other_disability_stf_others': 0,
+
+
             # special UI fields
             "colleges_without_student_data": [],
             "colleges_without_student_data_count": 0,
         })
+    # ============================================================
+    # BASE FILTER (on College master)
+    # ============================================================
+    filter_criteria = Q(is_deleted=False)
+    if college_codes:
+        filter_criteria &= Q(College_Code__in=college_codes)
+    if college_names:
+        filter_criteria &= Q(College_Name__in=college_names)
+    if districts:
+        filter_criteria &= Q(District__in=districts)
+    if talukas:
+        filter_criteria &= Q(taluka__in=talukas)
+    if college_types:
+        filter_criteria &= Q(college_type__in=college_types)
+    if belongs_tos:
+        filter_criteria &= Q(belongs_to__in=belongs_tos)
+
+    base_ids = set(
+        College.objects.filter(filter_criteria)
+        .values_list("id", flat=True)
+        .distinct()
+    )
+
+    # ============================================================
+    # 🔒 Restrict by logged-in user's college (if not superuser)
+    # ============================================================
+    user = request.user
+    if not user.is_superuser:
+        profile = UserCollege.objects.filter(user=user).first()
+        if not profile or not profile.college or profile.college.is_deleted:
+            # Normal user but no valid college mapping → all zero response
+            return _zero_response()
+
+        # intersect filters with this user's single college
+        user_college_id = profile.college.id
+        base_ids = base_ids.intersection({user_college_id})
+
+    
+    # ============================================================
+    # Determine which colleges match Discipline/Program using master table
+    # (so colleges are counted even if no student rows exist for the selected year)
+    # ============================================================
+    if disciplines or programs:
+        prog_master_q = Q(is_deleted=False)
+        if disciplines:
+            prog_master_q &= Q(Discipline__in=disciplines)
+        if programs:
+            prog_master_q &= Q(ProgramName__in=programs)
+
+        prog_master_ids = set(
+            CollegeProgram.objects.filter(prog_master_q)
+            .values_list("College_id", flat=True)
+            .distinct()
+        )
+
+        filtered_college_ids = list(base_ids.intersection(prog_master_ids))
+    else:
+        filtered_college_ids = list(base_ids)
+
+    # ============================================================
+    # If no matched colleges -> return zeros early (echo year)
+    # ============================================================
+    if not filtered_college_ids:
+        return _zero_response()
+      
 
     # ============================================================
     # Student rows to aggregate (year-specific, and narrowed by Program/Discipline if requested)
