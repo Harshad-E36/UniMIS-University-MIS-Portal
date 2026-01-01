@@ -17,6 +17,15 @@ import datetime
 from datetime import date
 from io import BytesIO
 import io
+from django.utils import timezone
+
+
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.urls import reverse
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 # Create your views here.
@@ -108,20 +117,59 @@ def home(request):
         "BelongsTo": BelongsTo.objects.all(),
         "programs": programs_qs,
         "academic_year": academic_year.objects.all(),
+        "default_academic_year": (
+            academic_year.objects.order_by("id")
+            .values_list("Academic_Year", flat=True)
+            .first()
+        )
     })
 
 def college_master(request):
     return render(request, 'college_master.html', {"disciplines" : Discipline.objects.all(), "Collegetype" : CollegeType.objects.all(), "BelongsTo": BelongsTo.objects.all()}) 
 
-def compute_current_academic_year(today=None):
-    today = today or date.today()
-    y = today.year
-    if today.month >= 8:
-        start = y
+def get_academic_years(request):
+    if not request.user.is_superuser:
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    years = academic_year.objects.order_by("Academic_Year")
+
+    data = [
+        {
+            "year": y.Academic_Year,
+            "is_open": y.is_open
+        }
+        for y in years
+    ]
+
+    return JsonResponse({"years": data})
+
+def toggle_academic_year(request):
+    if not request.user.is_superuser:
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    year_value = request.POST.get("year")
+    is_open = request.POST.get("is_open") == "true"
+
+    try:
+        year_obj = academic_year.objects.get(Academic_Year=year_value)
+    except academic_year.DoesNotExist:
+        return JsonResponse({"error": "Year not found"}, status=404)
+
+    year_obj.is_open = is_open
+
+    if is_open:
+        year_obj.opened_by = request.user
     else:
-        start = y - 1
-    end_short = str(start + 1)[-2:]
-    return f"{start}-{end_short}"
+        year_obj.closed_by = request.user
+
+    year_obj.save()
+
+    return JsonResponse({
+        "success": True,
+        "year": year_value,
+        "is_open": year_obj.is_open
+    })
+
 
 def student_master(request):
     if not request.user.is_authenticated:
@@ -135,9 +183,8 @@ def student_master(request):
             CollegeCode = profile.college.College_Code
             CollegeName = profile.college.College_Name
 
-    current_academic_year = compute_current_academic_year()
 
-    return render(request, 'student_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName, "current_academic_year": current_academic_year, })
+    return render(request, 'student_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName })
 
 def staff_master(request):
     if not request.user.is_authenticated:
@@ -151,9 +198,7 @@ def staff_master(request):
             CollegeCode = profile.college.College_Code
             CollegeName = profile.college.College_Name
 
-    current_academic_year = compute_current_academic_year()
-
-    return render(request, 'staff_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName, "current_academic_year": current_academic_year,})
+    return render(request, 'staff_master.html', {"academic_year": academic_year.objects.all(), "college_code" : CollegeCode, "college_name": CollegeName})
 
 
 def user_status(request):
@@ -481,23 +526,35 @@ def add_edit_record(request):
         else:
             # No profile yet → create it
             UserCollege.objects.create(user=user, college=college)
+        
+    # 📧 Send email after successful college creation
+    send_college_assignment_email(request, user, college)
 
     return JsonResponse({"status": 201, "message": "Record added successfully"})
 
 
 @ajax_login_required
 def delete_record(request):
-    if request.method == 'POST':
-        id = request.POST.get('id')
-        record = College.objects.get(id = id)
-        record.is_deleted = True
-        record.save()
+    if request.method != "POST":
+        return JsonResponse({"status": 400, "message": "Invalid method"}, status=400)
 
-        response_data = {
-            'message' : 'record deleted successfully',
-            'status' : 204
-        }
-        return JsonResponse(response_data)
+    record_id = request.POST.get("id")
+
+    try:
+        college = College.objects.get(id=record_id, is_deleted=False)
+    except College.DoesNotExist:
+        return JsonResponse({"status": 404, "message": "Record not found"}, status=404)
+
+    with transaction.atomic():
+
+        # 🔑 STEP 1: Unassign users from this college
+        UserCollege.objects.filter(college=college).update(college=None)
+
+        # 🔑 STEP 2: Soft delete the college
+        college.is_deleted = True
+        college.save(update_fields=["is_deleted"])
+
+    return JsonResponse({"status": 204, "message": "College deleted successfully"})
 
 @ajax_login_required
 def get_dashboard_data(request):
@@ -1751,6 +1808,7 @@ def add_student_aggregate(request):
 
         if not college_code or not academic_year:
             return JsonResponse({'status': 400, 'message': 'Missing required fields'})
+        
 
         try:
             college = College.objects.get(College_Code=college_code, is_deleted=False)      
@@ -1763,7 +1821,20 @@ def add_student_aggregate(request):
         saved = []
         errors = []
 
-        
+        already_exists = student_aggregate_master.objects.filter(
+        College=college,
+        Academic_Year=academic_year,
+        is_deleted=False
+        ).exists()
+
+        if already_exists:
+            return JsonResponse({
+                "status": 409,
+                "message": (
+                    f"Student data for college '{college_code}' "
+                    f"and academic year '{academic_year}' already exists."
+                )
+            })
         with transaction.atomic():
             for program_name, data in records.items():
                 program_obj = CollegeProgram.objects.filter(
@@ -2470,6 +2541,13 @@ def get_student_records(request):
         latest = academic_year.objects.order_by("-Academic_Year").first()
         year = latest.Academic_Year if latest else ""
 
+     # 🔑 Decide edit/delete permission ONCE
+    ay = academic_year.objects.get(Academic_Year=year)
+    if not ay.is_open :
+        is_locked_year = True
+    else:
+        is_locked_year = False
+
     # ---- helper: get user's college (None => superuser/admin) ----
     def _get_user_college(user):
         if user.is_superuser:
@@ -2714,6 +2792,8 @@ def get_student_records(request):
             "college_name": col.College_Name,
             "academic_year": year,
             "total_students": total_students_for_college,
+            # 🔑 THIS CONTROLS EDIT / DELETE IN DATATABLES
+            "is_locked": is_locked_year,
             "programs": grouped_list,
         })
 
@@ -3870,6 +3950,13 @@ def get_staff_records(request):
         latest = academic_year.objects.order_by("-Academic_Year").first()
         year = latest.Academic_Year if latest else ""
 
+    
+     # 🔑 Decide edit/delete permission ONCE
+    ay = academic_year.objects.get(Academic_Year = year)
+    if not ay.is_open :
+        is_locked_year = True
+    else:
+        is_locked_year = False
     # ---- helper: get user's college (None => superuser/admin) ----
     def _get_user_college(user):
         if user.is_superuser:
@@ -4115,6 +4202,7 @@ def get_staff_records(request):
             "college_code": col.College_Code,
             "college_name": col.College_Name,
             "academic_year": year,
+            "is_locked" : is_locked_year,
             "total_staff": total_staff_for_college,
             "programs": grouped_list,
         })
@@ -4154,6 +4242,20 @@ def add_staff_aggregate(request):
     saved = []
     errors = []
 
+    already_exists = staff_master_aggregate.objects.filter(
+        College=college,
+        Academic_Year=academic_year,
+        is_deleted=False
+    ).exists()
+
+    if already_exists:
+        return JsonResponse({
+            "status": 409,
+            "message": (
+                f"Student data for college '{college_code}' "
+                f"and academic year '{academic_year}' already exists."
+            )
+        })
     with transaction.atomic():
         for program_name, data in records.items():
             program_obj = CollegeProgram.objects.filter(
@@ -5266,9 +5368,59 @@ def change_password(request):
     user.set_password(new)
     user.save()
 
-    # Note: by default Django does not force logout on password change.
-    # If you WANT to keep the user logged-in you can call:
-    #   update_session_auth_hash(request, user)
-    # But per your instruction, leaving default behavior is fine.
-
     return JsonResponse({"success": True})
+
+
+
+def send_college_assignment_email(request, user, college):
+    # Generate password reset link
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+
+    reset_link = request.build_absolute_uri(
+        reverse("password_reset_confirm", kwargs={
+            "uidb64": uid,
+            "token": token
+        })
+    )
+
+    login_url = request.build_absolute_uri(reverse("login"))
+
+    subject = "College Portal Access – Account Created"
+
+    message = f"""
+Dear {user.username},
+
+Your account has been created and assigned to a college in the
+College Academic Data Management System.
+
+College Assigned:
+{college.College_Name}
+
+Login Details:
+Username: {user.username}
+Email: {user.email}
+
+For security reasons, passwords are not shared via email.
+Please set your password using the secure link below:
+
+Set / Reset Password:
+{reset_link}
+
+Login URL:
+{login_url}
+
+If you did not expect this email, please contact the system administrator.
+
+Regards,
+College Administration Team
+"""
+
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False
+    )
+

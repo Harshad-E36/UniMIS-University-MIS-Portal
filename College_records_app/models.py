@@ -56,7 +56,20 @@ class BelongsTo(models.Model):
 
 # static table for academic year
 class academic_year(models.Model):
-    Academic_Year = models.CharField(max_length=20)
+    Academic_Year = models.CharField(max_length=20, unique=True)
+    is_open = models.BooleanField(default=False)
+
+    opened_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+
+    closed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='closed_years'
+    )
+    opened_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    closed_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
 
     def __str__(self):
         return self.Academic_Year

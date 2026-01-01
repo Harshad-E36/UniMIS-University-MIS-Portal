@@ -573,6 +573,141 @@
       width: 110px;
       max-width: 120px;
     }
+
+
+    @media (max-width: 992px) {
+
+      /* Header padding reduction */
+      .header-banner {
+        padding: 2rem 1rem;
+      }
+
+      /* Center title scaling */
+      .product-title {
+        font-size: 2rem;
+      }
+
+      .product-college {
+        font-size: 1.1rem;
+      }
+
+      /* Header actions move below center content */
+      .header-banner .header-actions {
+        position: static;
+        transform: none;
+        margin-top: 1rem;
+        align-items: center;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .header-banner .header-actions .btn-row,
+      .header-banner .header-actions .bottom-row {
+        justify-content: center;
+      }
+
+      /* Academic year select width */
+      .header-banner .header-actions select#globalAcademicYear {
+        width: 130px;
+      }
+
+      /* Metric cards: 2 per row instead of 4 */
+      .metric-col {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+
+      /* Header */
+      .header-banner {
+        padding: 1.5rem 0.75rem;
+        border-radius: 0.75rem;
+      }
+
+      .product-title {
+        font-size: 1.6rem;
+      }
+
+      .product-college {
+        font-size: 0.95rem;
+      }
+
+      .page-subtitle {
+        font-size: 0.9rem;
+      }
+
+      /* Stack header actions vertically */
+      .header-banner .header-actions {
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+
+      /* Buttons full width */
+      .header-banner .header-actions .btn-row button,
+      .header-banner .header-actions .bottom-row select {
+        width: 100%;
+      }
+
+      /* Add Record button */
+      #AddRecordButton {
+        width: 100%;
+        font-size: 1rem;
+      }
+
+      /* Metric cards: single column */
+      .metric-col {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+      }
+
+      /* Table wrapper */
+      .table-container {
+        padding: 0.75rem;
+      }
+
+      /* DataTable horizontal scroll */
+      table.dataTable {
+        width: 100% !important;
+        overflow-x: auto;
+        display: block;
+      }
+    }
+
+
+    @media (max-width: 576px) {
+
+      /* Titles */
+      .product-title {
+        font-size: 1.4rem;
+      }
+
+      .product-college {
+        font-size: 0.85rem;
+      }
+
+      /* Cassette */
+      #collegeCodeCassette .inner-cassette {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      #collegeCodeInput {
+        width: 100%;
+      }
+
+      /* Modal padding */
+      .modal-body {
+        padding: 0.75rem;
+      }
+
+      /* Form inputs spacing */
+      .program-section .row>div {
+        margin-bottom: 0.5rem;
+      }
+    }
   </style>
 
 </head>
@@ -700,7 +835,11 @@
               <select id="academicYear" class="form-select">
                 <option value="">Select Year</option>
                 {% for year in academic_year %}
-                <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
+                {% if year.is_open and not year.is_locked %}
+                <option value="{{ year.Academic_Year }}">
+                  {{ year.Academic_Year }}
+                </option>
+                {% endif %}
                 {% endfor %}
               </select>
             </div>
@@ -1610,131 +1749,70 @@
     }
   }
 
-  // expose backend-provided current academic year to JS
-  window.CURRENT_ACADEMIC_YEAR = "{{ current_academic_year|default:''|escapejs }}";
 
   function initStudentTable() {
     const table = $("#records_table").DataTable({
       serverSide: true,
       processing: true,
+
       ajax: {
         url: "/get_student_records/",
         type: "GET",
         data: function (d) {
-          // always take latest selected year
           d.year = $("#globalAcademicYear").val();
         }
       },
-      pageLength: 10,
 
-      // normal layout, no DataTables Buttons
+      pageLength: 10,
       dom: "lfrtip",
 
       columns: [
+        /* Expand / Collapse */
         {
           data: null,
           orderable: false,
           searchable: false,
           render: function () {
             return `
-          <button class="btn btn-sm btn-outline-primary toggle-programs">
-            <i class="bi bi-plus-lg"></i>
-          </button>`;
+            <button class="btn btn-sm btn-outline-primary toggle-programs">
+              <i class="bi bi-plus-lg"></i>
+            </button>`;
           }
         },
+
         { data: "college_code" },
         { data: "college_name" },
         { data: "academic_year" },
+
         {
           data: "total_students",
-          render: function (d) {
-            return d ?? "-";
-          }
+          render: d => d ?? "-"
         },
+
+        /* ACTIONS (Edit / Delete) */
         {
           data: null,
+          orderable: false,
+          searchable: false,
           render: function (data, type, row) {
-            // helper: parse "2024-25" -> 2024 (integer) or null
-            function startYearFromAcadStr(yr) {
-              if (!yr || typeof yr !== "string") return null;
-              const m = yr.match(/^(\d{4})/);
-              return m ? parseInt(m[1], 10) : null;
-            }
 
-            // selected year from UI
-            const selectedYearStr = $("#globalAcademicYear").val() || "";
-            const selectedStart = startYearFromAcadStr(selectedYearStr);
-
-            // backend provided current academic year (should be injected as window.CURRENT_ACADEMIC_YEAR)
-            const backendYearStr = window.CURRENT_ACADEMIC_YEAR || "";
-            const backendStart = startYearFromAcadStr(backendYearStr);
-
-            // determine if selected is a previous year compared to backend current
-            const isPrevious =
-              selectedStart !== null &&
-              backendStart !== null &&
-              selectedStart < backendStart;
-
-            // clone action template
+            const isLocked = !!row.is_locked;
             const $clone = $($("#actionButtonsTemplate").html().trim());
 
-            $clone
-              .find(".btn-edit")
+            // attach metadata
+            $clone.find(".btn-edit, .btn-delete")
               .attr("data-college", row.college_code)
-              .attr("data-year", row.academic_year);
-
-            $clone
-              .find(".btn-delete")
-              .attr("data-college", row.college_code)
-              .attr("data-year", row.academic_year);
-
-            if (isPrevious) {
-              // visually mark as disabled BUT do NOT .prop('disabled', true) so clicks still reach JS
-              $clone.find(".btn-edit, .btn-delete")
-                .addClass("disabled")                    // keeps greyed look
-                .attr("aria-disabled", "true")           // accessibility hint
-                // DO NOT set .prop('disabled', true) so clicks still reach JS
-                .attr("title", "Locked: previous academic year")
-                // optional: neutral outline so it reads as disabled/locked
-                .removeClass("btn-outline-primary btn-outline-danger")
-                .addClass("btn-outline-secondary");
-
-              // mark container so handlers can detect quickly
-              $clone.find(".action-icons").attr("data-locked", "1");
-            } else {
-              // ensure enabled look
-              $clone.find(".btn-edit")
-                .removeClass("disabled")
-                .attr("aria-disabled", "false")
-                .prop("disabled", false)
-                .removeClass("btn-outline-secondary")
-                .addClass("btn-outline-primary")
-                .attr("title", "Edit");
-
-              $clone.find(".btn-delete")
-                .removeClass("disabled")
-                .attr("aria-disabled", "false")
-                .prop("disabled", false)
-                .removeClass("btn-outline-secondary")
-                .addClass("btn-outline-danger")
-                .attr("title", "Delete");
-
-              $clone.find(".action-icons").removeAttr("data-locked");
-            }
-
-            // add a data-locked flag for quick checking from outside if needed
-            if (isPrevious) {
-              $clone.find(".action-icons").attr("data-locked", "1");
-            } else {
-              $clone.find(".action-icons").removeAttr("data-locked");
-            }
+              .attr("data-year", row.academic_year)
+              .attr("data-locked", isLocked ? "1" : "0");
 
             return $("<div>").append($clone).html();
           }
         }
       ],
+
       order: [[2, "asc"]]
     });
+
 
     // External export button (like Page 1)
     $("#ExportStudentExcelButton").on("click", function () {
@@ -2019,35 +2097,6 @@
       }
     });
 
-    //
-    // Intercept pointer/mousedown on locked edit/delete buttons and show notification.
-    // Use mousedown so we run BEFORE normal click handlers.
-    //
-    $(document).on('mousedown', '#records_table .btn-edit, #records_table .btn-delete', function (e) {
-      const $btn = $(this);
-      const ariaDisabled = $btn.attr('aria-disabled') === 'true';
-      const hasDisabledClass = $btn.hasClass('disabled');
-      const parentLocked = $btn.closest('.action-icons').attr('data-locked') === '1';
-
-      if (ariaDisabled || hasDisabledClass || parentLocked) {
-        // Prevent click handlers from running
-        e.preventDefault();
-        e.stopImmediatePropagation();
-
-        const year = $('#globalAcademicYear').val() || '';
-        const msg = year ? `Editing is disabled for academic year ${year}.` : 'Editing is disabled for the selected academic year.';
-
-        if (typeof showNotification === 'function') {
-          showNotification(msg, 'warning');
-        } else {
-          alert(msg);
-        }
-
-        return false;
-      }
-      // otherwise allow normal behavior
-    });
-
     return table;
   }
 
@@ -2129,7 +2178,7 @@
         } else {
           alert("No college assigned to your account");
         }
-        
+
       }
 
       // fill the input (in case submit handler reads it) and trigger submit
@@ -2321,6 +2370,9 @@
                 Sum of Program Washrooms: ${response.sum_of_program_washrooms_in_payload}`
               );
             }
+            else if (response.status === 409) {
+              alert(response.message)
+            }
             else {
               showNotification(response.message || "Something went wrong", "danger");
             }
@@ -2366,15 +2418,29 @@
     $(document).on("click", ".btn-edit", function (e) {
       e.preventDefault();
 
-      const college = $(this).data("college");
-      const year = $(this).data("year") || $("#globalAcademicYear").val();
+      const $btn = $(this);
+      const isLocked = $btn.attr("data-locked") === "1";
+
+      // 🔒 LOCK CHECK (NEW)
+      if (isLocked) {
+        const year = $btn.data("year") || $("#globalAcademicYear").val();
+        showNotification(
+          `Editing is disabled for academic year ${year}.`,
+          "warning"
+        );
+        return; // 🚫 STOP here
+      }
+
+      // ---- existing logic below (UNCHANGED) ----
+
+      const college = $btn.data("college");
+      const year = $btn.data("year") || $("#globalAcademicYear").val();
 
       if (!college) {
         showNotification("Missing college code", "danger");
         return;
       }
 
-      const $btn = $(this);
       $btn.prop("disabled", true).addClass("disabled");
 
       $.ajax({
@@ -2393,7 +2459,10 @@
             populateEditModal(response);
 
             $("#collegeModal").data("mode", "edit");
-            $("#collegeModal").data("college-code", response.college_data?.College_Code || college);
+            $("#collegeModal").data(
+              "college-code",
+              response.college_data?.College_Code || college
+            );
 
             $("#collegeModal").modal("show");
           } else {
@@ -2402,21 +2471,40 @@
         },
         error: function (xhr) {
           $btn.prop("disabled", false).removeClass("disabled");
+
           let msg = "Server error";
           try {
             const json = JSON.parse(xhr.responseText);
             if (json && json.message) msg = json.message;
           } catch (e) { }
+
           showNotification(msg, "danger");
         }
       });
     });
 
 
-    // DELETE RECORD HANDLER 
-    $(document).on("click", ".btn-delete", function () {
-      const college = $(this).data("college");
-      const year = $(this).data("year");
+    // DELETE RECORD HANDLER
+    $(document).on("click", ".btn-delete", function (e) {
+      e.preventDefault();
+
+      const $btn = $(this);
+      const isLocked = $btn.attr("data-locked") === "1";
+
+      // 🔒 LOCK CHECK (NEW)
+      if (isLocked) {
+        const year = $btn.data("year") || $("#globalAcademicYear").val();
+        showNotification(
+          `Deletion is disabled for academic year ${year}.`,
+          "warning"
+        );
+        return; // 🚫 STOP here
+      }
+
+      // ---- existing logic below (UNCHANGED) ----
+
+      const college = $btn.data("college");
+      const year = $btn.data("year");
 
       if (!college || !year) {
         showNotification("Invalid record selected.", "danger");

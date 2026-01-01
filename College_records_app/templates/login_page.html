@@ -14,159 +14,317 @@
   <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
   <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
 
-  <style>
+<style>
+  /* ================================
+     Design Tokens (Aligned with MIS)
+     ================================ */
+  :root {
+    --brand-blue: #0d6efd;
+    --brand-green: #157347; /* softer green */
+    --danger: #dc3545;
+    --muted: #6c757d;
+    --bg: #f8f9fa;
+
+    --radius-lg: 14px;
+    --radius-md: 10px;
+
+    /* softer, less floaty shadow */
+    --card-shadow: 0 4px 12px rgba(22, 28, 36, 0.06);
+  }
+
+  /* ================================
+     Base
+     ================================ */
+  body {
+    background: var(--bg);
+    font-family: "Segoe UI", Roboto, sans-serif;
+    color: #24303a;
+    min-height: 100vh;
+  }
+
+  /* ================================
+     Login Card
+     ================================ */
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+
+  /* ================================
+     Header (Subtle gradient)
+     ================================ */
+  .login-header {
+    background: linear-gradient(
+      135deg,
+      var(--brand-blue),
+      var(--brand-green)
+    );
+    color: #ffffff;
+    padding: 1.35rem 1.25rem;
+    text-align: center;
+  }
+
+  .login-title {
+    font-size: 1.4rem;
+    font-weight: 600; /* less aggressive */
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  .login-subtitle {
+    font-size: 0.88rem;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
+
+  /* ================================
+     Body
+     ================================ */
+  .login-body {
+    padding: 1.6rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.04); /* subtle separation */
+  }
+
+  /* ================================
+     Inputs
+     ================================ */
+  .login-body input.form-control {
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    border: 1px solid #d5dce5;
+  }
+
+  .login-body input.form-control:focus {
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+  }
+
+  /* ================================
+     Login Button
+     ================================ */
+  .btn-login {
+    background: linear-gradient(
+      135deg,
+      var(--brand-blue),
+      var(--brand-green)
+    );
+    color: #ffffff !important; /* 🔑 enforce white text */
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-login:hover {
+    opacity: 0.94;
+    color: #ffffff !important;
+  }
+
+  /* ================================
+     Links
+     ================================ */
+  .login-links a {
+    font-size: 0.9rem;
+    color: var(--brand-blue);
+    text-decoration: none;
+  }
+
+  .login-links a:hover {
+    text-decoration: underline;
+  }
+
+  /* ================================
+     Notification Toast
+     ================================ */
+  .notification {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 14px 26px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    z-index: 2000;
+  }
+
+  .notification-success {
+    background-color: #28a745;
+  }
+
+  .notification-error {
+    background-color: var(--danger);
+  }
+
+  .show-notification {
+    opacity: 1;
+    transform: translateX(-50%) translateY(16px);
+  }
+
+  /* ================================
+     Responsive
+     ================================ */
+  @media (max-width: 576px) {
     body {
-      background: #f8f9fa;
+      padding: 1rem;
     }
 
-    .login-card {
-      width: 380px;
-      border-radius: 12px;
+    .login-body {
+      padding: 1.35rem;
     }
 
-    /* Notification Toast */
-    .notification {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 15px 30px;
-      background-color: #28a745;
-      color: white;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      opacity: 0;
-      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-      z-index: 2000;
+    .login-title {
+      font-size: 1.25rem;
     }
+  }
+</style>
 
-    .notification-success {
-      background-color: #28a745;
-    }
 
-    .notification-error {
-      background-color: #dc3545;
-    }
-
-    .show-notification {
-      opacity: 1;
-      transform: translateX(-50%) translateY(20px);
-    }
-  </style>
 </head>
 
 <body>
 
-  <div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
-    <div class="card shadow p-4 login-card">
+  <div class="container d-flex justify-content-center align-items-center" style="min-height:100vh">
 
-      <h3 class="text-center mb-4">Login</h3>
+    <div class="login-card">
 
-      <form id="loginForm">
-        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+      <!-- Header -->
+      <div class="login-header">
+        <h1 class="login-title">Example MIS Software</h1>
+        <div class="login-subtitle">Sign in to your account</div>
+      </div>
 
-        <div class="mb-3">
-          <label class="form-label">Email</label>
-          <input type="email" name="email" class="form-control" required placeholder="Enter your email">
-        </div>
+      <!-- Body -->
+      <div class="login-body">
 
-        <div class="mb-3">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" required minlength="6"
-            placeholder="Enter password">
-        </div>
+        <form id="loginForm">
+          <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
-        <div class="form-check mb-3">
-          <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me" value="1">
-          <label class="form-check-label">Remember me</label>
-        </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email</label>
+            <input type="email" name="email" class="form-control" required placeholder="Enter your email">
+          </div>
 
-        <button type="submit" class="btn btn-primary w-100">Login</button>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Password</label>
+            <input type="password" name="password" class="form-control" required minlength="6"
+              placeholder="Enter your password">
+          </div>
 
-      </form>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me" value="1">
+              <label class="form-check-label">
+                Remember me
+              </label>
+            </div>
+
+            <div class="login-links">
+              <a href="{% url 'password_reset' %}">
+                Forgot password?
+              </a>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-login w-100">
+            Login
+          </button>
+        </form>
+
+      </div>
 
     </div>
+
   </div>
 
-  <script>
-    // Notification function
-    function showNotification(message, type) {
-      var notificationClass = type === "success" ? "notification-success" : "notification-error";
-      var notification = $('<div>', {
-        class: 'notification ' + notificationClass,
-        text: message
+</body>
+
+
+<script>
+  // Notification function
+  function showNotification(message, type) {
+    var notificationClass = type === "success" ? "notification-success" : "notification-error";
+    var notification = $('<div>', {
+      class: 'notification ' + notificationClass,
+      text: message
+    });
+
+    $('body').append(notification);
+
+    setTimeout(function () {
+      notification.addClass('show-notification');
+    }, 10);
+
+    setTimeout(function () {
+      notification.removeClass('show-notification');
+      setTimeout(function () {
+        notification.remove();
+      }, 500);
+    }, 3000);
+  }
+
+  // function to get CSRF cookie
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      var cookies = document.cookie.split(';');
+      $.each(cookies, function (i, cookie) {
+        cookie = $.trim(cookie);
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          return false; // break loop
+        }
       });
-
-      $('body').append(notification);
-
-      setTimeout(function () {
-        notification.addClass('show-notification');
-      }, 10);
-
-      setTimeout(function () {
-        notification.removeClass('show-notification');
-        setTimeout(function () {
-          notification.remove();
-        }, 500);
-      }, 3000);
     }
+    return cookieValue;
+  }
 
-    // function to get CSRF cookie
-    function getCookie(name) {
-      var cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        $.each(cookies, function (i, cookie) {
-          cookie = $.trim(cookie);
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            return false; // break loop
-          }
-        });
+  // jQuery global setup: adds CSRF to every non-GET request
+  $.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+      if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+        xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
       }
-      return cookieValue;
+    },
+    complete: function (xhr) {
+      if (xhr.responseJSON && xhr.responseJSON.status === 302) {
+        // Session expired or forbidden
+        showNotification("Session expired. Please log in again.", "danger")
+      }
     }
+  });
 
-    // jQuery global setup: adds CSRF to every non-GET request
-    $.ajaxSetup({
-      beforeSend: function (xhr, settings) {
-        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
-          xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+  // Submit form
+  $("#loginForm").submit(function (e) {
+    e.preventDefault();
+
+    $.ajax({
+      url: "/login/",
+      type: "POST",
+      data: $("#loginForm").serialize(),
+      success: function (res) {
+        if (res.status === 200) {
+          showNotification(res.message, "success");
+          setTimeout(() => window.location.href = "/", 350);
+        } else {
+          showNotification(res.message, "error");
         }
       },
-      complete: function (xhr) {
-        if (xhr.responseJSON && xhr.responseJSON.status === 302) {
-          // Session expired or forbidden
-          showNotification("Session expired. Please log in again.", "danger")
-        }
+      error: function () {
+        showNotification("Something went wrong", "error");
       }
     });
-
-    // Submit form
-    $("#loginForm").submit(function (e) {
-      e.preventDefault();
-
-      $.ajax({
-        url: "/login/",
-        type: "POST",
-        data: $("#loginForm").serialize(),
-        success: function (res) {
-          if (res.status === 200) {
-            showNotification(res.message, "success");
-            setTimeout(() => window.location.href = "/", 350);
-          } else {
-            showNotification(res.message, "error");
-          }
-        },
-        error: function () {
-          showNotification("Something went wrong", "error");
-        }
-      });
-    });
-  </script>
-
-</body>
+  });
+</script>
 
 </html>

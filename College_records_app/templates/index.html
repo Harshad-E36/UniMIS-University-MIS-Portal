@@ -999,6 +999,675 @@
         padding-bottom: 6px;
       }
     }
+
+
+    /* Wrapper dropdown */
+    .academic-dropdown {
+      position: absolute;
+      top: 48px;
+      right: 0;
+      width: 280px;
+
+      background: linear-gradient(180deg,
+          rgba(255, 255, 255, 0.98),
+          rgba(248, 249, 250, 0.96));
+
+      color: #24303a;
+      border-radius: var(--radius-md);
+      box-shadow: var(--modal-shadow);
+      padding: 12px;
+
+      z-index: 1050;
+
+      /* Animation base state */
+      opacity: 0;
+      transform: translateY(-8px) scale(0.96);
+      pointer-events: none;
+
+      transition:
+        opacity 0.25s ease,
+        transform 0.25s cubic-bezier(.2, .9, .25, 1);
+    }
+
+    /* Visible state */
+    .academic-dropdown.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Title */
+    .dropdown-title {
+      font-family: "Poppins", "Segoe UI", sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.4px;
+
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+
+      color: var(--brand-blue);
+      border-bottom: 1px solid rgba(13, 110, 253, 0.15);
+    }
+
+    /* Year row */
+    .year-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      padding: 8px 6px;
+      border-radius: 8px;
+
+      font-size: 0.9rem;
+      font-weight: 600;
+
+      transition: background 0.18s ease;
+    }
+
+    .year-row:hover {
+      background: linear-gradient(180deg,
+          rgba(13, 110, 253, 0.06),
+          transparent);
+    }
+
+    /* Divider */
+    .year-row:not(:last-child) {
+      margin-bottom: 4px;
+    }
+
+    /* ============================================================
+   Toggle Switch (Aligned with brand colors)
+   ============================================================ */
+
+    .switch {
+      position: relative;
+      width: 42px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      cursor: pointer;
+
+      background-color: #ced4da;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+
+      transition: background-color 0.25s ease;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+
+      background-color: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+      transition: transform 0.25s cubic-bezier(.2, .9, .25, 1);
+    }
+
+    /* ON state */
+    .switch input:checked+.slider {
+      background: linear-gradient(135deg,
+          var(--brand-blue),
+          var(--brand-green));
+    }
+
+    .switch input:checked+.slider::before {
+      transform: translateX(20px);
+    }
+
+    /* ============================================================
+   Academic Settings Button (Cog)
+   ============================================================ */
+
+    .academic-settings-wrapper {
+      position: relative;
+    }
+
+    /* Button */
+    .academic-settings-btn {
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--brand-blue);
+      border-radius: 8px;
+
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+    }
+
+    /* Hover behaves like other header buttons */
+    .academic-settings-btn:hover {
+      background: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(19, 46, 78, 0.14);
+    }
+
+    /* Active/open state */
+    .academic-settings-btn.active {
+      background: #ffffff;
+      box-shadow: 0 10px 26px rgba(19, 46, 78, 0.18);
+    }
+
+    /* Cog icon */
+    .academic-settings-btn i {
+      font-size: 1.05rem;
+      transition: transform 0.25s ease;
+    }
+
+    /* Rotate cog ONLY when dropdown is open */
+    .academic-settings-btn.active i {
+      transform: rotate(180deg);
+    }
+
+    /* ============================================================
+   Header Tooltips (Reusable, subtle, brand-aligned)
+   ============================================================ */
+
+    .header-tooltip {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+
+      background: linear-gradient(180deg,
+          rgba(255, 255, 255, 0.94),
+          rgba(248, 249, 250, 0.94));
+
+      color: #374151;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.25px;
+
+      padding: 6px 11px;
+      border-radius: 8px;
+      white-space: nowrap;
+
+      border: 1px solid rgba(13, 110, 253, 0.18);
+
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+
+      transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
+
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      z-index: 2000;
+    }
+
+    /* Tooltip arrow */
+    .header-tooltip::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      right: 16px;
+
+      border-width: 6px;
+      border-style: solid;
+      border-color:
+        transparent transparent rgba(255, 255, 255, 0.94) transparent;
+    }
+
+    body:not(.select-open) .header-tooltip-wrapper:hover .header-tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Hide tooltip when wrapper is open */
+    .header-tooltip-wrapper.open .header-tooltip {
+      opacity: 0 !important;
+      transform: translateY(-6px) !important;
+      pointer-events: none !important;
+    }
+
+    /* Account dropdown open → hide tooltip */
+    .account-wrapper.open .header-tooltip {
+      opacity: 0 !important;
+      transform: translateY(-6px) !important;
+      pointer-events: none !important;
+    }
+
+    /* Academic settings dropdown open */
+    .academic-settings-wrapper:has(.academic-dropdown.open) .header-tooltip {
+      opacity: 0 !important;
+      transform: translateY(-6px) !important;
+      pointer-events: none !important;
+    }
+
+    /* ============================================================
+   Header Academic Year Select — interactive hover
+   ============================================================ */
+
+    .header-tooltip-wrapper select.modern-select {
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .header-tooltip-wrapper:hover select.modern-select {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(19, 46, 78, 0.14);
+    }
+
+
+
+    /* Kill ALL header tooltips while native select is active */
+    body.select-open .header-tooltip {
+      opacity: 0 !important;
+      transform: translateY(-6px) !important;
+      pointer-events: none !important;
+    }
+
+
+    /* ================================
+   Account Dropdown (Header)
+================================ */
+
+    .account-wrapper {
+      position: relative;
+    }
+
+    /* ---------- Account Button ---------- */
+    .account-btn {
+      background: #ffffff;
+      color: var(--brand-blue) !important;
+      /* 🔑 LOCK TEXT COLOR */
+      border-radius: 8px;
+      font-weight: 700;
+      padding: 0 14px;
+      height: 40px;
+
+      opacity: 1;
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.15s ease;
+    }
+
+    /* Hover = ACTIVE (not faded) */
+    .account-btn:hover {
+      background: #ffffff;
+      color: var(--brand-blue) !important;
+      /* 🔑 PREVENT WHITE TEXT */
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(19, 46, 78, 0.12);
+    }
+
+    /* Focus (keyboard / click) */
+    .account-btn:focus {
+      background: #ffffff;
+      color: var(--brand-blue) !important;
+      outline: none;
+    }
+
+    /* Open state */
+    .account-wrapper.open .account-btn {
+      background: #ffffff;
+      color: var(--brand-blue) !important;
+      box-shadow: 0 12px 28px rgba(19, 46, 78, 0.18);
+    }
+
+    /* ---------- Dropdown Menu ---------- */
+    .account-wrapper .account-menu {
+      position: absolute;
+      top: 44px;
+      right: 0;
+      min-width: 220px;
+
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: var(--modal-shadow);
+      padding: 6px;
+
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px) scale(0.97);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+
+      z-index: 1050;
+    }
+
+    /* Open state */
+    .account-wrapper.open .account-menu {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    /* ---------- Menu Items ---------- */
+    .account-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+
+      font-weight: 600;
+      color: #24303a;
+      text-align: left;
+      transition: background 0.15s ease;
+    }
+
+    .account-item:hover {
+      background: rgba(13, 110, 253, 0.08);
+    }
+
+    .account-item.danger {
+      color: var(--danger);
+    }
+
+    .account-divider {
+      height: 1px;
+      background: rgba(0, 0, 0, 0.08);
+      margin: 6px 0;
+    }
+
+
+    /* ===================== Academic Year Dropdown ===================== */
+
+    .year-dropdown-btn {
+      min-width: 110px;
+      height: 40px;
+      padding: 6px 10px;
+      font-weight: 700;
+      border-radius: 8px;
+      background: #fff;
+      color: #21303b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .year-dropdown-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(19, 46, 78, 0.14);
+    }
+
+    /* Dropdown menu */
+    .year-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 110px;
+
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: var(--modal-shadow);
+      padding: 6px;
+
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px) scale(0.97);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+
+      z-index: 1050;
+    }
+
+    .year-dropdown-wrapper.open .year-dropdown-menu {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Options */
+    .year-option {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      text-align: left;
+      font-weight: 600;
+      color: #24303a;
+      transition: background 0.15s ease;
+    }
+
+    .year-option:hover {
+      background: rgba(13, 110, 253, 0.08);
+    }
+
+    .year-dropdown-wrapper.open .header-tooltip {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    /* Academic Year button — lock visuals */
+    .year-dropdown-btn {
+      background: #ffffff !important;
+      color: #21303b !important;
+    }
+
+    /* Hover must NEVER fade or turn transparent */
+    .year-dropdown-btn:hover,
+    .year-dropdown-wrapper.open .year-dropdown-btn {
+      background: #ffffff !important;
+      color: #21303b !important;
+    }
+
+
+
+    /* ============================================================
+   RESPONSIVE ADDITIONS — HEADER
+   ============================================================ */
+
+    /* Tablets & below */
+    @media (max-width: 991px) {
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1.25rem;
+      }
+
+      .header-left,
+      .header-right {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .header-right {
+        align-items: flex-start;
+      }
+
+      #welcome_msg {
+        margin-bottom: 4px;
+      }
+
+      .header-right>.d-flex {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      /* Prevent header dropdowns from going off screen */
+      .account-menu,
+      .year-dropdown-menu,
+      .academic-dropdown {
+        right: 0;
+        left: auto;
+        max-width: min(92vw, 320px);
+      }
+    }
+
+    /* Phones */
+    @media (max-width: 576px) {
+      .app-title {
+        font-size: 1.6rem !important;
+      }
+
+      .admin-title,
+      .college-name {
+        font-size: 1.1rem !important;
+      }
+
+      #welcome_msg {
+        font-size: 0.85rem;
+      }
+
+      .header .btn,
+      .header .btn-sm,
+      .year-dropdown-btn {
+        height: 38px !important;
+        font-size: 0.85rem;
+      }
+    }
+
+    /* ============================================================
+   RESPONSIVE ADDITIONS — FILTER NAVBAR
+   ============================================================ */
+
+    @media (max-width: 991px) {
+      .filter-navbar {
+        padding: 10px;
+      }
+
+      .filter-navbar .dropdown-menu {
+        max-width: 92vw;
+      }
+
+      .filter-dropdown {
+        min-width: unset;
+        width: 92vw;
+      }
+    }
+
+    /* Mobile: horizontal scroll instead of chaos */
+    @media (max-width: 576px) {
+      .filter-navbar>.d-flex {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 6px;
+      }
+
+      .filter-navbar>.d-flex::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      .filter-navbar>.d-flex::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.35);
+        border-radius: 4px;
+      }
+
+      .filter-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+    }
+
+    /* ============================================================
+   RESPONSIVE ADDITIONS — STAT CARDS
+   ============================================================ */
+
+    @media (max-width: 991px) {
+      .stat-card {
+        height: auto !important;
+        padding: 1.2rem !important;
+      }
+
+      .stat-card .stat-number {
+        font-size: 1.9rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .stat-card .stat-number {
+        font-size: 1.6rem;
+      }
+
+      .stat-card:hover {
+        transform: none;
+        box-shadow: var(--card-shadow);
+      }
+    }
+
+    /* ============================================================
+   RESPONSIVE ADDITIONS — SR CARDS
+   ============================================================ */
+
+    @media (max-width: 991px) {
+      .sr-values {
+        min-width: 90px;
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .sr-card {
+        padding: 12px;
+      }
+
+      .sr-card-title {
+        font-size: 0.95rem;
+      }
+
+      .sr-num {
+        font-size: 1rem;
+      }
+
+      .sr-values {
+        min-width: 70px;
+      }
+
+      .sr-card:hover {
+        transform: none;
+      }
+    }
+
+    /* ============================================================
+   RESPONSIVE ADDITIONS — MODALS
+   ============================================================ */
+
+    @media (max-width: 576px) {
+      .modal-dialog {
+        margin: 0.75rem;
+      }
+
+      .UserModal .modal-body {
+        padding: 1rem;
+      }
+    }
+
+    /* ============================================================
+   TOUCH DEVICE SAFETY
+   ============================================================ */
+
+    @media (hover: none) {
+      .header-tooltip {
+        display: none !important;
+      }
+
+      .btn:hover,
+      .year-dropdown-btn:hover,
+      .stat-card:hover,
+      .sr-card:hover {
+        transform: none !important;
+        box-shadow: inherit !important;
+      }
+    }
   </style>
 
 </head>
@@ -1008,6 +1677,7 @@
 
   <!-- Header -->
   <header class="header d-flex justify-content-between align-items-center flex-wrap">
+
     <!-- LEFT: App title + context -->
     <div class="header-left me-3">
       <div class="app-title">Example MIS software</div>
@@ -1015,70 +1685,134 @@
       {% if request.user.is_superuser %}
       <div class="header-subtitle admin-title">Admin Dashboard</div>
       {% else %}
-      {# Non-superuser: read first college from Colleges queryset (template-only) #}
       {% if Colleges and Colleges|length > 0 %}
       {% with c=Colleges.0 %}
       <div class="header-subtitle college-name" title="{{ c.College_Name|default:'' }}">
-        {{ c.College_Name|default:"No College Assignedd" }}
+        {{ c.College_Name|default:"No College Assigned" }}
       </div>
       {% endwith %}
       {% else %}
-      <div class="header-subtitle college-name" title="">
-        No College Assigned
-      </div>
+      <div class="header-subtitle college-name">No College Assigned</div>
       {% endif %}
-
       {% endif %}
     </div>
 
+    <!-- RIGHT: Welcome + Controls -->
+    <div class="header-right d-flex flex-column align-items-end gap-2">
 
-    <!-- RIGHT: buttons & controls (keep IDs / markup as before) -->
-    <div class="header-right d-flex flex-column align-items-end">
-      <span id="welcome_msg" class="text-light fw-semibold mb-2 me-2">Welcome, {{ request.user.username }}</span>
+      <!-- Welcome -->
+      <span id="welcome_msg" class="text-light fw-semibold me-1">
+        Welcome, {{ request.user.username }}
+      </span>
 
-      <div class="header-actions d-flex gap-2 align-items-center mb-2">
+      <!-- ONE CLEAN ROW -->
+      <div class="d-flex align-items-center gap-2">
 
-        <!-- primary group: quick account actions (left) -->
-        <div class="btn-group-left d-flex gap-2 align-items-center">
-          <button id="ChangePasswordBtn" class="btn btn-light btn-sm change-password-btn">
-            <i class="bi bi-key"></i> Change Password
+        <!-- ===================== Account Dropdown ===================== -->
+        <div class="account-wrapper position-relative header-tooltip-wrapper">
+
+          <button id="accountBtn" type="button" class="btn btn-sm account-btn">
+            <i class="bi bi-person-circle"></i> Account
           </button>
 
-          <button id="logout_btn" class="btn btn-outline-light btn-sm logout-btn">
-            <i class="bi bi-box-arrow-right"></i> Logout
-          </button>
+          <!-- Tooltip -->
+          <div class="header-tooltip">
+            Account actions & security
+          </div>
+
+          <!-- Account Menu -->
+          <div id="accountMenu" class="account-menu">
+            <button id="ChangePasswordBtn" class="account-item">
+              <i class="bi bi-key"></i> Change Password
+            </button>
+
+            {% if request.user.is_superuser %}
+            <button id="createUserBtn" class="account-item">
+              <i class="bi bi-person-plus"></i> Create User
+            </button>
+            {% endif %}
+
+            <div class="account-divider"></div>
+
+            <button id="logout_btn" class="account-item danger">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+          </div>
+
         </div>
 
-        <!-- accent action (Export) placed centrally so it's prominent -->
-        <div class="btn-group-accent ">
+        <!-- ===================== Export Button ===================== -->
+        <div class="position-relative header-tooltip-wrapper">
+
           <button id="export_filtered_excel" class="btn btn-export btn-sm">
             <i class="bi bi-file-earmark-excel"></i> Export
           </button>
+
+          <div class="header-tooltip">
+            Export filtered data to Excel
+          </div>
+
         </div>
 
-      </div>
+        <!-- ===================== Academic Year Dropdown ===================== -->
+        <div class="position-relative header-tooltip-wrapper year-dropdown-wrapper">
 
-
-      <div class="d-flex align-items-center">
-        <!-- admin-only (keep ID) -->
-        <div class="btn-group-admin d-flex gap-2 align-items-center me-2">
-          {% if request.user.is_superuser %}
-          <button id="createUserBtn" class="btn btn-light btn-sm create-user-btn">
-            <i class="bi bi-person-plus"></i> Create User
+          <!-- Trigger -->
+          <button id="academicYearBtn" type="button" class="btn btn-sm modern-select year-dropdown-btn"
+            aria-haspopup="listbox" aria-expanded="false">
+            <span id="academicYearLabel">{{ default_academic_year }}</span>
+            <i class="bi bi-chevron-down ms-1"></i>
           </button>
-          {% endif %}
+
+          <!-- Tooltip -->
+          <div class="header-tooltip">
+            Select active academic year
+          </div>
+
+          <!-- Dropdown -->
+          <div id="academicYearDropdown" class="year-dropdown-menu">
+            {% for year in academic_year %}
+            <button type="button" class="year-option" data-value="{{ year.Academic_Year }}">
+              {{ year.Academic_Year }}
+            </button>
+            {% endfor %}
+          </div>
+
+          <!-- Hidden input to keep old JS working -->
+          <input type="hidden" id="globalAcademicYear" value="{{ default_academic_year }}" />
+
         </div>
 
-        <div class="text-light small me-2 fw-semibold">Academic Year</div>
-        <select id="globalAcademicYear" class="form-select form-select-sm w-auto modern-select">
-          {% for year in academic_year %}
-          <option value="{{ year.Academic_Year }}">{{ year.Academic_Year }}</option>
-          {% endfor %}
-        </select>
+        <!-- ===================== Academic Settings (Admin) ===================== -->
+        {% if request.user.is_superuser %}
+        <div class="position-relative academic-settings-wrapper header-tooltip-wrapper">
+
+          <button id="academicHamburger" class="btn btn-outline-light btn-sm academic-settings-btn" type="button"
+            aria-label="Toggle active academic years">
+
+            <i class="bi bi-gear-fill"></i>
+          </button>
+
+          <!-- Tooltip -->
+          <div class="header-tooltip">
+            Toggle active academic years
+          </div>
+
+          <!-- Dropdown -->
+          <div id="academicDropdown" class="academic-dropdown">
+            <div class="dropdown-title">Academic Years</div>
+            <div id="academicYearList"></div>
+          </div>
+
+        </div>
+        {% endif %}
+
       </div>
     </div>
 
+
   </header>
+
 
   <div id="protected_content">
 
@@ -2517,6 +3251,22 @@
 
   $(document).ready(function () {
 
+    const $label = $("#academicYearLabel");
+    const $hidden = $("#globalAcademicYear");
+
+    // Read whatever is visually shown
+    const visualYear = $label.text().trim();
+
+    // If hidden input is empty, initialize it from UI
+    if (!$hidden.val() && visualYear) {
+      $hidden.val(visualYear);
+    }
+
+    // Absolute safety: hidden input must never be empty
+    if (!$hidden.val()) {
+      console.error("globalAcademicYear is empty after initialization");
+    }
+
     // Prevent caching issues on back/forward navigation
     $(window).on("pageshow", function (event) {
       if (event.originalEvent.persisted || (window.performance && window.performance.navigation.type === 2)) {
@@ -3003,6 +3753,7 @@
       });
     }
 
+
     // ====== jQuery Validate setup (adapts per-mode) ======
     if ($.validator) {
       $("#createUserForm").validate({
@@ -3102,6 +3853,169 @@
       $('#accountTypeWrapper').removeClass('d-none'); // restore for next create open
       if ($.validator) { $('#createUserForm').validate().resetForm(); }
     });
+
+
+
+    const $hamburger = $("#academicHamburger");
+    const $dropdown = $("#academicDropdown");
+    const $yearList = $("#academicYearList");
+
+    /* ===============================
+       Academic Hamburger (ADMIN ONLY)
+       =============================== */
+    if ($hamburger.length) {
+
+      // Toggle dropdown
+      $hamburger.on("click", function (e) {
+        e.stopPropagation();
+        $dropdown.toggleClass("open");
+        $hamburger.toggleClass("active");
+      });
+
+      // Close on outside click
+      $(document).on("click", function () {
+        $dropdown.removeClass("open");
+        $hamburger.removeClass("active");
+      });
+
+      $dropdown.on("click", function (e) {
+        e.stopPropagation();
+      });
+
+      // -----------------------------
+      // Fetch academic years
+      // -----------------------------
+      function loadAcademicYears() {
+        $.ajax({
+          url: "/api/academic-years/",
+          type: "GET",
+          success: function (res) {
+            renderAcademicYears(res.years || []);
+          },
+          error: function () {
+            console.error("Failed to load academic years");
+          }
+        });
+      }
+
+      function renderAcademicYears(data) {
+        $yearList.empty();
+
+        if (!data.length) {
+          $yearList.append(
+            `<div class="text-muted small px-2">No academic years found</div>`
+          );
+          return;
+        }
+
+        $.each(data, function (_, item) {
+          $yearList.append(`
+        <div class="year-row">
+          <span>${item.year}</span>
+          <label class="switch">
+            <input type="checkbox"
+                   data-year="${item.year}"
+                   ${item.is_open ? "checked" : ""}>
+            <span class="slider"></span>
+          </label>
+        </div>
+      `);
+        });
+      }
+
+      // Initial load
+      loadAcademicYears();
+
+      // -----------------------------
+      // Toggle year ON / OFF
+      // -----------------------------
+      $yearList.on("change", "input[type='checkbox']", function () {
+        const $checkbox = $(this);
+        const year = $checkbox.data("year");
+        const isOpen = $checkbox.is(":checked");
+
+        $.ajax({
+          url: "/api/toggle-academic-year/",
+          type: "POST",
+          data: {
+            year: year,
+            is_open: isOpen,
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+          },
+          error: function () {
+            // rollback
+            $checkbox.prop("checked", !isOpen);
+            alert("Failed to update academic year");
+          }
+        });
+      });
+
+    }
+
+
+    $(function () {
+      const $wrapper = $(".account-wrapper");
+      const $btn = $("#accountBtn");
+      const $menu = $("#accountMenu");
+
+      if (!$wrapper.length || !$btn.length || !$menu.length) return;
+
+      // Toggle account dropdown
+      $btn.on("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.blur();
+
+        $wrapper.toggleClass("open");
+      });
+
+      // Prevent clicks inside menu from closing it
+      $menu.on("click", function (e) {
+        e.stopPropagation();
+      });
+
+      // Close only when clicking outside account dropdown
+      $(document).on("click.account", function (e) {
+        if (!$(e.target).closest(".account-wrapper").length) {
+          $wrapper.removeClass("open");
+        }
+      });
+    });
+
+
+    $(function () {
+      const $wrapper = $(".year-dropdown-wrapper");
+      const $btn = $("#academicYearBtn");
+      const $label = $("#academicYearLabel");
+      const $input = $("#globalAcademicYear");
+
+      // Toggle dropdown
+      $btn.on("click", function (e) {
+        e.stopPropagation();
+        $wrapper.toggleClass("open");
+        $btn.attr("aria-expanded", $wrapper.hasClass("open"));
+      });
+
+      // Select a year
+      $(document).on("click", ".year-option", function (e) {
+        e.stopPropagation();
+
+        const value = $(this).data("value");
+
+        $label.text(value);
+        $input.val(value).trigger("change");
+
+        $wrapper.removeClass("open");
+        $btn.attr("aria-expanded", "false");
+      });
+
+      // Close when clicking outside
+      $(document).on("click", function () {
+        $wrapper.removeClass("open");
+        $btn.attr("aria-expanded", "false");
+      });
+    });
+
 
   });
 

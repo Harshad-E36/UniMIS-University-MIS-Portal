@@ -354,6 +354,173 @@
     #RecordsModal .modal-content {
       border-radius: 1rem !important;
     }
+
+    .modal-loader {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 1056;
+      /* higher than modal content */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .modal-content {
+      position: relative;
+      /* REQUIRED for overlay */
+    }
+
+    @media (max-width: 992px) {
+
+      /* Header spacing */
+      .header-banner {
+        padding: 2rem 1rem;
+      }
+
+      /* Header actions flow below title */
+      .header-banner .header-actions {
+        position: static;
+        transform: none;
+        margin-top: 1rem;
+        align-items: center;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+
+      .header-banner .header-actions .btn-row {
+        justify-content: center;
+      }
+
+      /* Table container breathing room */
+      .table-container {
+        padding: 0.9rem;
+      }
+
+      /* Discipline cards: 2 per row */
+      #records_table .card,
+      #collegeAccordionTemplate .col-md-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+    }
+
+    @media (max-width: 768px) {
+
+      /* Header polish */
+      .header-banner {
+        padding: 1.5rem 0.75rem;
+        border-radius: 0.75rem;
+      }
+
+      h1 {
+        font-size: 1.7rem;
+      }
+
+      p {
+        font-size: 0.95rem;
+      }
+
+      /* Stack header actions vertically */
+      .header-banner .header-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      /* Buttons full width */
+      .header-banner .header-actions button {
+        width: 100%;
+      }
+
+      /* Add Record button */
+      #AddRecordButton {
+        width: 100%;
+        font-size: 1rem;
+      }
+
+      /* DataTable scroll instead of breaking */
+      table.dataTable,
+      #records_table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      /* Accordion content padding */
+      .accordion-body {
+        padding: 0.75rem;
+      }
+
+      /* Discipline cards stack */
+      #collegeAccordionTemplate .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 576px) {
+
+      /* Header text scaling */
+      h1 {
+        font-size: 1.45rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+      }
+
+      /* Reduce modal margins */
+      #RecordsModal .modal-dialog {
+        margin: 10px !important;
+        max-width: calc(100% - 20px) !important;
+        width: calc(100% - 20px) !important;
+      }
+
+      /* Modal body padding */
+      #RecordsModal .modal-body {
+        padding: 1rem !important;
+      }
+
+      /* Form fields stack cleanly */
+      .modal-body .row>div {
+        margin-bottom: 0.6rem;
+      }
+
+      /* Dropdown menus full width */
+      .dropdown-menu {
+        width: 100% !important;
+      }
+
+      /* Notification toast safe width */
+      .notification {
+        width: calc(100% - 2rem);
+        max-width: 360px;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+
+      h1 {
+        font-size: 1.3rem;
+      }
+
+      #AddRecordButton {
+        font-size: 0.9rem;
+      }
+
+      /* Tighten modal footer buttons */
+      #RecordsModal .modal-footer button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
   </style>
 
 </head>
@@ -493,6 +660,15 @@
   <div class="modal fade" id="RecordsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
+
+        <!-- Modal Loading Overlay -->
+        <div id="modalLoader" class="modal-loader d-none">
+          <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <div class="mt-2">Saving record, please wait…</div>
+        </div>
+
         <div class="modal-header">
           <h1 class="modal-title fs-5">Add Record</h1>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -636,7 +812,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-primary" id="submit_button" form="add_edit_form">Add</button>
+          <button type="submit" class="btn btn-primary" id="submit_button" form="add_edit_form">Add College</button>
         </div>
       </div>
     </div>
@@ -973,8 +1149,22 @@
     });
   }
 
+  function showModalLoader() {
+    $("#modalLoader").removeClass("d-none");
+    $("#submit_button").prop("disabled", true).text("Saving...");
+  }
+
+  function hideModalLoader() {
+    $("#modalLoader").addClass("d-none");
+    $("#submit_button").prop("disabled", false).text("Add College");
+  }
+
+
 
   function add_edit_records() {
+
+    showModalLoader();
+
     // always send numeric id
     const idVal = $('#record_id').val();
     const id = (idVal && idVal.trim() !== '') ? parseInt(idVal, 10) : 0;
@@ -1020,6 +1210,9 @@
       error: function (xhr, status, error) {
         console.error("AJAX Error:", xhr.responseText);
         showNotification("Server Error", "danger");
+      },
+      complete: function () {
+        hideModalLoader();
       }
     });
   }
@@ -1300,6 +1493,7 @@
       $modal.find('#taluka').html('<option value="" disabled selected>Select Taluka</option>');
 
       $modal.find('.dependent-dropdown').remove();
+      hideModalLoader();
     });
 
 

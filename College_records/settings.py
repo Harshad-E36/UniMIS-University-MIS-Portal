@@ -137,3 +137,13 @@ SESSION_COOKIE_AGE = 3600 # by default, session cookies expire when the browser 
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = False  # True if HTTPS
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "malharmr123@gmail.com"
+EMAIL_HOST_PASSWORD = "ijbeexzgnoybytro"
+DEFAULT_FROM_EMAIL = "malharmr123@gmail.com"
+
